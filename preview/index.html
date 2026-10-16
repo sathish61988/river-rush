@@ -67,7 +67,7 @@
       box-shadow: 0 0 10px rgba(30, 112, 212, 0.6);
     }
 
-    /* Game Container */
+    /* Game Container - Desktop Default */
     #game-container {
       position: relative;
       width: min(100vw, calc(100vh * (16 / 9)));
@@ -81,7 +81,7 @@
       justify-content: center;
     }
 
-    /* Device frame styling */
+    /* Device frame styling for desktop presentation */
     #game-container.device-frame {
       border: 12px solid #161c28;
       border-radius: 32px;
@@ -90,6 +90,55 @@
       height: min(86vh, calc(92vw * (9 / 16)));
       max-width: 1920px;
       max-height: 1080px;
+    }
+
+    /* MOBILE & TABLET FULLSCREEN LANDSCAPE (Edge-to-Edge, zero letterboxing) */
+    @media (max-width: 1024px) and (orientation: landscape), (max-height: 550px) and (orientation: landscape), (hover: none) and (orientation: landscape) {
+      body {
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow: hidden !important;
+        width: 100vw !important;
+        height: 100vh !important;
+      }
+      #dev-toolbar {
+        display: none !important;
+      }
+      #game-container, #game-container.device-frame {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        max-width: 100vw !important;
+        max-height: 100vh !important;
+        aspect-ratio: unset !important;
+        border: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        margin: 0 !important;
+      }
+      #webgl-canvas {
+        width: 100% !important;
+        height: 100% !important;
+      }
+    }
+
+    /* MOBILE PORTRAIT: Fullscreen container */
+    @media (orientation: portrait) and (max-width: 900px) {
+      #dev-toolbar {
+        display: none !important;
+      }
+      #game-container, #game-container.device-frame {
+        width: 100vw !important;
+        height: 100vh !important;
+        max-width: 100vw !important;
+        max-height: 100vh !important;
+        aspect-ratio: unset !important;
+        border: none !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+      }
     }
 
     /* ThreeJS WebGL Canvas */
@@ -682,34 +731,148 @@
       border-color: #ffffff;
     }
 
-    /* Motion Tilt Controls Styling & Hiding of Mobile Buttons */
+    /* Motion Tilt Controls Styling - Keep touch buttons accessible as fallback */
     .motion-active .hud-steer-btn {
-      display: none !important;
+      opacity: 0.45;
+      transform: scale(0.92);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+    }
+    .motion-active .hud-steer-btn:active {
+      opacity: 1 !important;
+      transform: scale(0.96) !important;
     }
     .hud-motion-pill {
       cursor: pointer;
       transition: all 0.2s ease;
-      border: 2px solid #27476e;
+      border: 2px solid #3d80c6;
+      background: linear-gradient(180deg, #183354 0%, #0e2035 100%);
+      color: #ffffff;
+      box-shadow: 0 3px 12px rgba(30, 112, 212, 0.4);
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .hud-motion-pill.pulse-glow {
+      animation: pulseMotionBtn 2s infinite ease-in-out;
+    }
+    @keyframes pulseMotionBtn {
+      0%, 100% { border-color: #3d80c6; box-shadow: 0 0 8px rgba(61, 128, 198, 0.4); }
+      50% { border-color: #64b5ff; box-shadow: 0 0 16px rgba(100, 181, 255, 0.85); }
     }
     .hud-motion-pill:hover, .hud-motion-pill:active {
-      background: #183354;
-      border-color: #58a4ff;
+      background: #1e4b80;
+      border-color: #64b5ff;
     }
     .hud-motion-pill.active {
-      background: rgba(18, 72, 45, 0.9);
-      border-color: #2ed573;
-      color: #afffd0;
-      box-shadow: 0 0 10px rgba(46, 213, 115, 0.4);
+      background: linear-gradient(180deg, #1a643b 0%, #0d3a20 100%) !important;
+      border-color: #2ed573 !important;
+      color: #afffd0 !important;
+      box-shadow: 0 0 15px rgba(46, 213, 115, 0.5) !important;
+      animation: none !important;
     }
     .hud-calibrate-pill {
       cursor: pointer;
       background: rgba(14, 25, 40, 0.88);
       border: 1.5px dashed #4282c2;
       font-size: clamp(11px, 1.2vw, 13px);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
     }
     .hud-calibrate-pill:hover, .hud-calibrate-pill:active {
       background: #1e4570;
       border-style: solid;
+    }
+
+    /* Rotate Device Prompt Overlay */
+    #screen-rotate-prompt {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: radial-gradient(circle at center, rgba(14, 30, 52, 0.98) 0%, rgba(5, 10, 18, 0.99) 100%);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      z-index: 10000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      box-sizing: border-box;
+      text-align: center;
+    }
+    @media (orientation: portrait) and (max-width: 900px) {
+      body:not(.dismiss-rotate) #screen-rotate-prompt {
+        display: flex;
+      }
+    }
+    .rotate-card {
+      background: rgba(14, 28, 48, 0.92);
+      border: 2px solid #2d609c;
+      box-shadow: 0 15px 50px rgba(0, 0, 0, 0.85), 0 0 30px rgba(45, 96, 156, 0.35);
+      border-radius: 28px;
+      padding: 32px 24px;
+      max-width: 380px;
+      width: 90%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      animation: popIn 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    }
+    .rotate-phone-anim {
+      width: 80px;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      animation: rotatePhoneWiggle 2.8s ease-in-out infinite;
+    }
+    @keyframes rotatePhoneWiggle {
+      0%, 20% { transform: rotate(0deg); }
+      45%, 75% { transform: rotate(-90deg); }
+      95%, 100% { transform: rotate(0deg); }
+    }
+    .rotate-curved-arrow {
+      position: absolute;
+      top: 0;
+      right: 0;
+      filter: drop-shadow(0 0 6px rgba(255, 210, 21, 0.7));
+    }
+    .rotate-title {
+      font-family: 'Teko', sans-serif;
+      font-size: 38px;
+      line-height: 36px;
+      letter-spacing: 2px;
+      font-weight: 700;
+      color: #ffffff;
+      text-shadow: 0 0 15px rgba(88, 164, 255, 0.6);
+    }
+    .rotate-subtitle {
+      font-size: 14px;
+      line-height: 20px;
+      color: #9ac4f8;
+      font-weight: 500;
+      max-width: 320px;
+    }
+    .rotate-dismiss-btn {
+      margin-top: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(88, 164, 255, 0.4);
+      color: #84bbf5;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 8px 18px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .rotate-dismiss-btn:hover {
+      background: rgba(88, 164, 255, 0.25);
+      color: #ffffff;
     }
 
     /* Small Screen & Portrait Responsiveness (390x844 & 430x932) */
@@ -1076,6 +1239,25 @@
 </head>
 <body>
 
+  <!-- Screen Orientation Prompt: Rotate Your Phone (Mobile Portrait) -->
+  <div id="screen-rotate-prompt">
+    <div class="rotate-card">
+      <div class="rotate-phone-anim">
+        <svg viewBox="0 0 48 72" width="56" height="72" fill="none" stroke="#64b5ff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="4" y="4" width="40" height="64" rx="8" ry="8" fill="#12243d"/>
+          <line x1="20" y1="12" x2="28" y2="12" stroke="#4a8ec9" stroke-width="2"/>
+          <circle cx="24" cy="58" r="3" fill="#64b5ff"/>
+        </svg>
+        <svg class="rotate-curved-arrow" viewBox="0 0 24 24" width="32" height="32" fill="#ffd215">
+          <path d="M12 4V1L8 5l4 4V6c3.31 0 6 2.69 6 6 0 1.01-.25 1.97-.7 2.8l1.46 1.46C19.54 15.03 20 13.57 20 12c0-4.42-3.58-8-8-8zm-6.76.74L3.78 6.2C4.46 7.97 4 10.42 4 12c0 4.42 3.58 8 8 8v3l4-4-4-4v3c-3.31 0-6-2.69-6-6 0-1.01.25-1.97.7-2.8z"/>
+        </svg>
+      </div>
+      <div class="rotate-title">ROTATE YOUR PHONE</div>
+      <div class="rotate-subtitle">River Rush is optimized for Landscape Mode. Turn your device horizontally for the full 3D steering experience!</div>
+      <button class="rotate-dismiss-btn" onclick="dismissRotatePrompt()">Play in Portrait Anyway</button>
+    </div>
+  </div>
+
   <!-- Top Developer & Reviewer Toolbar -->
   <div id="dev-toolbar">
     <button class="nav-btn active" onclick="switchScreen('main-menu')">1. Main Menu</button>
@@ -1248,11 +1430,11 @@
             <img src="assets/ui/Icon_Heart.png" alt="Lives">
             <span id="hud-lives-val">3</span>
           </div>
-          <button class="hud-pill hud-motion-pill" id="btn-toggle-motion" onclick="toggleMotionControls()" title="Toggle Phone Tilt Steering">
+          <button class="hud-pill hud-motion-pill pulse-glow" id="btn-toggle-motion" onclick="requestMotionPermissionAndEnable()" title="Enable Mobile Phone Tilt Steering">
             <span id="motion-icon">📱</span>
-            <span id="motion-status-text">Tilt: OFF</span>
+            <span id="motion-status-text">ENABLE TILT</span>
           </button>
-          <button class="hud-pill hud-calibrate-pill" id="btn-calibrate-motion" onclick="calibrateTilt()" title="Calibrate Neutral Level" style="display: none;">
+          <button class="hud-pill hud-calibrate-pill" id="btn-calibrate-motion" onclick="calibrateTilt()" title="Calibrate Neutral Tilt Position" style="display: none;">
             <span>🎯 Center</span>
           </button>
         </div>
@@ -1308,7 +1490,7 @@
                 <div style="font-size:10px; font-weight:600; color:#84bbf5;">Tilt phone left/right to steer</div>
               </div>
             </div>
-            <button class="nav-btn" id="btn-pause-motion-toggle" onclick="toggleMotionControls()" style="font-size:11px; padding:5px 12px;">Enable</button>
+            <button class="nav-btn" id="btn-pause-motion-toggle" onclick="requestMotionPermissionAndEnable()" style="font-size:11px; padding:5px 12px;">Enable Tilt</button>
           </div>
 
           <div class="pause-audio-row">
@@ -3413,8 +3595,24 @@
     const TILT_MAX = 20.0;      // Degrees for 100% full steering lock
     const TILT_SMOOTHING = 8.5; // Smoothing interpolation rate
 
+    function isSecureContextAvailable() {
+      // Browsers restrict DeviceOrientation to secure contexts (HTTPS or localhost)
+      if (typeof window.isSecureContext === 'boolean') {
+        return window.isSecureContext;
+      }
+      return location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+    }
+
+    function dismissRotatePrompt() {
+      document.body.classList.add('dismiss-rotate');
+      setTimeout(onWindowResize, 100);
+    }
+
     function handleDeviceOrientation(e) {
-      if (e.gamma === null && e.beta === null) return;
+      // Discard invalid / dummy sensor events (desktop/emulators often return null or NaN)
+      if (e.gamma === null || e.beta === null || typeof e.gamma === 'undefined' || typeof e.beta === 'undefined' || isNaN(e.gamma) || isNaN(e.beta)) {
+        return;
+      }
 
       if (!motionEventsReceived) {
         motionEventsReceived = true;
@@ -3435,11 +3633,12 @@
         // Tilted left -> negative gamma. Tilted right -> positive gamma.
         tilt = e.gamma || 0;
       } else if (screenAngle === 90) {
-        // Landscape (top of phone rotated left)
-        tilt = e.beta || 0;
-      } else if (screenAngle === -90 || screenAngle === 270) {
-        // Landscape (top of phone rotated right)
+        // Landscape (top of phone rotated left to player's left hand)
+        // Dipping left hand tilts top downward (+beta on mobile), so negate beta for negative steering
         tilt = -(e.beta || 0);
+      } else if (screenAngle === -90 || screenAngle === 270) {
+        // Landscape (top of phone rotated right to player's right hand)
+        tilt = e.beta || 0;
       } else if (screenAngle === 180) {
         // Inverted portrait
         tilt = -(e.gamma || 0);
@@ -3473,41 +3672,68 @@
       }
       motionControlsActive = true;
       updateMotionUI(true);
-      toast("📱 Tilt Steering Enabled! Tilt phone to steer.");
+      toast("📱 Tilt Steering Active! Tilt phone left/right to steer.");
     }
 
-    async function enableMotionControls() {
-      // 1. iOS 13+ permission request (must be executed directly from a user click/tap)
-      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+    async function requestMotionPermissionAndEnable() {
+      playClick();
+
+      // If already active, toggle off
+      if (motionControlsActive) {
+        disableMotionControls(true);
+        return;
+      }
+
+      // 1. Check for Secure Context (HTTPS or localhost)
+      if (!isSecureContextAvailable()) {
+        console.warn("DeviceOrientation disabled: window.isSecureContext is false.");
+        toast("⚠️ Tilt sensors require HTTPS or localhost (Secure Context). Touch buttons remain active.");
+        updateMotionUI(false, "HTTPS Required");
+        return;
+      }
+
+      // 2. Check for DeviceOrientationEvent support
+      if (typeof window.DeviceOrientationEvent === 'undefined') {
+        toast("⚠️ Motion sensors not supported on this device/browser. Touch buttons active.");
+        updateMotionUI(false, "Unsupported");
+        return;
+      }
+
+      // 3. iOS 13+ permission request (must run directly within user click/tap gesture)
+      if (typeof DeviceOrientationEvent.requestPermission === 'function') {
         try {
           const permission = await DeviceOrientationEvent.requestPermission();
           if (permission !== 'granted') {
-            toast("Sensor permission denied. Touch buttons remain active.");
-            disableMotionControls(false);
+            toast("⚠️ Motion sensor permission denied. Touch buttons active.");
+            updateMotionUI(false, "Denied");
             return;
           }
         } catch (err) {
           console.warn("DeviceOrientation permission error:", err);
-          toast("Unable to request motion permission. Touch buttons active.");
-          disableMotionControls(false);
+          toast("⚠️ Unable to request sensor permission. Touch buttons active.");
+          updateMotionUI(false, "Denied");
           return;
         }
       }
 
-      // 2. Attach deviceorientation listener
-      window.removeEventListener('deviceorientation', handleDeviceOrientation, true);
+      // 4. Update UI to connecting/requesting state
+      updateMotionUI('connecting');
       motionEventsReceived = false;
+
+      // 5. Attach deviceorientation listener
+      window.removeEventListener('deviceorientation', handleDeviceOrientation, true);
       window.addEventListener('deviceorientation', handleDeviceOrientation, true);
 
-      // 3. Verification timeout (Requirement: Do not claim sensors are active until events received)
+      // 6. Verification timeout: do NOT claim sensors are active if no readings arrive
       if (sensorVerificationTimer) clearTimeout(sensorVerificationTimer);
       sensorVerificationTimer = setTimeout(() => {
         if (!motionEventsReceived) {
-          console.log("No deviceorientation events received within timeout (desktop/no sensor).");
-          disableMotionControls(false);
-          toast("Motion sensors unavailable on this device. Touch buttons active.");
+          console.log("No deviceorientation events received within 1500ms timeout (desktop/no sensor).");
+          window.removeEventListener('deviceorientation', handleDeviceOrientation, true);
+          updateMotionUI(false, "No Sensor");
+          toast("⚠️ No motion sensor detected on this device. Touch buttons remain active.");
         }
-      }, 1200);
+      }, 1500);
     }
 
     function disableMotionControls(showNotice = true) {
@@ -3527,15 +3753,6 @@
       }
     }
 
-    function toggleMotionControls() {
-      playClick();
-      if (motionControlsActive) {
-        disableMotionControls(true);
-      } else {
-        enableMotionControls();
-      }
-    }
-
     function calibrateTilt() {
       playClick();
       neutralTiltAngle = rawTiltAngle;
@@ -3545,34 +3762,70 @@
       toast("🎯 Neutral tilt angle calibrated!");
     }
 
-    function updateMotionUI(active) {
+    function updateMotionUI(state, reason = "") {
       const hud = document.getElementById('screen-hud');
       const toggleBtn = document.getElementById('btn-toggle-motion');
       const statusText = document.getElementById('motion-status-text');
       const calBtn = document.getElementById('btn-calibrate-motion');
       const pauseToggle = document.getElementById('btn-pause-motion-toggle');
 
-      if (active) {
+      if (state === true) {
         if (hud) hud.classList.add('motion-active');
-        if (toggleBtn) toggleBtn.classList.add('active');
-        if (statusText) statusText.innerText = 'Tilt: ON';
-        if (calBtn) calBtn.style.display = 'flex';
-        if (pauseToggle) pauseToggle.innerText = 'Disable';
+        if (toggleBtn) {
+          toggleBtn.classList.remove('pulse-glow');
+          toggleBtn.classList.add('active');
+        }
+        if (statusText) statusText.innerText = 'TILT: ON';
+        if (calBtn) calBtn.style.display = 'inline-flex';
+        if (pauseToggle) pauseToggle.innerText = 'Disable Tilt';
+      } else if (state === 'connecting') {
+        if (statusText) statusText.innerText = 'CONNECTING...';
+        if (toggleBtn) toggleBtn.classList.remove('active');
+        if (pauseToggle) pauseToggle.innerText = 'Connecting...';
       } else {
         if (hud) hud.classList.remove('motion-active');
-        if (toggleBtn) toggleBtn.classList.remove('active');
-        if (statusText) statusText.innerText = 'Tilt: OFF';
+        if (toggleBtn) {
+          toggleBtn.classList.remove('active');
+          toggleBtn.classList.add('pulse-glow');
+        }
+        if (statusText) {
+          statusText.innerText = reason ? `Tilt: ${reason}` : 'ENABLE TILT';
+        }
         if (calBtn) calBtn.style.display = 'none';
-        if (pauseToggle) pauseToggle.innerText = 'Enable';
+        if (pauseToggle) pauseToggle.innerText = 'Enable Tilt';
+      }
+    }
+
+    function onOrientationChange() {
+      // Re-calibrate neutral holding angle on orientation change to prevent sudden veering
+      isTiltCalibrated = false;
+      targetTiltSteer = 0;
+      smoothedTiltSteer = 0;
+      // Re-check rotate prompt
+      document.body.classList.remove('dismiss-rotate');
+      setTimeout(onWindowResize, 150);
+    }
+    if (screen.orientation && screen.orientation.addEventListener) {
+      screen.orientation.addEventListener('change', onOrientationChange);
+    }
+    window.addEventListener('orientationchange', onOrientationChange);
+
+    // Auto remove device frame on mobile/tablet viewports on load
+    if (window.innerWidth <= 1024 || ('ontouchstart' in window) || (navigator.maxTouchPoints > 0)) {
+      const gc = document.getElementById('game-container');
+      if (gc && (window.innerWidth <= 1024 || window.innerHeight <= 600)) {
+        gc.classList.remove('device-frame');
       }
     }
 
     // Expose helpers on window for automated test harnesses
-    window.enableMotionControls = enableMotionControls;
+    window.requestMotionPermissionAndEnable = requestMotionPermissionAndEnable;
+    window.enableMotionControls = requestMotionPermissionAndEnable; // alias for backwards compatibility
     window.disableMotionControls = disableMotionControls;
-    window.toggleMotionControls = toggleMotionControls;
+    window.toggleMotionControls = requestMotionPermissionAndEnable; // alias
     window.calibrateTilt = calibrateTilt;
     window.handleDeviceOrientation = handleDeviceOrientation;
+    window.dismissRotatePrompt = dismissRotatePrompt;
     Object.defineProperty(window, 'motionControlsActive', {
       get() { return motionControlsActive; },
       set(v) { motionControlsActive = v; updateMotionUI(v); }
