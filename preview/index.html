@@ -3655,13 +3655,13 @@
       // Calculate relative tilt from neutral holding angle
       const relTilt = rawTiltAngle - neutralTiltAngle;
 
-      // Apply dead zone and clamp
+      // Apply dead zone and clamp (reverse horizontal tilt mapping: left tilt -> steer left, right tilt -> steer right)
       if (Math.abs(relTilt) <= TILT_DEADZONE) {
         targetTiltSteer = 0;
       } else {
         const sign = Math.sign(relTilt);
         const mag = Math.min(1.0, (Math.abs(relTilt) - TILT_DEADZONE) / (TILT_MAX - TILT_DEADZONE));
-        targetTiltSteer = sign * mag;
+        targetTiltSteer = -sign * mag;
       }
     }
 
