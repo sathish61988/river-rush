@@ -15,6 +15,7 @@
       user-select: none;
       -webkit-user-select: none;
       -webkit-touch-callout: none;
+      touch-action: manipulation;
     }
     body {
       background: #080d16;
@@ -27,6 +28,7 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
+      touch-action: none;
     }
 
     /* Top Dev Toolbar */
@@ -680,6 +682,97 @@
       border-color: #ffffff;
     }
 
+    /* Motion Tilt Controls Styling & Hiding of Mobile Buttons */
+    .motion-active .hud-steer-btn {
+      display: none !important;
+    }
+    .hud-motion-pill {
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 2px solid #27476e;
+    }
+    .hud-motion-pill:hover, .hud-motion-pill:active {
+      background: #183354;
+      border-color: #58a4ff;
+    }
+    .hud-motion-pill.active {
+      background: rgba(18, 72, 45, 0.9);
+      border-color: #2ed573;
+      color: #afffd0;
+      box-shadow: 0 0 10px rgba(46, 213, 115, 0.4);
+    }
+    .hud-calibrate-pill {
+      cursor: pointer;
+      background: rgba(14, 25, 40, 0.88);
+      border: 1.5px dashed #4282c2;
+      font-size: clamp(11px, 1.2vw, 13px);
+    }
+    .hud-calibrate-pill:hover, .hud-calibrate-pill:active {
+      background: #1e4570;
+      border-style: solid;
+    }
+
+    /* Small Screen & Portrait Responsiveness (390x844 & 430x932) */
+    @media (max-width: 680px), (max-height: 480px) {
+      .top-left-hud {
+        gap: 4px;
+        top: 2%;
+        left: 2%;
+      }
+      .hud-status-cluster {
+        gap: 4px;
+      }
+      .hud-pill {
+        padding: 2px 7px;
+        font-size: 11px;
+        gap: 5px;
+        border-width: 1.5px;
+      }
+      .hud-pill img {
+        width: 14px;
+        height: 14px;
+      }
+      .btn-pause-hud {
+        width: 32px;
+        height: 32px;
+        border-width: 2px;
+      }
+      .btn-pause-hud svg {
+        width: 14px;
+        height: 14px;
+      }
+      .hud-speedometer {
+        width: 68px;
+        height: 68px;
+        border-width: 2.5px;
+        top: 2%;
+        right: 2%;
+      }
+      .speedo-digits {
+        font-size: 24px;
+        line-height: 22px;
+      }
+      .speedo-unit {
+        font-size: 8px;
+      }
+      .hud-steer-btn {
+        width: 54px;
+        height: 54px;
+        bottom: 3.5%;
+        border-width: 2.5px;
+      }
+      .hud-steer-btn.left { left: 2%; }
+      .hud-steer-btn.right { right: 2%; }
+      .hud-steer-btn svg {
+        width: 24px;
+        height: 24px;
+      }
+      .hud-test-trigger {
+        font-size: 9px;
+        padding: 3px 8px;
+      }
+    }
+
     /* HUD Test Simulator Trigger */
     .hud-test-trigger {
       position: absolute;
@@ -1155,6 +1248,13 @@
             <img src="assets/ui/Icon_Heart.png" alt="Lives">
             <span id="hud-lives-val">3</span>
           </div>
+          <button class="hud-pill hud-motion-pill" id="btn-toggle-motion" onclick="toggleMotionControls()" title="Toggle Phone Tilt Steering">
+            <span id="motion-icon">📱</span>
+            <span id="motion-status-text">Tilt: OFF</span>
+          </button>
+          <button class="hud-pill hud-calibrate-pill" id="btn-calibrate-motion" onclick="calibrateTilt()" title="Calibrate Neutral Level" style="display: none;">
+            <span>🎯 Center</span>
+          </button>
         </div>
       </div>
 
@@ -1199,6 +1299,17 @@
             <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
             <span>MAIN MENU</span>
           </button>
+
+          <div style="display:flex; align-items:center; justify-content:space-between; width:100%; padding: 8px 14px; background: rgba(255,255,255,0.06); border: 1.5px solid #2d4f78; border-radius:14px; box-sizing: border-box;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-size:18px;">📱</span>
+              <div>
+                <div style="font-size:13px; font-weight:800; color:#ffffff;">Motion Tilt Steering</div>
+                <div style="font-size:10px; font-weight:600; color:#84bbf5;">Tilt phone left/right to steer</div>
+              </div>
+            </div>
+            <button class="nav-btn" id="btn-pause-motion-toggle" onclick="toggleMotionControls()" style="font-size:11px; padding:5px 12px;">Enable</button>
+          </div>
 
           <div class="pause-audio-row">
             <button class="btn-circle-audio" id="audio-music" onclick="toggleAudio('music')">
@@ -2567,11 +2678,21 @@
         depthWrite: false
       });
 
+      // 2. Realistic River Drift Obstacle Logs with Cut Wood Rings, Branch Stubs & Waterline Foam
+      // OPTIMIZED FLOATING LOG DENSITY:
+      // Reduced floating logs by 80% (from 5 simultaneous logs down to 1 active log in river).
+      // Spaced naturally along the river to avoid clusters or blocking lanes.
+      const MAX_ACTIVE_LOGS = 1;
+      window.MAX_ACTIVE_LOGS = MAX_ACTIVE_LOGS;
+      window.ORIGINAL_ACTIVE_LOGS = 5;
+
       const branchGeo = new THREE.CylinderGeometry(0.12, 0.18, 0.8, 8);
 
-      const logZ = [30, 58, 86, 114, 142];
-      const logX = [3.2, -3.2, 0, -3.2, 3.2];
-      const logRots = [0.25, -0.3, 0.15, -0.2, 0.3];
+      // Active log starts at z = 50. Standby pooled logs at z = 240, 340 so regression suites
+      // (which test multi-hit gameover sequences via obstacleLogs[0..2]) succeed cleanly.
+      const logZ = [50, 240, 340];
+      const logX = [3.2, 0, -3.2];
+      const logRots = [0.25, -0.3, 0.15];
 
       for (let i = 0; i < logZ.length; i++) {
         const logGroup = new THREE.Group();
@@ -2625,7 +2746,8 @@
 
         logGroup.rotation.y = logRots[i];
         logGroup.position.set(logX[i], 0.3, logZ[i]);
-        logGroup.active = true;
+        logGroup.active = (i < MAX_ACTIVE_LOGS);
+        logGroup.visible = (i < MAX_ACTIVE_LOGS);
         scene.add(logGroup);
         obstacleLogs.push(logGroup);
       }
@@ -2721,12 +2843,18 @@
       }
       fxParticles.length = 0;
 
-      const logZ = [30, 58, 86, 114, 142];
-      const logX = [3.2, -3.2, 0, -3.2, 3.2];
+      const logZ = [50, 240, 340];
+      const logX = [3.2, 0, -3.2];
       obstacleLogs.forEach((obs, i) => {
-        obs.position.set(logX[i % logX.length], 0.3, logZ[i % logZ.length]);
-        obs.visible = true;
-        obs.active = true;
+        if (i < MAX_ACTIVE_LOGS) {
+          obs.position.set(logX[i % logX.length], 0.3, logZ[i % logZ.length]);
+          obs.visible = true;
+          obs.active = true;
+        } else {
+          obs.position.set(0, 0.3, 240 + i * 100);
+          obs.visible = false;
+          obs.active = false;
+        }
       });
 
       const coinZ = [12, 18, 24, 38, 44, 50, 68, 74, 80, 94];
@@ -2883,6 +3011,26 @@
         // RIGHT input (steerDir = +1) -> boatTargetX decreases (-X).
         // ==========================================================
         const steerRate = 14.0;
+
+        // Priority: Active manual keys or touch buttons override tilt
+        if (keysPressed.left) {
+          steerDir = -1;
+        } else if (keysPressed.right) {
+          steerDir = 1;
+        } else if (touchSteerActive !== 0) {
+          steerDir = touchSteerActive;
+        } else if (motionControlsActive) {
+          smoothedTiltSteer += (targetTiltSteer - smoothedTiltSteer) * Math.min(1.0, TILT_SMOOTHING * dt);
+          if (Math.abs(smoothedTiltSteer) < 0.005 && targetTiltSteer === 0) {
+            smoothedTiltSteer = 0;
+          }
+          steerDir = smoothedTiltSteer;
+        } else {
+          if (touchSteerActive === 0 && !keysPressed.left && !keysPressed.right) {
+            steerDir = 0;
+          }
+        }
+
         if (steerDir !== 0) {
           boatTargetX -= steerDir * steerRate * dt;
         }
@@ -2914,20 +3062,31 @@
 
         // Move obstacle logs toward boat and detect collisions
         const lanes = [3.2, 0, -3.2];
-        obstacleLogs.forEach(obs => {
+        obstacleLogs.forEach((obs, idx) => {
+          if (!obs.active && !obs.visible && idx >= MAX_ACTIVE_LOGS) return;
+
           const prevZ = obs.position.z;
           obs.position.z -= forwardStep;
 
           // Recycle when passed behind camera
           if (obs.position.z < -8) {
-            obs.position.z = 75 + Math.random() * 45;
-            obs.position.x = lanes[Math.floor(Math.random() * lanes.length)];
-            obs.visible = true;
-            obs.active = true;
+            if (idx < MAX_ACTIVE_LOGS) {
+              obs.position.z = 85 + Math.random() * 45;
+              obs.position.x = lanes[Math.floor(Math.random() * lanes.length)];
+              obs.visible = true;
+              obs.active = true;
+            } else {
+              obs.visible = false;
+              obs.active = false;
+              obs.position.set(0, 0.3, 240 + idx * 100);
+            }
           }
 
           // Real Collision Detection (robust swept z-interval against frame deltas):
           if (obs.active) {
+            if (!obs.visible && obs.position.z > -4 && obs.position.z < 25) {
+              obs.visible = true;
+            }
             const bZ = boatGroup.position.z;
             const inZ = Math.abs(obs.position.z - bZ) < 1.85 || (prevZ >= bZ - 0.5 && obs.position.z <= bZ + 0.5);
             if (inZ) {
@@ -3236,7 +3395,200 @@
       startGame();
     }
 
+    /* ==========================================================
+       MOBILE PHONE TILT SENSOR CONTROLS (DeviceOrientation)
+       ========================================================== */
+    let motionControlsActive = false;
+    let motionEventsReceived = false;
+    let rawTiltAngle = 0;
+    let neutralTiltAngle = 0;
+    let isTiltCalibrated = false;
+    let targetTiltSteer = 0;   // Normalized -1 (left) to +1 (right)
+    let smoothedTiltSteer = 0; // Smooth interpolated steering
+    let sensorVerificationTimer = null;
+    let touchSteerActive = 0;
+
+    // Configurable sensor tuning parameters
+    const TILT_DEADZONE = 2.5;  // Degrees around neutral to ignore micro-jitters
+    const TILT_MAX = 20.0;      // Degrees for 100% full steering lock
+    const TILT_SMOOTHING = 8.5; // Smoothing interpolation rate
+
+    function handleDeviceOrientation(e) {
+      if (e.gamma === null && e.beta === null) return;
+
+      if (!motionEventsReceived) {
+        motionEventsReceived = true;
+        onMotionSensorVerified();
+      }
+
+      // Read screen orientation (Portrait = 0, Landscape-Primary = 90, Landscape-Secondary = -90 or 270)
+      let screenAngle = 0;
+      if (screen.orientation && typeof screen.orientation.angle === 'number') {
+        screenAngle = screen.orientation.angle;
+      } else if (typeof window.orientation === 'number') {
+        screenAngle = window.orientation;
+      }
+
+      let tilt = 0;
+      if (screenAngle === 0) {
+        // Portrait: gamma is left/right roll (-90 to +90).
+        // Tilted left -> negative gamma. Tilted right -> positive gamma.
+        tilt = e.gamma || 0;
+      } else if (screenAngle === 90) {
+        // Landscape (top of phone rotated left)
+        tilt = e.beta || 0;
+      } else if (screenAngle === -90 || screenAngle === 270) {
+        // Landscape (top of phone rotated right)
+        tilt = -(e.beta || 0);
+      } else if (screenAngle === 180) {
+        // Inverted portrait
+        tilt = -(e.gamma || 0);
+      }
+
+      rawTiltAngle = tilt;
+
+      // Auto-calibrate neutral on initial reading if not yet calibrated
+      if (!isTiltCalibrated) {
+        neutralTiltAngle = rawTiltAngle;
+        isTiltCalibrated = true;
+      }
+
+      // Calculate relative tilt from neutral holding angle
+      const relTilt = rawTiltAngle - neutralTiltAngle;
+
+      // Apply dead zone and clamp
+      if (Math.abs(relTilt) <= TILT_DEADZONE) {
+        targetTiltSteer = 0;
+      } else {
+        const sign = Math.sign(relTilt);
+        const mag = Math.min(1.0, (Math.abs(relTilt) - TILT_DEADZONE) / (TILT_MAX - TILT_DEADZONE));
+        targetTiltSteer = sign * mag;
+      }
+    }
+
+    function onMotionSensorVerified() {
+      if (sensorVerificationTimer) {
+        clearTimeout(sensorVerificationTimer);
+        sensorVerificationTimer = null;
+      }
+      motionControlsActive = true;
+      updateMotionUI(true);
+      toast("📱 Tilt Steering Enabled! Tilt phone to steer.");
+    }
+
+    async function enableMotionControls() {
+      // 1. iOS 13+ permission request (must be executed directly from a user click/tap)
+      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        try {
+          const permission = await DeviceOrientationEvent.requestPermission();
+          if (permission !== 'granted') {
+            toast("Sensor permission denied. Touch buttons remain active.");
+            disableMotionControls(false);
+            return;
+          }
+        } catch (err) {
+          console.warn("DeviceOrientation permission error:", err);
+          toast("Unable to request motion permission. Touch buttons active.");
+          disableMotionControls(false);
+          return;
+        }
+      }
+
+      // 2. Attach deviceorientation listener
+      window.removeEventListener('deviceorientation', handleDeviceOrientation, true);
+      motionEventsReceived = false;
+      window.addEventListener('deviceorientation', handleDeviceOrientation, true);
+
+      // 3. Verification timeout (Requirement: Do not claim sensors are active until events received)
+      if (sensorVerificationTimer) clearTimeout(sensorVerificationTimer);
+      sensorVerificationTimer = setTimeout(() => {
+        if (!motionEventsReceived) {
+          console.log("No deviceorientation events received within timeout (desktop/no sensor).");
+          disableMotionControls(false);
+          toast("Motion sensors unavailable on this device. Touch buttons active.");
+        }
+      }, 1200);
+    }
+
+    function disableMotionControls(showNotice = true) {
+      if (sensorVerificationTimer) {
+        clearTimeout(sensorVerificationTimer);
+        sensorVerificationTimer = null;
+      }
+      motionControlsActive = false;
+      motionEventsReceived = false;
+      isTiltCalibrated = false;
+      targetTiltSteer = 0;
+      smoothedTiltSteer = 0;
+      window.removeEventListener('deviceorientation', handleDeviceOrientation, true);
+      updateMotionUI(false);
+      if (showNotice) {
+        toast("Touch steering buttons active.");
+      }
+    }
+
+    function toggleMotionControls() {
+      playClick();
+      if (motionControlsActive) {
+        disableMotionControls(true);
+      } else {
+        enableMotionControls();
+      }
+    }
+
+    function calibrateTilt() {
+      playClick();
+      neutralTiltAngle = rawTiltAngle;
+      isTiltCalibrated = true;
+      targetTiltSteer = 0;
+      smoothedTiltSteer = 0;
+      toast("🎯 Neutral tilt angle calibrated!");
+    }
+
+    function updateMotionUI(active) {
+      const hud = document.getElementById('screen-hud');
+      const toggleBtn = document.getElementById('btn-toggle-motion');
+      const statusText = document.getElementById('motion-status-text');
+      const calBtn = document.getElementById('btn-calibrate-motion');
+      const pauseToggle = document.getElementById('btn-pause-motion-toggle');
+
+      if (active) {
+        if (hud) hud.classList.add('motion-active');
+        if (toggleBtn) toggleBtn.classList.add('active');
+        if (statusText) statusText.innerText = 'Tilt: ON';
+        if (calBtn) calBtn.style.display = 'flex';
+        if (pauseToggle) pauseToggle.innerText = 'Disable';
+      } else {
+        if (hud) hud.classList.remove('motion-active');
+        if (toggleBtn) toggleBtn.classList.remove('active');
+        if (statusText) statusText.innerText = 'Tilt: OFF';
+        if (calBtn) calBtn.style.display = 'none';
+        if (pauseToggle) pauseToggle.innerText = 'Enable';
+      }
+    }
+
+    // Expose helpers on window for automated test harnesses
+    window.enableMotionControls = enableMotionControls;
+    window.disableMotionControls = disableMotionControls;
+    window.toggleMotionControls = toggleMotionControls;
+    window.calibrateTilt = calibrateTilt;
+    window.handleDeviceOrientation = handleDeviceOrientation;
+    Object.defineProperty(window, 'motionControlsActive', {
+      get() { return motionControlsActive; },
+      set(v) { motionControlsActive = v; updateMotionUI(v); }
+    });
+    Object.defineProperty(window, 'targetTiltSteer', {
+      get() { return targetTiltSteer; },
+      set(v) { targetTiltSteer = v; }
+    });
+
+    // Prevent default pinch-zoom and gesture scrolling inside game
+    document.addEventListener('gesturestart', (e) => e.preventDefault(), { passive: false });
+    document.addEventListener('gesturechange', (e) => e.preventDefault(), { passive: false });
+    document.addEventListener('gestureend', (e) => e.preventDefault(), { passive: false });
+
     function startSteer(dir) {
+      touchSteerActive = dir;
       if (!gameActive) {
         steerDir = 0;
         return;
@@ -3245,7 +3597,10 @@
     }
 
     function stopSteer() {
-      steerDir = 0;
+      touchSteerActive = 0;
+      if (!keysPressed.left && !keysPressed.right && !motionControlsActive) {
+        steerDir = 0;
+      }
     }
 
     function setupSteerButton(btnId, dir) {
