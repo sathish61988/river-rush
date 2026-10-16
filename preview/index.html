@@ -1,0 +1,3429 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>River Rush - Boat Adventure UI Preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700;800;900&family=Teko:wght@700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+    body {
+      background: #080d16;
+      color: #ffffff;
+      font-family: 'Outfit', sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Top Dev Toolbar */
+    #dev-toolbar {
+      position: absolute;
+      top: 10px;
+      z-index: 1000;
+      background: rgba(10, 18, 30, 0.88);
+      border: 1px solid rgba(80, 160, 240, 0.4);
+      backdrop-filter: blur(8px);
+      border-radius: 30px;
+      padding: 5px 12px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 6px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+      max-width: 96vw;
+    }
+    .nav-btn {
+      background: #142842;
+      border: 1px solid #28548a;
+      color: #9ac4f8;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 5px 11px;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    .nav-btn:hover, .nav-btn.active {
+      background: #1e70d4;
+      color: #fff;
+      border-color: #58a4ff;
+      box-shadow: 0 0 10px rgba(30, 112, 212, 0.6);
+    }
+
+    /* Game Container */
+    #game-container {
+      position: relative;
+      width: min(100vw, calc(100vh * (16 / 9)));
+      height: min(100vh, calc(100vw * (9 / 16)));
+      aspect-ratio: 16 / 9;
+      background: #0d1e30;
+      overflow: hidden;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Device frame styling */
+    #game-container.device-frame {
+      border: 12px solid #161c28;
+      border-radius: 32px;
+      box-shadow: 0 0 0 4px #2a3448, 0 25px 60px rgba(0,0,0,0.9);
+      width: min(92vw, calc(86vh * (16 / 9)));
+      height: min(86vh, calc(92vw * (9 / 16)));
+      max-width: 1920px;
+      max-height: 1080px;
+    }
+
+    /* ThreeJS WebGL Canvas */
+    #webgl-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    /* Screen UI Overlay */
+    .screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 10;
+      pointer-events: none;
+      display: none;
+      opacity: 0;
+      transition: opacity 0.2s ease-out;
+      overflow: hidden;
+    }
+    .screen.active {
+      display: block;
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    /* Interactive Elements Pointer Events */
+    button, .interactive {
+      pointer-events: auto;
+      cursor: pointer;
+    }
+
+    /* Button Press Feedback */
+    button {
+      outline: none;
+      border: none;
+      transition: transform 0.08s ease, filter 0.1s ease;
+    }
+    button:active {
+      transform: scale(0.95) !important;
+      filter: brightness(1.15);
+    }
+
+    /* =========================================
+       SCREEN 1: MAIN MENU
+       ========================================= */
+    #screen-main-menu {
+      background: url('assets/env/BG_MainMenu.png') center/cover no-repeat;
+    }
+    .main-logo-container {
+      position: absolute;
+      top: 4%;
+      left: 5%;
+      width: clamp(200px, 28vw, 420px);
+      animation: floatLogo 3.5s ease-in-out infinite;
+      z-index: 20;
+    }
+    .main-logo-container img {
+      width: 100%;
+      height: auto;
+      filter: drop-shadow(0 10px 25px rgba(0, 0, 0, 0.65));
+    }
+    @keyframes floatLogo {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      50% { transform: translateY(-7px) rotate(-0.8deg); }
+    }
+
+    /* Left Side Utilities */
+    .left-side-utils {
+      position: absolute;
+      left: 3.5%;
+      bottom: 5%;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      z-index: 20;
+    }
+    .square-util-btn {
+      width: clamp(54px, 5.8vw, 76px);
+      height: clamp(54px, 5.8vw, 76px);
+      background: linear-gradient(180deg, #1f334d 0%, #122033 100%);
+      border: 2.5px solid #2d4c72;
+      border-radius: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.45);
+      cursor: pointer;
+    }
+    .square-util-btn img {
+      width: clamp(22px, 2.4vw, 32px);
+      height: clamp(22px, 2.4vw, 32px);
+      margin-bottom: 2px;
+    }
+    .square-util-btn span {
+      font-size: clamp(8px, 0.8vw, 10px);
+      font-weight: 700;
+      color: #b5d5ff;
+      letter-spacing: 0.5px;
+    }
+
+    /* Right Main Buttons */
+    .right-main-buttons {
+      position: absolute;
+      right: 3.5%;
+      bottom: 5%;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: flex-end;
+      z-index: 20;
+    }
+    .btn-play-large {
+      width: clamp(210px, 23vw, 320px);
+      height: clamp(60px, 6.8vw, 84px);
+      background: linear-gradient(180deg, #4ec322 0%, #299312 90%, #16550a 100%);
+      border: 3.5px solid #16550a;
+      border-radius: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      font-size: clamp(24px, 2.8vw, 36px);
+      font-weight: 900;
+      color: #fff;
+      text-shadow: 0 3px 6px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 8px 25px rgba(41, 147, 18, 0.5), inset 0 2px 4px rgba(255, 255, 255, 0.4);
+      cursor: pointer;
+    }
+    .btn-play-large svg {
+      width: clamp(24px, 2.8vw, 36px);
+      height: clamp(24px, 2.8vw, 36px);
+      fill: #fff;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+    }
+    .btn-blue-main {
+      width: clamp(190px, 20vw, 280px);
+      height: clamp(50px, 5.5vw, 68px);
+      background: linear-gradient(180deg, #1a7eda 0%, #0e56a8 90%, #073064 100%);
+      border: 3px solid #073064;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      padding-left: clamp(16px, 1.8vw, 26px);
+      gap: 14px;
+      font-size: clamp(18px, 2vw, 26px);
+      font-weight: 800;
+      color: #fff;
+      text-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 6px 20px rgba(14, 86, 168, 0.4), inset 0 2px 4px rgba(255, 255, 255, 0.3);
+      cursor: pointer;
+    }
+    .btn-blue-main img {
+      width: clamp(22px, 2.3vw, 30px);
+      height: clamp(22px, 2.3vw, 30px);
+    }
+
+    /* =========================================
+       COMMON TOP HEADER ROW
+       ========================================= */
+    .top-header-row {
+      position: absolute;
+      top: 3.5%;
+      left: 3.5%;
+      right: 3.5%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 30;
+    }
+    .btn-square-back {
+      width: clamp(46px, 4.8vw, 58px);
+      height: clamp(46px, 4.8vw, 58px);
+      background: linear-gradient(180deg, #1e3654 0%, #102034 100%);
+      border: 2.5px solid #2b4d75;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .btn-square-back svg {
+      width: clamp(20px, 2.2vw, 26px);
+      height: clamp(20px, 2.2vw, 26px);
+      fill: #fff;
+    }
+    .header-pill-title {
+      background: linear-gradient(180deg, #1a324e 0%, #0c1a2c 100%);
+      border: 2.5px solid #2e5582;
+      border-radius: 30px;
+      padding: clamp(6px, 0.8vw, 9px) clamp(22px, 3.2vw, 42px);
+      font-size: clamp(16px, 1.8vw, 22px);
+      font-weight: 800;
+      letter-spacing: 1px;
+      color: #ffffff;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+      white-space: nowrap;
+    }
+    .coin-counter-pill {
+      background: linear-gradient(180deg, #122438 0%, #0a1522 100%);
+      border: 2px solid #254468;
+      border-radius: 25px;
+      padding: clamp(5px, 0.7vw, 7px) clamp(10px, 1.2vw, 15px);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: clamp(15px, 1.7vw, 20px);
+      font-weight: 800;
+      color: #fff;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+      flex-shrink: 0;
+    }
+    .coin-counter-pill img {
+      width: clamp(20px, 2.2vw, 26px);
+      height: clamp(20px, 2.2vw, 26px);
+    }
+    .btn-plus-green {
+      background: #39b524;
+      border: none;
+      width: clamp(20px, 2vw, 24px);
+      height: clamp(20px, 2vw, 24px);
+      border-radius: 50%;
+      color: #fff;
+      font-weight: 900;
+      font-size: clamp(14px, 1.4vw, 16px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    /* =========================================
+       SCREEN 2: BOAT SELECTION
+       ========================================= */
+    #screen-boat-select {
+      background: url('assets/env/BG_BoatSelect.png') center/cover no-repeat;
+    }
+    .carousel-arrow {
+      position: absolute;
+      top: 36%;
+      transform: translateY(-50%);
+      width: clamp(44px, 4.6vw, 56px);
+      height: clamp(44px, 4.6vw, 56px);
+      background: rgba(14, 28, 44, 0.85);
+      border: 2.5px solid rgba(80, 150, 220, 0.55);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+      z-index: 25;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    }
+    .carousel-arrow.left { left: 3%; }
+    .carousel-arrow.right { right: 3%; }
+    .carousel-arrow svg {
+      width: clamp(22px, 2.3vw, 28px);
+      height: clamp(22px, 2.3vw, 28px);
+      fill: #fff;
+    }
+
+    /* Center Boat Showcase */
+    .boat-showcase-container {
+      position: absolute;
+      top: 12%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(560px, 82%);
+      height: clamp(140px, 32vh, 260px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 15;
+      pointer-events: none;
+    }
+    .boat-showcase-container img {
+      max-width: 90%;
+      max-height: 90%;
+      object-fit: contain;
+      border-radius: 20px;
+      -webkit-mask-image: radial-gradient(circle closest-side, rgba(0,0,0,1) 68%, rgba(0,0,0,0) 98%);
+      mask-image: radial-gradient(circle closest-side, rgba(0,0,0,1) 68%, rgba(0,0,0,0) 98%);
+      filter: drop-shadow(0 14px 28px rgba(0, 0, 0, 0.75));
+      transition: transform 0.25s cubic-bezier(0.18, 0.89, 0.32, 1.28), opacity 0.2s ease;
+    }
+
+    /* Boat Stats Card */
+    .boat-stats-card {
+      position: absolute;
+      bottom: calc(clamp(44px, 5.8vw, 68px) + 3.5%);
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(620px, 88%);
+      background: linear-gradient(180deg, rgba(16, 28, 44, 0.95) 0%, rgba(9, 17, 28, 0.98) 100%);
+      border: 2.5px solid #2d4f78;
+      border-radius: 20px;
+      padding: clamp(8px, 1.1vw, 14px) clamp(14px, 1.6vw, 22px);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+      z-index: 25;
+    }
+    .boat-info-col {
+      display: flex;
+      flex-direction: column;
+      gap: clamp(3px, 0.5vw, 6px);
+      flex: 1;
+      min-width: 0;
+    }
+    .boat-name {
+      font-size: clamp(16px, 2vw, 24px);
+      font-weight: 900;
+      color: #ffffff;
+      letter-spacing: 0.5px;
+    }
+    .stat-row {
+      display: flex;
+      align-items: center;
+      gap: clamp(6px, 0.9vw, 12px);
+      font-size: clamp(10px, 1.1vw, 13px);
+      font-weight: 700;
+      color: #9ac2ef;
+    }
+    .stat-label {
+      width: clamp(55px, 6.5vw, 70px);
+      flex-shrink: 0;
+    }
+    .stat-segments {
+      display: flex;
+      gap: clamp(3px, 0.4vw, 5px);
+    }
+    .stat-seg {
+      width: clamp(14px, 1.8vw, 22px);
+      height: clamp(9px, 1.1vw, 12px);
+      background: #142232;
+      border-radius: 3px;
+      border: 1px solid #223850;
+      transition: background 0.2s ease;
+    }
+    .stat-seg.filled {
+      background: linear-gradient(180deg, #5ae12d 0%, #37af19 100%);
+      border-color: #1e700f;
+      box-shadow: 0 0 6px rgba(90, 225, 45, 0.5);
+    }
+    .btn-select-boat {
+      min-width: clamp(125px, 15vw, 175px);
+      height: clamp(42px, 4.8vw, 54px);
+      padding: 0 clamp(10px, 1.2vw, 16px);
+      background: linear-gradient(180deg, #ffc61e 0%, #e4940a 90%, #915505 100%);
+      border: 2.5px solid #915505;
+      border-radius: 14px;
+      font-size: clamp(14px, 1.6vw, 19px);
+      font-weight: 900;
+      color: #fff;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 6px 20px rgba(228, 148, 10, 0.4);
+      cursor: pointer;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+    }
+
+    /* Boat Thumbnail Bar */
+    .boat-thumb-strip {
+      position: absolute;
+      bottom: 2%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(620px, 90%);
+      display: flex;
+      justify-content: center;
+      gap: clamp(6px, 1vw, 12px);
+      z-index: 25;
+    }
+    .boat-thumb-slot {
+      flex: 1;
+      max-width: 108px;
+      height: clamp(44px, 5.8vw, 68px);
+      background: #0f1c2d;
+      border: 2.5px solid #254468;
+      border-radius: 14px;
+      overflow: hidden;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.15s ease;
+    }
+    .boat-thumb-slot img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .boat-thumb-slot.selected {
+      border: 3.5px solid #ffdb2a;
+      box-shadow: 0 0 16px rgba(255, 219, 42, 0.7);
+      transform: scale(1.05);
+    }
+
+    /* =========================================
+       SCREEN 3: MAP SELECTION
+       ========================================= */
+    #screen-map-select {
+      background: url('assets/env/BG_MapSelect.png') center/cover no-repeat;
+    }
+    .map-grid-container {
+      position: absolute;
+      top: 54%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: min(820px, 86%);
+      height: min(470px, 68%);
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: clamp(10px, 1.5vw, 20px);
+      z-index: 20;
+    }
+    .map-card {
+      border-radius: 18px;
+      overflow: hidden;
+      position: relative;
+      cursor: pointer;
+      border: 3px solid #254468;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+      background: #0e1b2b;
+    }
+    .map-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.35s ease;
+    }
+    .map-card:hover img {
+      transform: scale(1.05);
+    }
+    .map-card.selected {
+      border: 3.5px solid #ffdb2a;
+      box-shadow: 0 0 25px rgba(255, 219, 42, 0.8);
+      transform: scale(1.02);
+    }
+    .map-card-name-pill {
+      position: absolute;
+      bottom: clamp(6px, 1vw, 12px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(10, 20, 32, 0.92);
+      border: 2px solid #2d4f78;
+      border-radius: 20px;
+      padding: clamp(3px, 0.4vw, 5px) clamp(12px, 1.8vw, 22px);
+      font-size: clamp(11px, 1.3vw, 15px);
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      color: #fff;
+      backdrop-filter: blur(4px);
+      white-space: nowrap;
+    }
+
+    /* =========================================
+       SCREEN 4: IN-GAME HUD
+       ========================================= */
+    #screen-hud {
+      background: transparent;
+    }
+    .top-left-hud {
+      position: absolute;
+      top: 3.5%;
+      left: 3%;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      z-index: 20;
+    }
+    .btn-pause-hud {
+      width: clamp(48px, 5.2vw, 60px);
+      height: clamp(48px, 5.2vw, 60px);
+      background: linear-gradient(180deg, #1b3552 0%, #0e1e32 100%);
+      border: 2.5px solid #2d527c;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .btn-pause-hud svg {
+      width: clamp(20px, 2.2vw, 24px);
+      height: clamp(20px, 2.2vw, 24px);
+      fill: #fff;
+    }
+    .hud-status-cluster {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .hud-pill {
+      background: rgba(14, 25, 40, 0.88);
+      border: 2px solid #27476e;
+      border-radius: 20px;
+      padding: clamp(3px, 0.4vw, 5px) clamp(10px, 1.2vw, 14px);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: clamp(14px, 1.5vw, 18px);
+      font-weight: 800;
+      color: #ffffff;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(4px);
+    }
+    .hud-pill img {
+      width: clamp(18px, 2vw, 22px);
+      height: clamp(18px, 2vw, 22px);
+    }
+
+    /* Speedometer Gauge (Top-Right) */
+    .hud-speedometer {
+      position: absolute;
+      top: 3%;
+      right: 3%;
+      width: clamp(96px, 11vw, 130px);
+      height: clamp(96px, 11vw, 130px);
+      background: radial-gradient(circle, #0e1928 0%, #08101a 100%);
+      border: 3.5px solid #2d4f78;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6), inset 0 0 15px rgba(30, 112, 212, 0.3);
+      z-index: 20;
+    }
+    .speedo-digits {
+      font-family: 'Teko', sans-serif;
+      font-size: clamp(36px, 4.2vw, 48px);
+      line-height: clamp(32px, 3.8vw, 42px);
+      font-weight: 700;
+      color: #ffffff;
+      text-shadow: 0 0 10px rgba(80, 160, 255, 0.8);
+    }
+    .speedo-unit {
+      font-size: clamp(10px, 1.1vw, 13px);
+      font-weight: 800;
+      color: #84bbf5;
+      letter-spacing: 1px;
+    }
+
+    /* Steering Controls (Bottom) */
+    .hud-steer-btn {
+      position: absolute;
+      bottom: 4.5%;
+      width: clamp(74px, 8.5vw, 100px);
+      height: clamp(74px, 8.5vw, 100px);
+      background: rgba(12, 35, 52, 0.76);
+      border: 3px solid rgba(80, 180, 230, 0.85);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5), inset 0 0 15px rgba(80, 180, 230, 0.3);
+      backdrop-filter: blur(4px);
+      cursor: pointer;
+      z-index: 20;
+    }
+    .hud-steer-btn.left { left: 3.5%; }
+    .hud-steer-btn.right { right: 3.5%; }
+    .hud-steer-btn svg {
+      width: clamp(32px, 3.8vw, 42px);
+      height: clamp(32px, 3.8vw, 42px);
+      fill: #ffffff;
+      filter: drop-shadow(0 2px 5px rgba(0,0,0,0.4));
+    }
+    .hud-steer-btn:active {
+      background: rgba(30, 110, 160, 0.85);
+      border-color: #ffffff;
+    }
+
+    /* HUD Test Simulator Trigger */
+    .hud-test-trigger {
+      position: absolute;
+      bottom: 4%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(14, 25, 40, 0.8);
+      border: 1.5px solid #2d4f78;
+      border-radius: 14px;
+      padding: 5px 14px;
+      font-size: clamp(10px, 1vw, 12px);
+      font-weight: 700;
+      color: #79a6db;
+      cursor: pointer;
+      z-index: 20;
+    }
+    .hud-test-trigger:hover {
+      background: #1c3656;
+      color: #fff;
+    }
+
+    /* =========================================
+       MODAL COMMON BACKDROP
+       ========================================= */
+    .modal-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(4, 10, 20, 0.78);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      padding: 16px;
+    }
+
+    /* =========================================
+       SCREEN 5: PAUSE MENU
+       ========================================= */
+    .pause-modal-card {
+      width: min(400px, 90%);
+      max-height: 90%;
+      background: linear-gradient(180deg, #101e30 0%, #0a1320 100%);
+      border: 3px solid #2c4c74;
+      border-radius: 24px;
+      padding: clamp(16px, 2vw, 24px) clamp(18px, 2.4vw, 28px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: clamp(10px, 1.4vw, 15px);
+      position: relative;
+      box-shadow: 0 15px 45px rgba(0, 0, 0, 0.8);
+      animation: popIn 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    }
+    @keyframes popIn {
+      0% { transform: scale(0.85); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .pause-title {
+      font-size: clamp(24px, 3vw, 32px);
+      font-weight: 900;
+      letter-spacing: 1px;
+      color: #ffffff;
+      margin-top: 2px;
+    }
+    .btn-red-close {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: clamp(38px, 4.4vw, 46px);
+      height: clamp(38px, 4.4vw, 46px);
+      background: linear-gradient(180deg, #eb412d 0%, #ba2314 100%);
+      border: 2.5px solid #75140b;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(186, 35, 20, 0.4);
+      cursor: pointer;
+    }
+    .btn-red-close svg {
+      width: clamp(16px, 1.8vw, 20px);
+      height: clamp(16px, 1.8vw, 20px);
+      fill: #fff;
+    }
+    .btn-modal-green {
+      width: 100%;
+      height: clamp(48px, 5.5vw, 62px);
+      background: linear-gradient(180deg, #4ec322 0%, #299312 90%, #16550a 100%);
+      border: 3px solid #16550a;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      font-size: clamp(18px, 2.2vw, 24px);
+      font-weight: 900;
+      color: #fff;
+      box-shadow: 0 6px 18px rgba(41, 147, 18, 0.4);
+      cursor: pointer;
+    }
+    .btn-modal-green svg {
+      width: clamp(20px, 2.4vw, 26px);
+      height: clamp(20px, 2.4vw, 26px);
+      fill: #fff;
+    }
+    .btn-modal-blue {
+      width: 100%;
+      height: clamp(48px, 5.5vw, 62px);
+      background: linear-gradient(180deg, #1a7eda 0%, #0e56a8 90%, #073064 100%);
+      border: 3px solid #073064;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      font-size: clamp(18px, 2.2vw, 24px);
+      font-weight: 900;
+      color: #fff;
+      box-shadow: 0 6px 18px rgba(14, 86, 168, 0.4);
+      cursor: pointer;
+    }
+    .btn-modal-blue svg {
+      width: clamp(20px, 2.4vw, 26px);
+      height: clamp(20px, 2.4vw, 26px);
+      fill: #fff;
+    }
+    .pause-audio-row {
+      display: flex;
+      gap: 14px;
+      margin-top: 4px;
+    }
+    .btn-circle-audio {
+      width: clamp(44px, 5vw, 54px);
+      height: clamp(44px, 5vw, 54px);
+      background: #142436;
+      border: 2.5px solid #28476c;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+      cursor: pointer;
+    }
+    .btn-circle-audio svg {
+      width: clamp(20px, 2.3vw, 24px);
+      height: clamp(20px, 2.3vw, 24px);
+      fill: #fff;
+    }
+    .btn-circle-audio.off {
+      opacity: 0.5;
+      background: #0d1622;
+      border-color: #1a2a3e;
+    }
+
+    /* =========================================
+       SCREEN 6: GAME OVER
+       ========================================= */
+    .gameover-modal-card {
+      width: min(420px, 90%);
+      max-height: 92%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      animation: popIn 0.25s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    }
+    .wooden-banner {
+      width: min(340px, 85%);
+      filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.6));
+      margin-bottom: -14px;
+      z-index: 2;
+    }
+    .gameover-body-card {
+      width: 100%;
+      background: linear-gradient(180deg, #101e30 0%, #0a1320 100%);
+      border: 3px solid #2c4c74;
+      border-radius: 24px;
+      padding: clamp(22px, 2.6vw, 28px) clamp(16px, 2vw, 22px) clamp(14px, 1.8vw, 18px) clamp(16px, 2vw, 22px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 15px 45px rgba(0, 0, 0, 0.8);
+      z-index: 1;
+    }
+    .stat-heading {
+      font-size: clamp(12px, 1.3vw, 14px);
+      font-weight: 800;
+      color: #92bae9;
+      letter-spacing: 1px;
+    }
+    .stat-huge-number {
+      font-size: clamp(30px, 3.6vw, 40px);
+      font-weight: 900;
+      color: #ffd629;
+      line-height: clamp(32px, 3.8vw, 42px);
+      margin-bottom: 4px;
+      text-shadow: 0 2px 10px rgba(255, 214, 41, 0.4);
+    }
+    .coin-result-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .coin-result-row img {
+      width: clamp(26px, 3vw, 34px);
+      height: clamp(26px, 3vw, 34px);
+    }
+    .coin-result-row span {
+      font-size: clamp(26px, 3vw, 34px);
+      font-weight: 900;
+      color: #ffffff;
+    }
+    .new-best-score-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: clamp(13px, 1.5vw, 16px);
+      font-weight: 900;
+      color: #ffcc1e;
+      letter-spacing: 0.5px;
+      text-shadow: 0 0 12px rgba(255, 204, 30, 0.6);
+      margin-top: 2px;
+    }
+    .new-best-score-badge svg {
+      width: clamp(18px, 2vw, 22px);
+      height: clamp(18px, 2vw, 22px);
+      fill: #ffcc1e;
+    }
+    .gameover-buttons-row {
+      display: flex;
+      gap: 12px;
+      width: 100%;
+      margin-top: 14px;
+      z-index: 2;
+    }
+    .btn-gameover-home {
+      flex: 1;
+      height: clamp(48px, 5.5vw, 60px);
+      background: linear-gradient(180deg, #1a7eda 0%, #0e56a8 90%, #073064 100%);
+      border: 3px solid #073064;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: clamp(16px, 1.8vw, 20px);
+      font-weight: 900;
+      color: #fff;
+      box-shadow: 0 6px 18px rgba(14, 86, 168, 0.4);
+      cursor: pointer;
+    }
+    .btn-gameover-home svg {
+      width: clamp(18px, 2vw, 22px);
+      height: clamp(18px, 2vw, 22px);
+      fill: #fff;
+    }
+    .btn-gameover-restart {
+      flex: 1.3;
+      height: clamp(48px, 5.5vw, 60px);
+      background: linear-gradient(180deg, #4ec322 0%, #299312 90%, #16550a 100%);
+      border: 3px solid #16550a;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: clamp(16px, 1.8vw, 20px);
+      font-weight: 900;
+      color: #fff;
+      box-shadow: 0 6px 18px rgba(41, 147, 18, 0.4);
+      cursor: pointer;
+    }
+    .btn-gameover-restart svg {
+      width: clamp(18px, 2vw, 22px);
+      height: clamp(18px, 2vw, 22px);
+      fill: #fff;
+    }
+
+    /* Collision Impact Vignette Overlay */
+    .hit-flash-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      background: radial-gradient(ellipse at center, rgba(255, 40, 20, 0) 30%, rgba(255, 30, 10, 0.55) 100%);
+      opacity: 0;
+      transition: opacity 0.05s ease-out;
+      z-index: 45;
+    }
+    .hit-flash-overlay.active {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Developer & Reviewer Toolbar -->
+  <div id="dev-toolbar">
+    <button class="nav-btn active" onclick="switchScreen('main-menu')">1. Main Menu</button>
+    <button class="nav-btn" onclick="switchScreen('hud')">2. In-Game HUD</button>
+    <button class="nav-btn" onclick="switchScreen('pause')">3. Pause Menu</button>
+    <button class="nav-btn" onclick="switchScreen('gameover')">4. Game Over</button>
+    <button class="nav-btn" onclick="switchScreen('boat-select')">5. Select Boat</button>
+    <button class="nav-btn" onclick="switchScreen('map-select')">6. Select Map</button>
+    <button class="nav-btn" onclick="toggleDeviceFrame()" id="frame-toggle-btn">Toggle Frame</button>
+  </div>
+
+  <!-- Game Canvas & Screen UI Container -->
+  <div id="game-container" class="device-frame">
+    <!-- 3D ThreeJS River Scene -->
+    <canvas id="webgl-canvas"></canvas>
+
+    <!-- Collision Impact Vignette Overlay -->
+    <div id="hit-flash" class="hit-flash-overlay"></div>
+
+    <!-- SCREEN 1: MAIN MENU -->
+    <div id="screen-main-menu" class="screen active">
+      <div class="main-logo-container">
+        <img src="assets/ui/RiverRush_Logo.png" alt="River Rush Boat Adventure Logo">
+      </div>
+
+      <div class="left-side-utils">
+        <button class="square-util-btn" onclick="playClick(); toast('Settings menu')">
+          <img src="assets/ui/Icon_Settings.png" alt="Settings">
+          <span>Settings</span>
+        </button>
+        <button class="square-util-btn" onclick="playClick(); toast('Leaderboard opened')">
+          <img src="assets/ui/Icon_Crown.png" alt="Leaderboard">
+          <span>Leaderboard</span>
+        </button>
+        <button class="square-util-btn" onclick="playClick(); toast('More games coming soon')">
+          <img src="assets/ui/Icon_Lock.png" alt="More Games">
+          <span>More Games</span>
+        </button>
+      </div>
+
+      <div class="right-main-buttons">
+        <button class="btn-play-large" onclick="startGame()">
+          <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          <span>PLAY</span>
+        </button>
+        <button class="btn-blue-main" onclick="switchScreen('boat-select')">
+          <img src="assets/ui/Icon_Boat.png" alt="Boats">
+          <span>BOATS</span>
+        </button>
+        <button class="btn-blue-main" onclick="switchScreen('map-select')">
+          <img src="assets/ui/Icon_Map.png" alt="Maps">
+          <span>MAPS</span>
+        </button>
+        <button class="btn-blue-main" onclick="playClick(); toast('Store coming soon')">
+          <img src="assets/ui/Icon_Store.png" alt="Store">
+          <span>STORE</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- SCREEN 2: BOAT SELECTION -->
+    <div id="screen-boat-select" class="screen">
+      <div class="top-header-row">
+        <button class="btn-square-back" onclick="switchScreen('main-menu')">
+          <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+        </button>
+        <div class="header-pill-title">SELECT BOAT</div>
+        <div class="coin-counter-pill">
+          <img src="assets/ui/Icon_Coin.png" alt="Coins">
+          <span id="boat-select-coins">12,350</span>
+          <button class="btn-plus-green" onclick="addCoins(500)">+</button>
+        </div>
+      </div>
+
+      <div class="carousel-arrow left" onclick="cycleBoat(-1)">
+        <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+      </div>
+      <div class="carousel-arrow right" onclick="cycleBoat(1)">
+        <svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+      </div>
+
+      <div class="boat-showcase-container">
+        <img id="boat-showcase-img" src="assets/ui/Boat_Preview_Red.png" alt="Speedster Red">
+      </div>
+
+      <div class="boat-stats-card">
+        <div class="boat-info-col">
+          <div class="boat-name" id="boat-card-name">SPEEDSTER</div>
+          <div class="stat-row">
+            <span class="stat-label">Speed</span>
+            <div class="stat-segments" id="boat-speed-segs"></div>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Handling</span>
+            <div class="stat-segments" id="boat-handling-segs"></div>
+          </div>
+          <div class="stat-row">
+            <span class="stat-label">Durability</span>
+            <div class="stat-segments" id="boat-durability-segs"></div>
+          </div>
+        </div>
+        <button class="btn-select-boat" id="btn-select-action" onclick="confirmSelectBoat()">SELECT</button>
+      </div>
+
+      <div class="boat-thumb-strip">
+        <div class="boat-thumb-slot selected" onclick="chooseBoat(0)">
+          <img src="assets/ui/Boat_Thumb_Red.png" alt="Speedster Red">
+        </div>
+        <div class="boat-thumb-slot" onclick="chooseBoat(1)">
+          <img src="assets/ui/Boat_Thumb_Blue.png" alt="Hydro Wave Blue">
+        </div>
+        <div class="boat-thumb-slot" onclick="chooseBoat(2)">
+          <img src="assets/ui/Boat_Thumb_Yellow.png" alt="Thunderbolt Yellow">
+        </div>
+        <div class="boat-thumb-slot" onclick="chooseBoat(3)">
+          <img src="assets/ui/Boat_Thumb_Green.png" alt="Viper Jet Green">
+        </div>
+        <div class="boat-thumb-slot" onclick="chooseBoat(4)">
+          <img src="assets/ui/Boat_Thumb_Locked.png" alt="Phantom X Locked">
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 3: MAP SELECTION -->
+    <div id="screen-map-select" class="screen">
+      <div class="top-header-row">
+        <button class="btn-square-back" onclick="switchScreen('main-menu')">
+          <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+        </button>
+        <div class="header-pill-title">SELECT MAP</div>
+        <div style="width: 62px;"></div>
+      </div>
+
+      <div class="map-grid-container">
+        <div class="map-card selected" onclick="chooseMap(0)">
+          <img src="assets/ui/Map_Tropical.png" alt="Tropical River">
+          <div class="map-card-name-pill">TROPICAL RIVER</div>
+        </div>
+        <div class="map-card" onclick="chooseMap(1)">
+          <img src="assets/ui/Map_Forest.png" alt="Forest River">
+          <div class="map-card-name-pill">FOREST RIVER</div>
+        </div>
+        <div class="map-card" onclick="chooseMap(2)">
+          <img src="assets/ui/Map_Mountain.png" alt="Mountain River">
+          <div class="map-card-name-pill">MOUNTAIN RIVER</div>
+        </div>
+        <div class="map-card" onclick="chooseMap(3)">
+          <img src="assets/ui/Map_Canyon.png" alt="Canyon River">
+          <div class="map-card-name-pill">CANYON RIVER</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 4: IN-GAME HUD -->
+    <div id="screen-hud" class="screen">
+      <div class="top-left-hud">
+        <button class="btn-pause-hud" onclick="switchScreen('pause')">
+          <svg viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+        </button>
+        <div class="hud-status-cluster">
+          <div class="hud-pill">
+            <img src="assets/ui/Icon_Distance.png" alt="Distance">
+            <span id="hud-distance-val">1,250 m</span>
+          </div>
+          <div class="hud-pill">
+            <img src="assets/ui/Icon_Coin.png" alt="Coins">
+            <span id="hud-coins-val">236</span>
+          </div>
+          <div class="hud-pill">
+            <img src="assets/ui/Icon_Heart.png" alt="Lives">
+            <span id="hud-lives-val">3</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hud-speedometer">
+        <div class="speedo-digits" id="hud-speed-val">128</div>
+        <div class="speedo-unit">KM/H</div>
+      </div>
+
+      <button class="hud-steer-btn left" id="btn-steer-l">
+        <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+      </button>
+
+      <button class="hud-steer-btn right" id="btn-steer-r">
+        <svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
+      </button>
+
+      <button class="hud-test-trigger" onclick="triggerGameOver()">
+        Crash Simulation (Trigger Game Over)
+      </button>
+    </div>
+
+    <!-- SCREEN 5: PAUSE MENU (Modal overlay) -->
+    <div id="screen-pause" class="screen">
+      <div class="modal-overlay">
+        <div class="pause-modal-card">
+          <button class="btn-red-close" onclick="switchScreen('hud')">
+            <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" stroke="#fff" stroke-width="3" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg>
+          </button>
+          <div class="pause-title">PAUSED</div>
+
+          <button class="btn-modal-green" onclick="switchScreen('hud')">
+            <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            <span>RESUME</span>
+          </button>
+
+          <button class="btn-modal-blue" onclick="restartGame()">
+            <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+            <span>RESTART</span>
+          </button>
+
+          <button class="btn-modal-blue" onclick="switchScreen('main-menu')">
+            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            <span>MAIN MENU</span>
+          </button>
+
+          <div class="pause-audio-row">
+            <button class="btn-circle-audio" id="audio-music" onclick="toggleAudio('music')">
+              <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+            </button>
+            <button class="btn-circle-audio" id="audio-sound" onclick="toggleAudio('sound')">
+              <svg viewBox="0 0 24 24"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
+            </button>
+            <button class="btn-circle-audio" onclick="playClick(); toast('Settings menu')">
+              <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 6: GAME OVER (Modal overlay) -->
+    <div id="screen-gameover" class="screen">
+      <div class="modal-overlay">
+        <div class="gameover-modal-card">
+          <img class="wooden-banner" src="assets/ui/Banner_GameOver.png" alt="Game Over Wooden Sign">
+          <div class="gameover-body-card">
+            <div class="stat-heading">DISTANCE</div>
+            <div class="stat-huge-number" id="go-dist-val">1,250 m</div>
+
+            <div class="stat-heading">COINS COLLECTED</div>
+            <div class="coin-result-row">
+              <img src="assets/ui/Icon_Coin.png" alt="Coins">
+              <span id="go-coins-val">236</span>
+            </div>
+
+            <div class="new-best-score-badge">
+              <svg viewBox="0 0 24 24"><polygon points="2 20 22 20 20 8 15 13 12 4 9 13 4 8 2 20"/></svg>
+              <span>NEW BEST SCORE!</span>
+            </div>
+          </div>
+
+          <div class="gameover-buttons-row">
+            <button class="btn-gameover-home" onclick="switchScreen('main-menu')">
+              <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+              <span>HOME</span>
+            </button>
+            <button class="btn-gameover-restart" onclick="restartGame()">
+              <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+              <span>PLAY AGAIN</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Overlay -->
+  <div id="toast" style="position: absolute; bottom: 30px; background: rgba(14,28,45,0.92); border: 2px solid #366cb0; border-radius: 20px; padding: 10px 24px; font-weight: 700; color: #fff; display: none; z-index: 2000; box-shadow: 0 6px 25px rgba(0,0,0,0.6);">
+    Notification
+  </div>
+
+  <!-- ThreeJS CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    /* ==========================================================
+       THREE.JS 3D RIVER & SPEEDBOAT ENVIRONMENT - UPGRADED
+       ========================================================== */
+    const container = document.getElementById('game-container');
+    const canvas = document.getElementById('webgl-canvas');
+    let scene, camera, renderer, clock;
+    let waterMesh, boatGroup, boatHullMat, boatStripeMat, boatWakeMesh, skyMesh;
+    let sprayPlaneL, sprayPlaneR, waterfallMeshL, waterfallMeshR, churnMesh;
+    let bowSprayL, bowSprayR;
+    const fxParticles = [];
+    let skyTex, cliffTex, foamTex, waterfallTex, teakDeckTex, logBarkTex, woodRingTex;
+    let waterNormalTex, waterColorTex;
+    let bankMaterials = [], rockMaterials = [], foliageMaterials = [];
+    let coins = [], obstacleLogs = [], sceneryObjects = [];
+    let boatTargetX = 0, boatCurrentX = 0;
+    let steerDir = 0;
+    const keysPressed = { left: false, right: false };
+    let gameActive = false;
+    let currentDistance = 0;
+    let collectedCoins = 0;
+    let playerLives = 3;
+    const baseSpeed = 35.55; // meters per second (~128 km/h)
+    let boatSpeed = baseSpeed;
+    let cameraShake = 0;
+    let invulnerableTimer = 0;
+    let animFrameId = null;
+
+    // Camera chase settings (matching BG_InGameRiver.png)
+    const CAM_BASE_Y = 3.1;
+    const CAM_BASE_Z = -5.8;
+    const CAM_LOOK_Y = 1.15;
+    const CAM_LOOK_Z = 18.0;
+
+    /* ==========================================================
+       PROCEDURAL CANVAS TEXTURE GENERATORS (Zero Remote Dependency)
+       ========================================================== */
+    function createSkyCanvasTexture() {
+      const c = document.createElement('canvas');
+      c.width = 1024;
+      c.height = 512;
+      const ctx = c.getContext('2d');
+
+      // Sky Gradient: deep tropical blue at zenith to golden peach horizon glow
+      const grad = ctx.createLinearGradient(0, 0, 0, 512);
+      grad.addColorStop(0.0, '#0a365c');
+      grad.addColorStop(0.35, '#136794');
+      grad.addColorStop(0.65, '#229ec2');
+      grad.addColorStop(0.82, '#64c2d4');
+      grad.addColorStop(0.93, '#f8d29b');
+      grad.addColorStop(1.0, '#fdead0');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 1024, 512);
+
+      // Distant warm tropical sun halo
+      const sunGrad = ctx.createRadialGradient(720, 360, 8, 720, 360, 240);
+      sunGrad.addColorStop(0, 'rgba(255, 255, 235, 0.95)');
+      sunGrad.addColorStop(0.25, 'rgba(255, 225, 140, 0.65)');
+      sunGrad.addColorStop(0.55, 'rgba(255, 180, 85, 0.25)');
+      sunGrad.addColorStop(1, 'rgba(255, 180, 85, 0)');
+      ctx.fillStyle = sunGrad;
+      ctx.beginPath();
+      ctx.arc(720, 360, 240, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Atmospheric Cumulus Clouds along horizon
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.28)';
+      for (let i = 0; i < 9; i++) {
+        const cx = (i * 125 + 30) % 1024;
+        const cy = 375 + (i % 3) * 16;
+        const r = 38 + (i % 4) * 9;
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.arc(cx + r * 0.75, cy - r * 0.2, r * 0.8, 0, Math.PI * 2);
+        ctx.arc(cx - r * 0.7, cy - r * 0.15, r * 0.75, 0, Math.PI * 2);
+        ctx.arc(cx + r * 1.35, cy + r * 0.1, r * 0.6, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.ClampToEdgeWrapping;
+      return tex;
+    }
+
+    function createCliffCanvasTexture() {
+      const c = document.createElement('canvas');
+      c.width = 512;
+      c.height = 512;
+      const ctx = c.getContext('2d');
+
+      // Base warm weathered sedimentary tone
+      ctx.fillStyle = '#655443';
+      ctx.fillRect(0, 0, 512, 512);
+
+      // Organic undulating geological strata layers
+      for (let y = 0; y < 512; y += 3) {
+        const cycle = y % 80;
+        let col;
+        if (cycle < 16) col = '#4c3e31'; // deep shadow seam
+        else if (cycle < 36) col = '#84715b'; // sunlit limestone layer
+        else if (cycle < 56) col = '#72604c'; // warm ochre sandstone
+        else if (cycle < 68) col = '#594a3a'; // granite band
+        else col = '#3e3226'; // dark basalt fissure
+
+        ctx.fillStyle = col;
+        // Draw slightly wavy horizontal bands
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        for (let x = 0; x <= 512; x += 32) {
+          const waveY = y + Math.sin(x * 0.04 + y * 0.1) * 2.5;
+          ctx.lineTo(x, waveY);
+        }
+        ctx.lineTo(512, y + 3);
+        ctx.lineTo(0, y + 3);
+        ctx.fill();
+
+        // Natural mineral fissures & micro-streaks
+        if (Math.random() > 0.4) {
+          ctx.fillStyle = Math.random() > 0.5 ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.09)';
+          for (let s = 0; s < 6; s++) {
+            ctx.fillRect(Math.random() * 512, y, 15 + Math.random() * 50, 2);
+          }
+        }
+      }
+
+      // Vertical water runoff & erosion staining
+      for (let s = 0; s < 25; s++) {
+        const sx = Math.random() * 512;
+        const sw = 4 + Math.random() * 12;
+        const grad = ctx.createLinearGradient(sx, 0, sx, 512);
+        grad.addColorStop(0, 'rgba(30, 24, 18, 0)');
+        grad.addColorStop(0.3, 'rgba(25, 20, 15, 0.15)');
+        grad.addColorStop(0.7, 'rgba(20, 35, 20, 0.22)');
+        grad.addColorStop(1, 'rgba(15, 25, 18, 0.35)');
+        ctx.fillStyle = grad;
+        ctx.fillRect(sx, 0, sw, 512);
+      }
+
+      // Lush clinging tropical moss & lichen clusters
+      for (let m = 0; m < 70; m++) {
+        const mx = Math.random() * 512;
+        const my = Math.random() * 512;
+        const r = 6 + Math.random() * 18;
+        const mossGrad = ctx.createRadialGradient(mx, my, 2, mx, my, r);
+        mossGrad.addColorStop(0, 'rgba(52, 122, 42, 0.75)');
+        mossGrad.addColorStop(0.6, 'rgba(38, 92, 32, 0.55)');
+        mossGrad.addColorStop(1, 'rgba(28, 68, 24, 0)');
+        ctx.fillStyle = mossGrad;
+        ctx.beginPath();
+        ctx.arc(mx, my, r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      return tex;
+    }
+
+    function createWaterNormalCanvasTexture() {
+      const c = document.createElement('canvas');
+      c.width = 256;
+      c.height = 256;
+      const ctx = c.getContext('2d');
+      const imgData = ctx.createImageData(256, 256);
+      const data = imgData.data;
+
+      // Multi-octave wave height field
+      const heights = new Float32Array(256 * 256);
+      for (let y = 0; y < 256; y++) {
+        for (let x = 0; x < 256; x++) {
+          const u = (x / 256) * Math.PI * 2;
+          const v = (y / 256) * Math.PI * 2;
+          const h = Math.sin(u * 4 + v * 3) * 0.35
+                  + Math.sin(u * 7 - v * 5) * 0.25
+                  + Math.cos(u * 2 + v * 8) * 0.22
+                  + Math.sin(u * 11 + v * 9) * 0.18;
+          heights[y * 256 + x] = h;
+        }
+      }
+
+      // Compute normal gradients
+      for (let y = 0; y < 256; y++) {
+        const ym1 = (y - 1 + 256) % 256;
+        const yp1 = (y + 1) % 256;
+        for (let x = 0; x < 256; x++) {
+          const xm1 = (x - 1 + 256) % 256;
+          const xp1 = (x + 1) % 256;
+
+          const dx = (heights[y * 256 + xp1] - heights[y * 256 + xm1]) * 1.8;
+          const dy = (heights[yp1 * 256 + x] - heights[ym1 * 256 + x]) * 1.8;
+
+          const len = Math.sqrt(dx * dx + dy * dy + 1.0);
+          const nx = (-dx / len) * 0.5 + 0.5;
+          const ny = (-dy / len) * 0.5 + 0.5;
+          const nz = (1.0 / len) * 0.5 + 0.5;
+
+          const idx = (y * 256 + x) * 4;
+          data[idx] = Math.floor(nx * 255);
+          data[idx + 1] = Math.floor(ny * 255);
+          data[idx + 2] = Math.floor(nz * 255);
+          data[idx + 3] = 255;
+        }
+      }
+      ctx.putImageData(imgData, 0, 0);
+
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      return tex;
+    }
+
+    function createWaterColorCanvasTexture() {
+      const c = document.createElement('canvas');
+      c.width = 256;
+      c.height = 512;
+      const ctx = c.getContext('2d');
+
+      // Across the width (0 to 256), blend shallow turquoise shoreline to deep crystalline lagoon
+      const grad = ctx.createLinearGradient(0, 0, 256, 0);
+      grad.addColorStop(0.0, '#1ad4c6');  // Shallow left shoreline turquoise
+      grad.addColorStop(0.12, '#12b5c7'); // Clear shallow reef
+      grad.addColorStop(0.35, '#0a8ea7'); // Transition
+      grad.addColorStop(0.5, '#05637e');  // Deep center river channel
+      grad.addColorStop(0.65, '#0a8ea7'); // Transition
+      grad.addColorStop(0.88, '#12b5c7'); // Clear shallow reef
+      grad.addColorStop(1.0, '#1ad4c6');  // Shallow right shoreline turquoise
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 256, 512);
+
+      // Subtle longitudinal water current streaks & caustics
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
+      for (let i = 0; i < 70; i++) {
+        const x = 16 + Math.random() * 224;
+        const y = Math.random() * 512;
+        const w = 3 + Math.random() * 10;
+        const h = 40 + Math.random() * 80;
+        ctx.fillRect(x, y, w, h);
+      }
+
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = THREE.ClampToEdgeWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      return tex;
+    }
+
+    function createWaterFoamCanvasTexture() {
+      const c = document.createElement('canvas');
+      c.width = 512;
+      c.height = 512;
+      const ctx = c.getContext('2d');
+
+      ctx.fillStyle = '#0a4256';
+      ctx.fillRect(0, 0, 512, 512);
+
+      // Cellular bubbly whitewater foam
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+      for (let i = 0; i < 550; i++) {
+        const x = Math.random() * 512;
+        const y = Math.random() * 512;
+        const r = 2.0 + Math.random() * 8.5;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Aerated frothy swirls
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
+      for (let i = 0; i < 220; i++) {
+        const x = Math.random() * 512;
+        const y = Math.random() * 512;
+        ctx.beginPath();
+        ctx.ellipse(x, y, 16 + Math.random() * 28, 5 + Math.random() * 12, Math.random() * Math.PI, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      return tex;
+    }
+
+    function createWaterfallCanvasTexture() {
+      const c = document.createElement('canvas');
+      c.width = 256;
+      c.height = 512;
+      const ctx = c.getContext('2d');
+
+      // Translucent rushing turquoise river water core
+      ctx.fillStyle = 'rgba(16, 145, 180, 0.82)';
+      ctx.fillRect(0, 0, 256, 512);
+
+      // Vertical cascading white fluted currents
+      for (let x = 0; x < 256; x += 4) {
+        const alpha = 0.45 + Math.random() * 0.52;
+        ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+        const w = 2 + Math.random() * 5;
+        ctx.fillRect(x, 0, w, 512);
+      }
+
+      // Foaming spray highlights
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+      for (let i = 0; i < 350; i++) {
+        ctx.fillRect(Math.random() * 256, Math.random() * 512, 3, 14 + Math.random() * 22);
+      }
+
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      return tex;
+    }
+
+    function createTeakDeckCanvasTexture() {
+      const c = document.createElement('canvas');
+      c.width = 256;
+      c.height = 256;
+      const ctx = c.getContext('2d');
+
+      ctx.fillStyle = '#b68142';
+      ctx.fillRect(0, 0, 256, 256);
+
+      const plankW = 16;
+      for (let x = 0; x < 256; x += plankW) {
+        const variation = (Math.random() - 0.5) * 16;
+        ctx.fillStyle = `rgb(${182 + variation}, ${129 + variation}, ${66 + variation})`;
+        ctx.fillRect(x + 1, 0, plankW - 2, 256);
+
+        // Dark caulking seam
+        ctx.fillStyle = '#1e140a';
+        ctx.fillRect(x, 0, 1.5, 256);
+      }
+
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      return tex;
+    }
+
+    function createLogBarkCanvasTexture() {
+      const c = document.createElement('canvas');
+      c.width = 512;
+      c.height = 256;
+      const ctx = c.getContext('2d');
+
+      ctx.fillStyle = '#48311a';
+      ctx.fillRect(0, 0, 512, 256);
+
+      for (let x = 0; x < 512; x += 6) {
+        ctx.fillStyle = (x % 18 < 6) ? '#321f0f' : '#5a3d22';
+        ctx.fillRect(x, 0, 4, 256);
+      }
+      ctx.fillStyle = 'rgba(42, 102, 32, 0.65)';
+      ctx.fillRect(0, 95, 512, 60);
+
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = THREE.RepeatWrapping;
+      tex.wrapT = THREE.RepeatWrapping;
+      return tex;
+    }
+
+    function createWoodRingCanvasTexture() {
+      const c = document.createElement('canvas');
+      c.width = 256;
+      c.height = 256;
+      const ctx = c.getContext('2d');
+
+      ctx.fillStyle = '#be9762';
+      ctx.fillRect(0, 0, 256, 256);
+
+      ctx.strokeStyle = 'rgba(88, 54, 25, 0.42)';
+      ctx.lineWidth = 2;
+      for (let r = 8; r < 120; r += 7) {
+        ctx.beginPath();
+        ctx.arc(128, 128, r + (Math.random() - 0.5) * 2, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      ctx.fillStyle = '#8a5e2c';
+      ctx.beginPath();
+      ctx.arc(128, 128, 16, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = '#321f0f';
+      ctx.lineWidth = 10;
+      ctx.beginPath();
+      ctx.arc(128, 128, 122, 0, Math.PI * 2);
+      ctx.stroke();
+
+      const tex = new THREE.CanvasTexture(c);
+      return tex;
+    }
+
+    function init3D() {
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x1a5880);
+      scene.fog = new THREE.FogExp2(0x1a5880, 0.009);
+
+      camera = new THREE.PerspectiveCamera(58, 16 / 9, 0.1, 1000);
+      camera.position.set(0, CAM_BASE_Y, CAM_BASE_Z);
+      camera.lookAt(0, CAM_LOOK_Y, CAM_LOOK_Z);
+
+      renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true, powerPreference: "high-performance" });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.setSize(container.clientWidth, container.clientHeight);
+      renderer.outputEncoding = THREE.sRGBEncoding;
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.14;
+      renderer.shadowMap.enabled = true;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+      clock = new THREE.Clock();
+
+      // Procedural Mipmapped Textures
+      skyTex = createSkyCanvasTexture();
+      cliffTex = createCliffCanvasTexture();
+      foamTex = createWaterFoamCanvasTexture();
+      waterfallTex = createWaterfallCanvasTexture();
+      teakDeckTex = createTeakDeckCanvasTexture();
+      logBarkTex = createLogBarkCanvasTexture();
+      woodRingTex = createWoodRingCanvasTexture();
+      waterNormalTex = createWaterNormalCanvasTexture();
+      waterColorTex = createWaterColorCanvasTexture();
+
+      // Atmospheric Sky Dome with procedural tropical sun & horizon clouds
+      const skyGeo = new THREE.SphereGeometry(280, 32, 20);
+      const skyMat = new THREE.MeshBasicMaterial({
+        map: skyTex,
+        side: THREE.BackSide,
+        depthWrite: false
+      });
+      skyMesh = new THREE.Mesh(skyGeo, skyMat);
+      scene.add(skyMesh);
+
+      // Lush Hemisphere Ambient Bounce (Sky: tropical daylight, Ground: deep jungle emerald)
+      const hemiLight = new THREE.HemisphereLight(0xdcf2ff, 0x1b3c20, 1.3);
+      hemiLight.position.set(0, 50, 0);
+      scene.add(hemiLight);
+
+      // Sun Directional Light with crisp warm specular highlights & full channel shadow coverage
+      const dirLight = new THREE.DirectionalLight(0xfff6e8, 1.75);
+      dirLight.position.set(28, 48, -25);
+      dirLight.castShadow = true;
+      dirLight.shadow.mapSize.width = 1024;
+      dirLight.shadow.mapSize.height = 1024;
+      dirLight.shadow.camera.near = 1.0;
+      dirLight.shadow.camera.far = 160;
+      dirLight.shadow.camera.left = -24;
+      dirLight.shadow.camera.right = 24;
+      dirLight.shadow.camera.top = 55;
+      dirLight.shadow.camera.bottom = -15;
+      dirLight.shadow.bias = -0.0004;
+      dirLight.shadow.normalBias = 0.02;
+      scene.add(dirLight);
+
+      // Cool Cyan Rim Fill Light from opposing riverbank
+      const fillLight = new THREE.DirectionalLight(0x28bad8, 0.65);
+      fillLight.position.set(-25, 20, 30);
+      scene.add(fillLight);
+
+      // Downriver Gorge Warm Atmospheric Rim Accent
+      const gorgeRimLight = new THREE.DirectionalLight(0xffd5a0, 0.4);
+      gorgeRimLight.position.set(8, 18, 130);
+      scene.add(gorgeRimLight);
+
+      // Underwater Up-Glow for rich tropical translucency
+      const underwaterGlow = new THREE.DirectionalLight(0x0a6688, 0.35);
+      underwaterGlow.position.set(0, -20, 10);
+      scene.add(underwaterGlow);
+
+      // 1. Water Surface with fine tessellation for animated waves & wake
+      const waterGeo = new THREE.PlaneGeometry(42, 170, 72, 140);
+      const waterMat = new THREE.MeshStandardMaterial({
+        map: waterColorTex,
+        normalMap: waterNormalTex,
+        normalScale: new THREE.Vector2(0.42, 0.42),
+        roughness: 0.08,
+        metalness: 0.22,
+        transparent: true,
+        opacity: 0.95,
+        wireframe: false
+      });
+      waterNormalTex.repeat.set(6, 26);
+      waterColorTex.repeat.set(1, 1);
+      waterMesh = new THREE.Mesh(waterGeo, waterMat);
+      waterMesh.rotation.x = -Math.PI / 2;
+      waterMesh.position.set(0, 0, 40);
+      waterMesh.receiveShadow = true;
+      scene.add(waterMesh);
+
+      // Shoreline Foam Ribbons (lapping against bank rocks with procedural foam texture)
+      const foamGeo = new THREE.PlaneGeometry(2.4, 160, 2, 80);
+      const foamMatL = new THREE.MeshBasicMaterial({
+        map: foamTex,
+        transparent: true,
+        opacity: 0.52,
+        depthWrite: false
+      });
+      foamMatL.map.repeat.set(1, 32);
+
+      const foamMeshL = new THREE.Mesh(foamGeo, foamMatL);
+      foamMeshL.rotation.x = -Math.PI / 2;
+      foamMeshL.position.set(-8.2, 0.04, 40);
+      scene.add(foamMeshL);
+
+      const foamMatR = new THREE.MeshBasicMaterial({
+        map: foamTex,
+        transparent: true,
+        opacity: 0.52,
+        depthWrite: false
+      });
+      foamMatR.map.repeat.set(1, 32);
+
+      const foamMeshR = new THREE.Mesh(foamGeo, foamMatR);
+      foamMeshR.rotation.x = -Math.PI / 2;
+      foamMeshR.position.set(8.2, 0.04, 40);
+      scene.add(foamMeshR);
+
+      // 2. Riverbanks, Stratified Canyon Cliffs, 3D Waterfalls & Distant Mountains
+      buildRiverbanks();
+
+      // 3. Upgraded High-Detail Speedboat Model with Teak Deck, Arch, Seats & Outboards
+      buildSpeedboat();
+
+      // 4. Floating Coins & Realistic River Obstacles
+      buildPickupsAndObstacles();
+
+      window.addEventListener('resize', onWindowResize);
+      if (animFrameId !== null) {
+        cancelAnimationFrame(animFrameId);
+        animFrameId = null;
+      }
+      animFrameId = requestAnimationFrame(animate);
+    }
+
+    function createPalmTree(tiltX = 0) {
+      const tree = new THREE.Group();
+
+      // Curved segmented organic trunk with ringed bark
+      const trunkMat = new THREE.MeshStandardMaterial({
+        color: 0x765436,
+        roughness: 0.85,
+        flatShading: true
+      });
+      foliageMaterials.push(trunkMat);
+
+      // Multi-segment logarithmic leaning trunk
+      const trunkSegments = 5;
+      let currX = 0, currY = 0;
+      for (let s = 0; s < trunkSegments; s++) {
+        const segH = 1.15;
+        const rBottom = 0.32 - s * 0.035;
+        const rTop = 0.285 - s * 0.035;
+        const segMesh = new THREE.Mesh(new THREE.CylinderGeometry(rTop, rBottom, segH, 9), trunkMat);
+        const lean = tiltX * (0.18 + s * 0.12);
+        currX += lean * 0.5;
+        currY += segH * 0.5;
+        segMesh.position.set(currX, currY, 0);
+        segMesh.rotation.z = lean * 0.8;
+        currY += segH * 0.5;
+        segMesh.castShadow = true;
+        tree.add(segMesh);
+      }
+
+      // Coconuts cluster beneath fronds
+      const nutMat = new THREE.MeshStandardMaterial({ color: 0x3a2512, roughness: 0.9 });
+      for (let n = 0; n < 5; n++) {
+        const nut = new THREE.Mesh(new THREE.SphereGeometry(0.22, 7, 7), nutMat);
+        const ang = (n * Math.PI * 2) / 5;
+        nut.position.set(currX + Math.cos(ang) * 0.25, currY - 0.2, Math.sin(ang) * 0.25);
+        tree.add(nut);
+      }
+
+      // Arched 3D Tropical Palm Fronds
+      const frondMat = new THREE.MeshStandardMaterial({
+        color: 0x1fa82c,
+        roughness: 0.55,
+        side: THREE.DoubleSide
+      });
+      foliageMaterials.push(frondMat);
+
+      const frondCount = 12;
+      for (let f = 0; f < frondCount; f++) {
+        const angle = (f / frondCount) * Math.PI * 2;
+        const frondGroup = new THREE.Group();
+        frondGroup.position.set(currX, currY, 0);
+        frondGroup.rotation.y = angle;
+
+        // Leaf geometry with natural drooping arch
+        const frondGeo = new THREE.PlaneGeometry(0.85, 4.8, 3, 6);
+        const vPos = frondGeo.attributes.position;
+        for (let vi = 0; vi < vPos.count; vi++) {
+          const fy = vPos.getY(vi);
+          const tArc = Math.max(0, Math.min(1, (fy + 2.4) / 4.8));
+          const arc = Math.pow(tArc, 2.2) * 1.5;
+          vPos.setZ(vi, -arc);
+          const wScale = Math.sin(tArc * Math.PI);
+          vPos.setX(vi, vPos.getX(vi) * (0.3 + wScale * 0.7));
+        }
+        frondGeo.computeVertexNormals();
+
+        const leaf = new THREE.Mesh(frondGeo, frondMat);
+        leaf.rotation.x = Math.PI / 2.3;
+        leaf.position.set(0, 0, 2.1);
+        leaf.castShadow = true;
+        frondGroup.add(leaf);
+        tree.add(frondGroup);
+      }
+
+      // Base lush jungle ferns & broadleaf undergrowth
+      const bushMat = new THREE.MeshStandardMaterial({ color: 0x167b22, roughness: 0.7 });
+      foliageMaterials.push(bushMat);
+      for (let b = 0; b < 4; b++) {
+        const bush = new THREE.Mesh(new THREE.DodecahedronGeometry(0.75 + Math.random() * 0.35, 1), bushMat);
+        bush.position.set(Math.random() * 0.7 - 0.35, 0.45, Math.random() * 0.7 - 0.35);
+        bush.scale.set(1.4, 0.55, 1.4);
+        tree.add(bush);
+      }
+
+      return tree;
+    }
+
+    function createCanopyTree() {
+      const tree = new THREE.Group();
+      const trunkMat = new THREE.MeshStandardMaterial({ color: 0x543922, roughness: 0.88 });
+      foliageMaterials.push(trunkMat);
+
+      // Fluted buttress root base
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.65, 4.6, 9), trunkMat);
+      trunk.position.y = 2.3;
+      trunk.castShadow = true;
+      tree.add(trunk);
+
+      // Layered tropical rainforest umbrella canopy
+      const canopyMat = new THREE.MeshStandardMaterial({
+        color: 0x187822,
+        roughness: 0.68,
+        flatShading: true
+      });
+      foliageMaterials.push(canopyMat);
+
+      const tiers = [
+        { y: 4.4, r: 3.2, sY: 0.5 },
+        { y: 5.5, r: 2.5, sY: 0.48 },
+        { y: 6.4, r: 1.6, sY: 0.42 }
+      ];
+      tiers.forEach(tr => {
+        const dome = new THREE.Mesh(new THREE.DodecahedronGeometry(tr.r, 1), canopyMat);
+        dome.position.y = tr.y;
+        dome.scale.set(1.25, tr.sY, 1.25);
+        dome.castShadow = true;
+        tree.add(dome);
+      });
+
+      return tree;
+    }
+
+    function createSculptedBoulder() {
+      const rockMat = new THREE.MeshStandardMaterial({
+        color: 0x66594b,
+        roughness: 0.85,
+        flatShading: true
+      });
+      rockMaterials.push(rockMat);
+
+      const mossMat = new THREE.MeshStandardMaterial({
+        color: 0x256e20,
+        roughness: 0.82,
+        flatShading: true
+      });
+      foliageMaterials.push(mossMat);
+
+      const boulder = new THREE.Group();
+      const rSize = 2.4 + Math.random() * 1.8;
+      const rockGeo = new THREE.DodecahedronGeometry(rSize, 1);
+      const rPos = rockGeo.attributes.position;
+      for (let vi = 0; vi < rPos.count; vi++) {
+        const vx = rPos.getX(vi);
+        const vy = rPos.getY(vi);
+        const vz = rPos.getZ(vi);
+        const noise = 1.0 + (Math.sin(vx * 1.8) + Math.cos(vy * 2.1) + Math.sin(vz * 1.7)) * 0.12;
+        rPos.setXYZ(vi, vx * noise, vy * noise * 0.78, vz * noise);
+      }
+      rockGeo.computeVertexNormals();
+
+      const mainRock = new THREE.Mesh(rockGeo, rockMat);
+      mainRock.castShadow = true;
+      mainRock.receiveShadow = true;
+      boulder.add(mainRock);
+
+      // Organic moss crown
+      const mossCap = new THREE.Mesh(new THREE.DodecahedronGeometry(rSize * 0.85, 1), mossMat);
+      mossCap.position.y = rSize * 0.32;
+      mossCap.scale.set(0.96, 0.4, 0.96);
+      boulder.add(mossCap);
+
+      return boulder;
+    }
+
+    function buildDistantKarstMountains() {
+      const mtGroup = new THREE.Group();
+      const mtMat = new THREE.MeshStandardMaterial({
+        color: 0x1d465c,
+        roughness: 0.92,
+        flatShading: true
+      });
+      rockMaterials.push(mtMat);
+
+      // Dramatic tiered tropical karst towers (Phi Phi / Guilin style)
+      const mtSpirePositions = [
+        { x: -55, z: 230, r: 24, h: 68 },
+        { x: -28, z: 245, r: 26, h: 78 },
+        { x: -2,  z: 225, r: 20, h: 56 },
+        { x: 26,  z: 250, r: 30, h: 84 },
+        { x: 52,  z: 235, r: 25, h: 70 },
+        { x: -85, z: 260, r: 36, h: 82 },
+        { x: 85,  z: 260, r: 36, h: 82 },
+        { x: -115, z: 275, r: 42, h: 90 },
+        { x: 115,  z: 275, r: 42, h: 90 }
+      ];
+
+      mtSpirePositions.forEach(p => {
+        const geo = new THREE.ConeGeometry(p.r, p.h, 9);
+        const m = new THREE.Mesh(geo, mtMat);
+        m.position.set(p.x, p.h * 0.44, p.z);
+        m.scale.set(1.15, 1.0, 0.88);
+        mtGroup.add(m);
+
+        // Shoulder buttress on mountain base
+        const buttress = new THREE.Mesh(new THREE.ConeGeometry(p.r * 0.65, p.h * 0.55, 7), mtMat);
+        buttress.position.set(p.x + (p.x > 0 ? -6 : 6), p.h * 0.22, p.z - 8);
+        mtGroup.add(buttress);
+      });
+      scene.add(mtGroup);
+    }
+
+    function buildRiverbanks() {
+      // 1. Natural shoreline stone ledges on left and right with undulating terrain
+      const shelfGeo = new THREE.BoxGeometry(6.5, 1.1, 160);
+      const shelfMat = new THREE.MeshStandardMaterial({
+        map: cliffTex,
+        roughness: 0.72,
+        metalness: 0.12
+      });
+      shelfMat.map.repeat.set(2, 28);
+      rockMaterials.push(shelfMat);
+
+      const shelfL = new THREE.Mesh(shelfGeo, shelfMat);
+      shelfL.position.set(-11.4, 0.38, 40);
+      shelfL.receiveShadow = true;
+      scene.add(shelfL);
+
+      const shelfR = new THREE.Mesh(shelfGeo, shelfMat);
+      shelfR.position.set(11.4, 0.38, 40);
+      shelfR.receiveShadow = true;
+      scene.add(shelfR);
+
+      // Sloped beach transition ledges along waterline
+      const beachMat = new THREE.MeshStandardMaterial({
+        color: 0xc8b694,
+        roughness: 0.9,
+        metalness: 0.05
+      });
+      const beachGeo = new THREE.PlaneGeometry(2.8, 160);
+      const beachL = new THREE.Mesh(beachGeo, beachMat);
+      beachL.rotation.x = -Math.PI / 2;
+      beachL.rotation.y = 0.12;
+      beachL.position.set(-8.8, 0.06, 40);
+      scene.add(beachL);
+
+      const beachR = new THREE.Mesh(beachGeo, beachMat);
+      beachR.rotation.x = -Math.PI / 2;
+      beachR.rotation.y = -0.12;
+      beachR.position.set(8.8, 0.06, 40);
+      scene.add(beachR);
+
+      // 2. High Stratified Karst Bluffs and Rock Pillars (staggered with open sky)
+      const cliffMat = new THREE.MeshStandardMaterial({
+        map: cliffTex,
+        roughness: 0.85,
+        flatShading: true
+      });
+      cliffMat.map.repeat.set(2, 6);
+      rockMaterials.push(cliffMat);
+
+      const topMat = new THREE.MeshStandardMaterial({ color: 0x1d7522, roughness: 0.75, flatShading: true });
+      foliageMaterials.push(topMat);
+
+      // Left Bank Karst Spires (open sky between them)
+      const leftBluffs = [
+        { x: -16, z: -10, w: 9, h: 14, d: 14, rot: 0.1 },
+        { x: -18, z: 12,  w: 10, h: 18, d: 16, rot: -0.2 },
+        { x: -15, z: 34,  w: 8, h: 12, d: 12, rot: 0.15 },
+        { x: -19, z: 56,  w: 11, h: 20, d: 15, rot: -0.1 },
+        { x: -16, z: 78,  w: 9, h: 15, d: 14, rot: 0.25 },
+        { x: -18, z: 100, w: 10, h: 19, d: 16, rot: -0.15 },
+        { x: -15, z: 120, w: 8, h: 14, d: 12, rot: 0.1 },
+        { x: -20, z: 140, w: 12, h: 22, d: 18, rot: -0.05 }
+      ];
+      leftBluffs.forEach(b => {
+        const bluff = new THREE.Mesh(new THREE.BoxGeometry(b.w, b.h, b.d), cliffMat);
+        bluff.position.set(b.x, b.h * 0.45, b.z);
+        bluff.rotation.y = b.rot;
+        bluff.castShadow = true;
+        bluff.receiveShadow = true;
+        scene.add(bluff);
+
+        const cap = new THREE.Mesh(new THREE.DodecahedronGeometry(b.w * 0.54, 1), topMat);
+        cap.position.set(b.x, b.h * 0.92, b.z);
+        cap.scale.set(1.22, 0.48, 1.22);
+        cap.castShadow = true;
+        scene.add(cap);
+      });
+
+      // Right Bank Karst Spires
+      const rightBluffs = [
+        { x: 16, z: -8,  w: 9, h: 15, d: 14, rot: -0.1 },
+        { x: 19, z: 15,  w: 11, h: 19, d: 16, rot: 0.2 },
+        { x: 15, z: 38,  w: 8, h: 13, d: 12, rot: -0.15 },
+        { x: 18, z: 60,  w: 10, h: 21, d: 15, rot: 0.1 },
+        { x: 16, z: 82,  w: 9, h: 16, d: 14, rot: -0.25 },
+        { x: 19, z: 104, w: 11, h: 20, d: 16, rot: 0.15 },
+        { x: 15, z: 124, w: 8, h: 14, d: 12, rot: -0.1 },
+        { x: 20, z: 142, w: 12, h: 22, d: 18, rot: 0.05 }
+      ];
+      rightBluffs.forEach(b => {
+        const bluff = new THREE.Mesh(new THREE.BoxGeometry(b.w, b.h, b.d), cliffMat);
+        bluff.position.set(b.x, b.h * 0.45, b.z);
+        bluff.rotation.y = b.rot;
+        bluff.castShadow = true;
+        bluff.receiveShadow = true;
+        scene.add(bluff);
+
+        const cap = new THREE.Mesh(new THREE.DodecahedronGeometry(b.w * 0.54, 1), topMat);
+        cap.position.set(b.x, b.h * 0.92, b.z);
+        cap.scale.set(1.22, 0.48, 1.22);
+        cap.castShadow = true;
+        scene.add(cap);
+      });
+
+      // 3. Canyon Waterfall Headwall Backdrop across the river valley (Z = 145)
+      const headwallGeo = new THREE.BoxGeometry(86, 34, 14);
+      const headwall = new THREE.Mesh(headwallGeo, cliffMat);
+      headwall.position.set(0, 16, 147);
+      headwall.receiveShadow = true;
+      scene.add(headwall);
+
+      const headwallTop = new THREE.Mesh(new THREE.BoxGeometry(88, 3.5, 16), topMat);
+      headwallTop.position.set(0, 33, 147);
+      scene.add(headwallTop);
+
+      // Triple Cascading 3D Waterfalls pouring over the cliff face (matching BG_InGameRiver.png)
+      const wfMat = new THREE.MeshBasicMaterial({
+        map: waterfallTex,
+        transparent: true,
+        opacity: 0.92,
+        side: THREE.DoubleSide
+      });
+
+      const wfCurtains = [
+        { x: -20, w: 15, h: 32, z: 141 },
+        { x: 0,   w: 16, h: 32, z: 141 },
+        { x: 20,  w: 15, h: 32, z: 141 }
+      ];
+      wfCurtains.forEach(c => {
+        const wfGeo = new THREE.PlaneGeometry(c.w, c.h, 6, 12);
+        const wfPos = wfGeo.attributes.position;
+        for (let i = 0; i < wfPos.count; i++) {
+          const y = wfPos.getY(i);
+          const zOffset = Math.sin((y + c.h * 0.5) / c.h * Math.PI) * 2.4;
+          wfPos.setZ(i, zOffset);
+        }
+        wfGeo.computeVertexNormals();
+
+        const wfMesh = new THREE.Mesh(wfGeo, wfMat);
+        wfMesh.position.set(c.x, c.h * 0.48, c.z);
+        scene.add(wfMesh);
+      });
+
+      // Plunge Pool Foam Disks at base of waterfalls
+      const poolGeo = new THREE.CircleGeometry(10.5, 20);
+      const poolMat = new THREE.MeshBasicMaterial({
+        map: foamTex,
+        transparent: true,
+        opacity: 0.82,
+        depthWrite: false
+      });
+      [-20, 0, 20].forEach(px => {
+        const pool = new THREE.Mesh(poolGeo, poolMat);
+        pool.rotation.x = -Math.PI / 2;
+        pool.position.set(px, 0.12, 141);
+        scene.add(pool);
+      });
+
+      // 4. Distant Karst Mountains
+      buildDistantKarstMountains();
+
+      // 5. Natural Sculpted Shoreline Boulders (scrolling scenery)
+      for (let i = 0; i < 20; i++) {
+        const bL = createSculptedBoulder();
+        bL.position.set(-8.8 - Math.random() * 1.6, 0.5, -10 + i * 7.5);
+        bL.rotation.set(Math.random(), Math.random(), Math.random());
+        scene.add(bL);
+        sceneryObjects.push(bL);
+
+        const bR = createSculptedBoulder();
+        bR.position.set(8.8 + Math.random() * 1.6, 0.5, -10 + i * 7.5);
+        bR.rotation.set(Math.random(), Math.random(), Math.random());
+        scene.add(bR);
+        sceneryObjects.push(bR);
+      }
+
+      // 6. Tropical Palm Trees along riverbanks (scrolling scenery)
+      for (let i = 0; i < 16; i++) {
+        const treeL = createPalmTree(0.25);
+        treeL.position.set(-9.8 - Math.random() * 1.4, 0.8, -12 + i * 9.5);
+        treeL.rotation.y = (Math.random() - 0.5) * 0.8;
+        scene.add(treeL);
+        sceneryObjects.push(treeL);
+
+        const treeR = createPalmTree(-0.25);
+        treeR.position.set(9.8 + Math.random() * 1.4, 0.8, -12 + i * 9.5);
+        treeR.rotation.y = (Math.random() - 0.5) * 0.8;
+        scene.add(treeR);
+        sceneryObjects.push(treeR);
+      }
+
+      // 7. Broadleaf Canopy Rainforest Trees along upper plateau (scrolling scenery)
+      for (let i = 0; i < 10; i++) {
+        const cL = createCanopyTree();
+        cL.position.set(-15.5 - Math.random() * 2.5, 6.0, -8 + i * 15.0);
+        cL.rotation.y = Math.random() * Math.PI * 2;
+        scene.add(cL);
+        sceneryObjects.push(cL);
+
+        const cR = createCanopyTree();
+        cR.position.set(15.5 + Math.random() * 2.5, 6.0, -8 + i * 15.0);
+        cR.rotation.y = Math.random() * Math.PI * 2;
+        scene.add(cR);
+        sceneryObjects.push(cR);
+      }
+    }
+
+    function buildSpeedboat() {
+      boatGroup = new THREE.Group();
+
+      // Main Gelcoat Materials (matching BG_InGameRiver.png & Boat_Preview_Red.png)
+      boatHullMat = new THREE.MeshStandardMaterial({
+        color: 0xd83424,
+        roughness: 0.12,
+        metalness: 0.28
+      });
+
+      boatStripeMat = new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        roughness: 0.12,
+        metalness: 0.32
+      });
+
+      const chromeMat = new THREE.MeshStandardMaterial({
+        color: 0xe8edf2,
+        metalness: 0.95,
+        roughness: 0.08
+      });
+
+      const blackArchMat = new THREE.MeshStandardMaterial({
+        color: 0x1e2024,
+        roughness: 0.35,
+        metalness: 0.82
+      });
+
+      const cockpitInteriorMat = new THREE.MeshStandardMaterial({
+        color: 0x14161a,
+        roughness: 0.7
+      });
+
+      const seatMat = new THREE.MeshStandardMaterial({
+        color: 0x2e3238,
+        roughness: 0.55
+      });
+
+      const seatCushionMat = new THREE.MeshStandardMaterial({
+        color: 0xd4c2a8,
+        roughness: 0.45
+      });
+
+      // 1. Lower Deep-V Racing Hull with aerodynamic chine flare
+      const hullGeo = new THREE.BoxGeometry(1.56, 0.48, 3.2);
+      const hull = new THREE.Mesh(hullGeo, boatHullMat);
+      hull.position.y = 0.24;
+      hull.castShadow = true;
+      boatGroup.add(hull);
+
+      // Aerodynamic Tapered Bow Provis
+      const bowGeo = new THREE.CylinderGeometry(0.02, 1.54, 1.42, 4);
+      const bow = new THREE.Mesh(bowGeo, boatHullMat);
+      bow.rotation.y = Math.PI / 4;
+      bow.position.set(0, 0.24, 2.22);
+      bow.scale.set(1.0, 1.0, 0.56);
+      bow.castShadow = true;
+      boatGroup.add(bow);
+
+      // Flared Chrome Chine Spray Rails & Gunwale Rubrails
+      const railL = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.08, 3.5), chromeMat);
+      railL.position.set(-0.79, 0.38, 0.1);
+      boatGroup.add(railL);
+      const railR = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.08, 3.5), chromeMat);
+      railR.position.set(0.79, 0.38, 0.1);
+      boatGroup.add(railR);
+
+      // Center Racing Stripe on Foredeck
+      const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.04, 2.45), boatStripeMat);
+      stripe.position.set(0, 0.48, 1.05);
+      boatGroup.add(stripe);
+
+      // Chrome Bow Cleat and Nav Light
+      const bowCleat = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.05, 0.08), chromeMat);
+      bowCleat.position.set(0, 0.5, 2.5);
+      boatGroup.add(bowCleat);
+
+      // 2. Cockpit Well with Teak Wood Decking & Dashboard
+      const well = new THREE.Mesh(new THREE.BoxGeometry(1.24, 0.3, 1.84), cockpitInteriorMat);
+      well.position.set(0, 0.45, -0.22);
+      boatGroup.add(well);
+
+      const teakDeckGeo = new THREE.PlaneGeometry(1.22, 1.8);
+      const teakDeckMat = new THREE.MeshStandardMaterial({
+        map: teakDeckTex,
+        roughness: 0.38
+      });
+      const teakDeck = new THREE.Mesh(teakDeckGeo, teakDeckMat);
+      teakDeck.rotation.x = -Math.PI / 2;
+      teakDeck.position.set(0, 0.48, -0.22);
+      boatGroup.add(teakDeck);
+
+      // Dashboard console with dials
+      const dash = new THREE.Mesh(new THREE.BoxGeometry(1.18, 0.24, 0.22), cockpitInteriorMat);
+      dash.position.set(0, 0.62, 0.58);
+      dash.rotation.x = -0.22;
+      boatGroup.add(dash);
+
+      // Wrap-around Aerodynamic Tinted Windshield
+      const glassMat = new THREE.MeshPhysicalMaterial({
+        color: 0x4fc2f0,
+        transparent: true,
+        opacity: 0.68,
+        roughness: 0.06,
+        transmission: 0.78,
+        reflectivity: 0.95
+      });
+      const glass = new THREE.Mesh(new THREE.BoxGeometry(1.20, 0.38, 0.12), glassMat);
+      glass.rotation.x = -0.42;
+      glass.position.set(0, 0.72, 0.64);
+      boatGroup.add(glass);
+
+      // Chrome Windshield Frame Bar
+      const frameBar = new THREE.Mesh(new THREE.BoxGeometry(1.24, 0.04, 0.06), chromeMat);
+      frameBar.position.set(0, 0.88, 0.58);
+      boatGroup.add(frameBar);
+
+      // Side Windshield Wings
+      const wingL = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.3, 0.64), glassMat);
+      wingL.position.set(-0.60, 0.70, 0.38);
+      boatGroup.add(wingL);
+      const wingR = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.3, 0.64), glassMat);
+      wingR.position.set(0.60, 0.70, 0.38);
+      boatGroup.add(wingR);
+
+      // Ergonomic Racing Bucket Seats with Headrests (matching Speedster artwork)
+      [-0.32, 0.32].forEach(sx => {
+        const seatBase = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.22, 0.38), seatMat);
+        seatBase.position.set(sx, 0.54, -0.32);
+        boatGroup.add(seatBase);
+
+        const seatBack = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.46, 0.12), seatCushionMat);
+        seatBack.position.set(sx, 0.82, -0.48);
+        seatBack.rotation.x = -0.15;
+        boatGroup.add(seatBack);
+
+        const headrest = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.15, 0.1), seatCushionMat);
+        headrest.position.set(sx, 1.08, -0.52);
+        boatGroup.add(headrest);
+      });
+
+      // Chrome 3-Spoke Steering Wheel
+      const wheelRing = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.024, 8, 18), chromeMat);
+      wheelRing.position.set(-0.32, 0.74, 0.3);
+      wheelRing.rotation.x = 0.52;
+      boatGroup.add(wheelRing);
+
+      // 3. Sport Roll-Bar Arch (Offshore Wakeboard Tower matching artwork)
+      const archGroup = new THREE.Group();
+      archGroup.position.set(0, 0.48, -0.74);
+
+      const pilL = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 1.18, 9), blackArchMat);
+      pilL.position.set(-0.64, 0.55, 0);
+      pilL.rotation.z = -0.16;
+      archGroup.add(pilL);
+
+      const pilR = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 1.18, 9), blackArchMat);
+      pilR.position.set(0.64, 0.55, 0);
+      pilR.rotation.z = 0.16;
+      archGroup.add(pilR);
+
+      const crossbar = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.4, 9), blackArchMat);
+      crossbar.rotation.z = Math.PI / 2;
+      crossbar.position.set(0, 1.1, 0);
+      archGroup.add(crossbar);
+
+      const navLight = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), new THREE.MeshBasicMaterial({ color: 0xff2818 }));
+      navLight.position.set(0, 1.2, 0);
+      archGroup.add(navLight);
+      boatGroup.add(archGroup);
+
+      // 4. Dual High-Performance Outboard Motors on Transom
+      [-0.42, 0.42].forEach(mx => {
+        const motorGroup = new THREE.Group();
+        motorGroup.position.set(mx, 0.44, -1.7);
+
+        const cowl = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.54, 0.44), boatHullMat);
+        cowl.position.y = 0.16;
+        cowl.castShadow = true;
+        motorGroup.add(cowl);
+
+        const cowlTop = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.08, 0.4), boatStripeMat);
+        cowlTop.position.y = 0.44;
+        motorGroup.add(cowlTop);
+
+        const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.07, 0.58, 8), chromeMat);
+        shaft.position.set(0, -0.3, -0.05);
+        motorGroup.add(shaft);
+
+        const skeg = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.18, 0.22), chromeMat);
+        skeg.position.set(0, -0.5, -0.08);
+        motorGroup.add(skeg);
+
+        // Chrome Twin Propeller
+        const prop = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.04, 6), chromeMat);
+        prop.rotation.x = Math.PI / 2;
+        prop.position.set(0, -0.42, 0.08);
+        motorGroup.add(prop);
+
+        boatGroup.add(motorGroup);
+      });
+
+      // 5. Trailing V-Wake Foam Plane with Procedural Foam Texture
+      const wakeGeo = new THREE.PlaneGeometry(8.5, 12.0, 4, 8);
+      const wPos = wakeGeo.attributes.position;
+      for (let i = 0; i < wPos.count; i++) {
+        const y = wPos.getY(i);
+        const t = (6 - y) / 12;
+        const widthScale = 0.32 + t * 0.95;
+        wPos.setX(i, wPos.getX(i) * widthScale);
+      }
+      wakeGeo.computeVertexNormals();
+
+      const wakeMat = new THREE.MeshBasicMaterial({
+        map: foamTex,
+        transparent: true,
+        opacity: 0.75,
+        depthWrite: false
+      });
+      wakeMat.map.repeat.set(1, 3);
+      boatWakeMesh = new THREE.Mesh(wakeGeo, wakeMat);
+      boatWakeMesh.rotation.x = -Math.PI / 2;
+      boatWakeMesh.position.set(0, 0.04, -7.2);
+      boatGroup.add(boatWakeMesh);
+
+      // 6. Transom Boiling Churn Foam directly behind motors
+      const churnGeo = new THREE.PlaneGeometry(2.8, 2.6);
+      const churnMat = new THREE.MeshBasicMaterial({
+        map: foamTex,
+        transparent: true,
+        opacity: 0.9,
+        depthWrite: false
+      });
+      churnMesh = new THREE.Mesh(churnGeo, churnMat);
+      churnMesh.rotation.x = -Math.PI / 2;
+      churnMesh.position.set(0, 0.05, -2.5);
+      boatGroup.add(churnMesh);
+
+      // 7. Flared Lateral Rooster-Tail Spray Curtains
+      const sprayMatL = new THREE.MeshBasicMaterial({
+        map: foamTex,
+        transparent: true,
+        opacity: 0.68,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      });
+      sprayPlaneL = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 3.4), sprayMatL);
+      sprayPlaneL.position.set(-1.0, 0.28, -2.1);
+      sprayPlaneL.rotation.set(0.14, -0.38, 0.52);
+      boatGroup.add(sprayPlaneL);
+
+      const sprayMatR = new THREE.MeshBasicMaterial({
+        map: foamTex,
+        transparent: true,
+        opacity: 0.68,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      });
+      sprayPlaneR = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 3.4), sprayMatR);
+      sprayPlaneR.position.set(1.0, 0.28, -2.1);
+      sprayPlaneR.rotation.set(0.14, 0.38, -0.52);
+      boatGroup.add(sprayPlaneR);
+
+      // 8. Dynamic Bow Spray V-Plumes
+      const bowSprayMat = new THREE.MeshBasicMaterial({
+        map: foamTex,
+        transparent: true,
+        opacity: 0.52,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      });
+      bowSprayL = new THREE.Mesh(new THREE.PlaneGeometry(0.75, 1.9), bowSprayMat);
+      bowSprayL.rotation.set(-0.25, -0.4, 0.65);
+      bowSprayL.position.set(-0.76, 0.16, 1.35);
+      boatGroup.add(bowSprayL);
+
+      bowSprayR = new THREE.Mesh(new THREE.PlaneGeometry(0.75, 1.9), bowSprayMat.clone());
+      bowSprayR.rotation.set(-0.25, 0.4, -0.65);
+      bowSprayR.position.set(0.76, 0.16, 1.35);
+      boatGroup.add(bowSprayR);
+
+      // Natural immersed waterline stance with slight planing pitch
+      boatGroup.position.set(0, -0.06, -1.2);
+      boatGroup.rotation.x = 0.038;
+      scene.add(boatGroup);
+    }
+
+    function buildPickupsAndObstacles() {
+      // 1. Golden Beveled Coins with Star Emblem, Radiant Glow Ring & Water Ripple Disc
+      const coinRimGeo = new THREE.CylinderGeometry(0.5, 0.5, 0.12, 28);
+      const coinMat = new THREE.MeshStandardMaterial({
+        color: 0xffd215,
+        metalness: 0.92,
+        roughness: 0.18
+      });
+
+      const auraGeo = new THREE.RingGeometry(0.6, 0.82, 24);
+      const auraMat = new THREE.MeshBasicMaterial({
+        color: 0xffe640,
+        transparent: true,
+        opacity: 0.45,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      });
+
+      const coinRippleGeo = new THREE.RingGeometry(0.2, 0.9, 16);
+      const coinRippleMat = new THREE.MeshBasicMaterial({
+        map: foamTex,
+        transparent: true,
+        opacity: 0.35,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      });
+
+      const coinZ = [12, 18, 24, 38, 44, 50, 68, 74, 80, 94];
+      const coinX = [0, 0, 0, 3.2, 3.2, 3.2, -3.2, -3.2, -3.2, 0];
+
+      for (let i = 0; i < coinZ.length; i++) {
+        const coinGroup = new THREE.Group();
+
+        const cMesh = new THREE.Mesh(coinRimGeo, coinMat);
+        cMesh.rotation.x = Math.PI / 2;
+        coinGroup.add(cMesh);
+
+        const star = new THREE.Mesh(new THREE.DodecahedronGeometry(0.22, 0), coinMat);
+        star.position.z = 0.07;
+        coinGroup.add(star);
+        const starBack = new THREE.Mesh(new THREE.DodecahedronGeometry(0.22, 0), coinMat);
+        starBack.position.z = -0.07;
+        coinGroup.add(starBack);
+
+        const aura = new THREE.Mesh(auraGeo, auraMat);
+        coinGroup.add(aura);
+
+        const ripple = new THREE.Mesh(coinRippleGeo, coinRippleMat);
+        ripple.rotation.x = -Math.PI / 2;
+        ripple.position.y = -0.52;
+        coinGroup.add(ripple);
+
+        coinGroup.position.set(coinX[i], 0.6, coinZ[i]);
+        scene.add(coinGroup);
+        coins.push(coinGroup);
+      }
+
+      // 2. Realistic River Drift Obstacle Logs with Cut Wood Rings, Branch Stubs & Waterline Foam
+      const logBodyGeo = new THREE.CylinderGeometry(0.45, 0.45, 3.2, 16);
+      const logBarkMat = new THREE.MeshStandardMaterial({
+        map: logBarkTex,
+        roughness: 0.92
+      });
+      const logEndMat = new THREE.MeshStandardMaterial({
+        map: woodRingTex,
+        roughness: 0.85
+      });
+      const mossMat = new THREE.MeshStandardMaterial({ color: 0x2d6824, roughness: 0.8 });
+      const hazardYellowMat = new THREE.MeshStandardMaterial({ color: 0xf5b800, roughness: 0.35 });
+      const hazardBlackMat = new THREE.MeshStandardMaterial({ color: 0x181818, roughness: 0.4 });
+
+      const waterSkirtGeo = new THREE.PlaneGeometry(3.8, 1.4);
+      const waterSkirtMat = new THREE.MeshBasicMaterial({
+        map: foamTex,
+        transparent: true,
+        opacity: 0.65,
+        depthWrite: false
+      });
+
+      const branchGeo = new THREE.CylinderGeometry(0.12, 0.18, 0.8, 8);
+
+      const logZ = [30, 58, 86, 114, 142];
+      const logX = [3.2, -3.2, 0, -3.2, 3.2];
+      const logRots = [0.25, -0.3, 0.15, -0.2, 0.3];
+
+      for (let i = 0; i < logZ.length; i++) {
+        const logGroup = new THREE.Group();
+
+        const trunk = new THREE.Mesh(logBodyGeo, logBarkMat);
+        trunk.rotation.z = Math.PI / 2;
+        trunk.castShadow = true;
+        logGroup.add(trunk);
+
+        [-1.61, 1.61].forEach(ex => {
+          const endCap = new THREE.Mesh(new THREE.CircleGeometry(0.44, 16), logEndMat);
+          endCap.position.x = ex;
+          endCap.rotation.y = ex > 0 ? Math.PI / 2 : -Math.PI / 2;
+          logGroup.add(endCap);
+        });
+
+        const mossPatch = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.12, 0.5), mossMat);
+        mossPatch.position.y = 0.44;
+        logGroup.add(mossPatch);
+
+        // Branch stubs for realistic driftwood
+        const branch1 = new THREE.Mesh(branchGeo, logBarkMat);
+        branch1.position.set(0.6, 0.35, 0.25);
+        branch1.rotation.set(0.5, 0.2, 0.7);
+        branch1.castShadow = true;
+        logGroup.add(branch1);
+
+        const branch2 = new THREE.Mesh(branchGeo, logBarkMat);
+        branch2.position.set(-0.7, 0.3, -0.25);
+        branch2.rotation.set(-0.6, -0.3, -0.5);
+        branch2.castShadow = true;
+        logGroup.add(branch2);
+
+        // Waterline contact foam skirt
+        const skirt = new THREE.Mesh(waterSkirtGeo, waterSkirtMat);
+        skirt.rotation.x = -Math.PI / 2;
+        skirt.position.y = -0.24;
+        logGroup.add(skirt);
+
+        [-0.8, 0.8].forEach(hx => {
+          const bandY = new THREE.Mesh(new THREE.CylinderGeometry(0.47, 0.47, 0.22, 16), hazardYellowMat);
+          bandY.rotation.z = Math.PI / 2;
+          bandY.position.x = hx;
+          logGroup.add(bandY);
+
+          const bandB = new THREE.Mesh(new THREE.CylinderGeometry(0.48, 0.48, 0.12, 16), hazardBlackMat);
+          bandB.rotation.z = Math.PI / 2;
+          bandB.position.x = hx;
+          logGroup.add(bandB);
+        });
+
+        logGroup.rotation.y = logRots[i];
+        logGroup.position.set(logX[i], 0.3, logZ[i]);
+        logGroup.active = true;
+        scene.add(logGroup);
+        obstacleLogs.push(logGroup);
+      }
+    }
+
+    /* ==========================================================
+       DYNAMIC PARTICLE EFFECTS (Collision Splash & Coin Bursts)
+       ========================================================== */
+    function spawnSplashExplosion(x, y, z) {
+      const dropGeo = new THREE.SphereGeometry(0.12, 6, 6);
+      const dropMat = new THREE.MeshStandardMaterial({
+        color: 0xdbf7ff,
+        roughness: 0.1,
+        metalness: 0.1,
+        transparent: true,
+        opacity: 0.9
+      });
+      for (let i = 0; i < 18; i++) {
+        const ang = Math.random() * Math.PI * 2;
+        const spd = 2.5 + Math.random() * 4.5;
+        const mesh = new THREE.Mesh(dropGeo, dropMat);
+        mesh.position.set(x + (Math.random() - 0.5) * 0.4, y + 0.2, z + (Math.random() - 0.5) * 0.4);
+        scene.add(mesh);
+        fxParticles.push({
+          mesh: mesh,
+          vx: Math.cos(ang) * spd,
+          vy: 3.5 + Math.random() * 4.0,
+          vz: Math.sin(ang) * spd - 2.0,
+          gravity: -16.0,
+          life: 0.6 + Math.random() * 0.3,
+          maxLife: 0.9,
+          initialScale: 0.7 + Math.random() * 0.6
+        });
+      }
+
+      // Wood splinters
+      const splinterGeo = new THREE.BoxGeometry(0.08, 0.08, 0.35);
+      const splinterMat = new THREE.MeshStandardMaterial({ color: 0x5a3d22, roughness: 0.85 });
+      for (let i = 0; i < 8; i++) {
+        const ang = Math.random() * Math.PI * 2;
+        const spd = 2.0 + Math.random() * 3.5;
+        const mesh = new THREE.Mesh(splinterGeo, splinterMat);
+        mesh.position.set(x, y + 0.3, z);
+        mesh.rotation.set(Math.random(), Math.random(), Math.random());
+        scene.add(mesh);
+        fxParticles.push({
+          mesh: mesh,
+          vx: Math.cos(ang) * spd,
+          vy: 3.0 + Math.random() * 3.5,
+          vz: Math.sin(ang) * spd - 2.0,
+          gravity: -14.0,
+          rotSpeed: { x: (Math.random() - 0.5) * 12, y: (Math.random() - 0.5) * 12, z: (Math.random() - 0.5) * 12 },
+          life: 0.7 + Math.random() * 0.3,
+          maxLife: 1.0,
+          initialScale: 1.0
+        });
+      }
+    }
+
+    function spawnCoinPickupEffect(x, y, z) {
+      const sparkGeo = new THREE.DodecahedronGeometry(0.12, 0);
+      const sparkMat = new THREE.MeshBasicMaterial({
+        color: 0xffea42,
+        transparent: true,
+        opacity: 0.95
+      });
+      for (let i = 0; i < 10; i++) {
+        const ang = (i / 10) * Math.PI * 2;
+        const spd = 2.2 + Math.random() * 2.0;
+        const mesh = new THREE.Mesh(sparkGeo, sparkMat);
+        mesh.position.set(x, y, z);
+        scene.add(mesh);
+        fxParticles.push({
+          mesh: mesh,
+          vx: Math.cos(ang) * spd,
+          vy: 2.0 + Math.random() * 2.5,
+          vz: Math.sin(ang) * spd,
+          gravity: -9.0,
+          rotSpeed: { x: (Math.random() - 0.5) * 15, y: (Math.random() - 0.5) * 15, z: (Math.random() - 0.5) * 15 },
+          life: 0.45 + Math.random() * 0.2,
+          maxLife: 0.65,
+          initialScale: 0.8 + Math.random() * 0.5
+        });
+      }
+    }
+
+    function resetObstaclesAndCoins() {
+      // Clear visual FX particles
+      for (let i = fxParticles.length - 1; i >= 0; i--) {
+        const p = fxParticles[i];
+        scene.remove(p.mesh);
+        if (p.mesh.geometry) p.mesh.geometry.dispose();
+      }
+      fxParticles.length = 0;
+
+      const logZ = [30, 58, 86, 114, 142];
+      const logX = [3.2, -3.2, 0, -3.2, 3.2];
+      obstacleLogs.forEach((obs, i) => {
+        obs.position.set(logX[i % logX.length], 0.3, logZ[i % logZ.length]);
+        obs.visible = true;
+        obs.active = true;
+      });
+
+      const coinZ = [12, 18, 24, 38, 44, 50, 68, 74, 80, 94];
+      const coinX = [0, 0, 0, 3.2, 3.2, 3.2, -3.2, -3.2, -3.2, 0];
+      coins.forEach((c, i) => {
+        c.position.set(coinX[i % coinX.length], 0.6, coinZ[i % coinZ.length]);
+        c.visible = true;
+      });
+    }
+
+    function onWindowResize() {
+      if (!renderer || !camera) return;
+      const w = container.clientWidth;
+      const h = container.clientHeight;
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+      renderer.setSize(w, h);
+    }
+
+    function animate() {
+      animFrameId = requestAnimationFrame(animate);
+      const dt = Math.min(clock.getDelta(), 0.08); // Real delta time
+      const t = clock.getElapsedTime();
+
+      // Scroll Waterfall & Shoreline Foam Textures
+      if (waterfallTex) {
+        waterfallTex.offset.y -= dt * 3.2;
+      }
+      if (foamTex) {
+        foamTex.offset.y -= dt * 1.8;
+      }
+      if (waterNormalTex) {
+        const flowStep = gameActive ? (boatSpeed * dt * 0.015) : (dt * 0.22);
+        waterNormalTex.offset.y -= flowStep;
+        waterNormalTex.offset.x = Math.sin(t * 0.7) * 0.025;
+      }
+
+      // Animate Water ripples & Dynamic Boat Wake
+      const pos = waterMesh.geometry.attributes.position;
+      const bZ = boatGroup ? boatGroup.position.z : -1.2;
+      for (let i = 0; i < pos.count; i++) {
+        const u = pos.getX(i);
+        const v = pos.getY(i);
+        let wave = Math.sin(u * 0.38 + t * 4.2) * 0.13
+                 + Math.cos(v * 0.26 - currentDistance * 0.22) * 0.15
+                 + Math.sin((u * 0.8 + v * 0.6) + t * 3.0) * 0.05;
+
+        // Realistic V-Wake behind speedboat
+        const dz = v - bZ;
+        if (dz < 0 && dz > -28) {
+          const dx = Math.abs(u - boatCurrentX);
+          const wakeWidth = 1.0 - dz * 0.25;
+          if (dx < wakeWidth) {
+            wave += Math.cos(dx * 3.2 + dz * 1.6 - t * 8.5) * (0.22 * (1.0 + dz / 28));
+          }
+        }
+        pos.setZ(i, wave);
+      }
+      pos.needsUpdate = true;
+      waterMesh.geometry.computeVertexNormals();
+
+      // Animate Coins spin
+      coins.forEach(c => {
+        c.rotation.y += 0.04;
+        c.rotation.z = Math.sin(t * 3) * 0.08;
+      });
+
+      // Animate boat stern wake opacity pulsation
+      if (boatWakeMesh) {
+        boatWakeMesh.material.opacity = 0.62 + Math.sin(t * 12) * 0.15;
+      }
+      if (churnMesh) {
+        churnMesh.material.opacity = 0.78 + Math.sin(t * 15) * 0.12;
+      }
+
+      // Animate rooster-tail lateral spray
+      if (sprayPlaneL && sprayPlaneR) {
+        const sprayPulse = 0.58 + Math.sin(t * 18) * 0.16;
+        sprayPlaneL.material.opacity = sprayPulse;
+        sprayPlaneR.material.opacity = sprayPulse;
+      }
+
+      // Animate dynamic bow spray V-plumes flaring into turns
+      if (bowSprayL && bowSprayR) {
+        const turn = boatTargetX - boatCurrentX;
+        bowSprayL.scale.setScalar(1.0 + Math.max(0, turn * 1.5));
+        bowSprayR.scale.setScalar(1.0 + Math.max(0, -turn * 1.5));
+        bowSprayL.material.opacity = 0.45 + Math.sin(t * 16) * 0.15 + Math.abs(turn) * 0.3;
+        bowSprayR.material.opacity = 0.45 + Math.cos(t * 16) * 0.15 + Math.abs(turn) * 0.3;
+      }
+
+      // Animate Obstacle Logs buoyant bobbing in river water
+      obstacleLogs.forEach((obs, idx) => {
+        if (obs.visible) {
+          obs.position.y = 0.3 + Math.sin(t * 3.2 + idx * 1.4) * 0.035;
+          obs.rotation.z = Math.sin(t * 2.8 + idx) * 0.025;
+        }
+      });
+
+      // Update visual FX particles (water droplets, wood splinters, golden sparks)
+      for (let i = fxParticles.length - 1; i >= 0; i--) {
+        const p = fxParticles[i];
+        p.life -= dt;
+        if (p.life <= 0) {
+          scene.remove(p.mesh);
+          if (p.mesh.geometry) p.mesh.geometry.dispose();
+          fxParticles.splice(i, 1);
+        } else {
+          const tNorm = Math.max(0, p.life / p.maxLife);
+          p.mesh.position.x += p.vx * dt;
+          p.mesh.position.y += p.vy * dt;
+          p.mesh.position.z += p.vz * dt;
+          p.vy += p.gravity * dt;
+          if (p.rotSpeed) {
+            p.mesh.rotation.x += p.rotSpeed.x * dt;
+            p.mesh.rotation.y += p.rotSpeed.y * dt;
+            p.mesh.rotation.z += p.rotSpeed.z * dt;
+          }
+          p.mesh.scale.setScalar(tNorm * p.initialScale);
+          if (p.mesh.material && p.mesh.material.opacity !== undefined) {
+            p.mesh.material.opacity = tNorm;
+          }
+        }
+      }
+
+      // Active gameplay logic (only executes when gameActive is true)
+      if (gameActive) {
+        // Camera Shake from collisions
+        if (cameraShake > 0) {
+          cameraShake = Math.max(0, cameraShake - dt);
+          camera.position.x = (Math.random() - 0.5) * cameraShake * 0.7;
+          camera.position.y = CAM_BASE_Y + (Math.random() - 0.5) * cameraShake * 0.7;
+        } else {
+          cameraShake = 0;
+          camera.position.x = 0;
+          camera.position.y = CAM_BASE_Y;
+        }
+        camera.position.z = CAM_BASE_Z;
+        camera.lookAt(0, CAM_LOOK_Y, CAM_LOOK_Z);
+
+        // Boat Invulnerability Flash
+        if (invulnerableTimer > 0) {
+          invulnerableTimer -= dt;
+          boatGroup.visible = Math.floor(t * 16) % 2 === 0;
+        } else {
+          boatGroup.visible = true;
+        }
+
+        // ==========================================================
+        // STEERING DIRECTION
+        // Camera at z = -5.5 looking forward along +Z.
+        // Screen-LEFT = increasing X (+X). Screen-RIGHT = decreasing X (-X).
+        // LEFT input (steerDir = -1) -> boatTargetX increases (+X).
+        // RIGHT input (steerDir = +1) -> boatTargetX decreases (-X).
+        // ==========================================================
+        const steerRate = 14.0;
+        if (steerDir !== 0) {
+          boatTargetX -= steerDir * steerRate * dt;
+        }
+        boatTargetX = Math.max(-5.0, Math.min(5.0, boatTargetX));
+        boatCurrentX += (boatTargetX - boatCurrentX) * Math.min(1.0, 12.0 * dt);
+
+        boatGroup.position.x = boatCurrentX;
+        boatGroup.position.y = -0.06 + Math.sin(t * 4) * 0.035;
+
+        // Realistic Roll/Banking into turn & planing pitch:
+        const turnDelta = boatTargetX - boatCurrentX;
+        boatGroup.rotation.z = turnDelta * 0.30;
+        boatGroup.rotation.y = -turnDelta * 0.14; // Yaw nose into turn
+        boatGroup.rotation.x = 0.035 + Math.sin(t * 3) * 0.02; // Planing pitch on waves
+
+        // ==========================================================
+        // FORWARD MOVEMENT, COLLISIONS & RECYCLING
+        // ==========================================================
+        const forwardStep = boatSpeed * dt;
+        currentDistance += forwardStep;
+
+        // Move riverbank scenery objects toward and past boat
+        sceneryObjects.forEach(obj => {
+          obj.position.z -= forwardStep;
+          if (obj.position.z < -14) {
+            obj.position.z += 140;
+          }
+        });
+
+        // Move obstacle logs toward boat and detect collisions
+        const lanes = [3.2, 0, -3.2];
+        obstacleLogs.forEach(obs => {
+          const prevZ = obs.position.z;
+          obs.position.z -= forwardStep;
+
+          // Recycle when passed behind camera
+          if (obs.position.z < -8) {
+            obs.position.z = 75 + Math.random() * 45;
+            obs.position.x = lanes[Math.floor(Math.random() * lanes.length)];
+            obs.visible = true;
+            obs.active = true;
+          }
+
+          // Real Collision Detection (robust swept z-interval against frame deltas):
+          if (obs.active) {
+            const bZ = boatGroup.position.z;
+            const inZ = Math.abs(obs.position.z - bZ) < 1.85 || (prevZ >= bZ - 0.5 && obs.position.z <= bZ + 0.5);
+            if (inZ) {
+              const dx = Math.abs(obs.position.x - boatGroup.position.x);
+              if (dx < 1.55) {
+                obs.active = false;
+                obs.visible = false;
+                spawnSplashExplosion(boatGroup.position.x, 0.3, obs.position.z);
+                handleObstacleHit();
+              }
+            }
+          }
+        });
+
+        // Move coins toward boat and detect collection (only while gameActive)
+        if (gameActive) {
+          coins.forEach(c => {
+            c.position.z -= forwardStep;
+
+            // Recycle when passed behind camera
+            if (c.position.z < -8) {
+              c.position.z = 65 + Math.random() * 55;
+              c.position.x = lanes[Math.floor(Math.random() * lanes.length)];
+              c.visible = true;
+            }
+
+            // Real Coin Pickup Detection
+            if (c.visible && Math.abs(c.position.z - boatGroup.position.z) < 1.3) {
+              const dx = Math.abs(c.position.x - boatGroup.position.x);
+              if (dx < 1.35) {
+                c.visible = false;
+                spawnCoinPickupEffect(c.position.x, c.position.y, c.position.z);
+                collectedCoins++;
+                document.getElementById('hud-coins-val').innerText = collectedCoins;
+                playCoin();
+              }
+            }
+          });
+        }
+
+        // Update HUD metrics with real distance and speedometer
+        document.getElementById('hud-distance-val').innerText = `${Math.floor(currentDistance).toLocaleString()} m`;
+        const speedKmh = Math.round(boatSpeed * 3.6);
+        document.getElementById('hud-speed-val').innerText = `${speedKmh}`;
+      } else {
+        // Paused or Game Over: completely freeze gameplay movement & camera shake
+        if (camera) {
+          camera.position.x = 0;
+          camera.position.y = CAM_BASE_Y;
+          camera.position.z = CAM_BASE_Z;
+          camera.lookAt(0, CAM_LOOK_Y, CAM_LOOK_Z);
+        }
+        steerDir = 0;
+        if (boatGroup) {
+          boatGroup.position.x = boatCurrentX;
+          boatGroup.position.y = -0.06 + Math.sin(t * 2) * 0.02;
+          boatGroup.rotation.z *= 0.9;
+          boatGroup.rotation.y *= 0.9;
+        }
+      }
+
+      renderer.render(scene, camera);
+    }
+
+    function handleObstacleHit() {
+      if (!gameActive || invulnerableTimer > 0) return;
+      invulnerableTimer = 0.9;
+      cameraShake = 0.85;
+      playerLives = Math.max(0, playerLives - 1);
+      document.getElementById('hud-lives-val').innerText = playerLives;
+      playCrash();
+      toast(`CRASH! ${playerLives} ${playerLives === 1 ? 'Life' : 'Lives'} Left`);
+
+      const flashEl = document.getElementById('hit-flash');
+      if (flashEl) {
+        flashEl.classList.add('active');
+        setTimeout(() => flashEl.classList.remove('active'), 180);
+      }
+
+      if (playerLives <= 0) {
+        triggerGameOver();
+      }
+    }
+
+    function triggerGameOver() {
+      gameActive = false;
+      steerDir = 0;
+      keysPressed.left = false;
+      keysPressed.right = false;
+      if (boatGroup) {
+        boatGroup.visible = true;
+      }
+      document.getElementById('go-dist-val').innerText = `${Math.floor(currentDistance).toLocaleString()} m`;
+      document.getElementById('go-coins-val').innerText = `${collectedCoins}`;
+      switchScreen('gameover');
+    }
+
+    /* ==========================================================
+       BOAT DATABASE & SELECTION LOGIC
+       ========================================================== */
+    const boatsDB = [
+      { name: "SPEEDSTER", color: 0xd92626, stripe: 0xffffff, preview: "assets/ui/Boat_Preview_Red.png", speed: 3, handling: 4, durability: 3, unlocked: true, cost: 0 },
+      { name: "HYDRO WAVE", color: 0x1a78d0, stripe: 0x00f0ff, preview: "assets/ui/Boat_Preview_Blue.png", speed: 4, handling: 3, durability: 3, unlocked: true, cost: 0 },
+      { name: "THUNDERBOLT", color: 0xf5bf18, stripe: 0x222222, preview: "assets/ui/Boat_Preview_Yellow.png", speed: 5, handling: 2, durability: 4, unlocked: true, cost: 0 },
+      { name: "VIPER JET", color: 0x28ba38, stripe: 0xd4ff00, preview: "assets/ui/Boat_Preview_Green.png", speed: 4, handling: 5, durability: 2, unlocked: true, cost: 0 },
+      { name: "PHANTOM X", color: 0x18181c, stripe: 0xa832e8, preview: "assets/ui/Boat_Preview_Black.png", speed: 5, handling: 5, durability: 5, unlocked: false, cost: 25000 }
+    ];
+    let currentBoatIdx = 0;
+    let selectedBoatIdx = 0;
+    let userCoins = 12350;
+
+    function renderBoatStats(idx) {
+      const b = boatsDB[idx];
+      document.getElementById('boat-card-name').innerText = b.name;
+
+      // Update Center Showcase Image
+      const showcaseImg = document.getElementById('boat-showcase-img');
+      if (showcaseImg && b.preview) {
+        showcaseImg.src = b.preview;
+        showcaseImg.alt = `${b.name} Speedboat`;
+      }
+
+      function renderSegs(containerId, count) {
+        const el = document.getElementById(containerId);
+        el.innerHTML = '';
+        for (let i = 0; i < 5; i++) {
+          const s = document.createElement('div');
+          s.className = `stat-seg ${i < count ? 'filled' : ''}`;
+          el.appendChild(s);
+        }
+      }
+      renderSegs('boat-speed-segs', b.speed);
+      renderSegs('boat-handling-segs', b.handling);
+      renderSegs('boat-durability-segs', b.durability);
+
+      const btn = document.getElementById('btn-select-action');
+      if (!b.unlocked) {
+        btn.innerText = `UNLOCK (${b.cost.toLocaleString()})`;
+        btn.style.fontSize = 'clamp(12px, 1.3vw, 16px)';
+        btn.style.background = 'linear-gradient(180deg, #6b7787 0%, #3d4653 100%)';
+        btn.style.borderColor = '#2a313a';
+      } else if (idx === selectedBoatIdx) {
+        btn.innerText = 'SELECTED';
+        btn.style.fontSize = 'clamp(15px, 1.6vw, 20px)';
+        btn.style.background = 'linear-gradient(180deg, #4ec322 0%, #299312 90%, #16550a 100%)';
+        btn.style.borderColor = '#16550a';
+      } else {
+        btn.innerText = 'SELECT';
+        btn.style.fontSize = 'clamp(15px, 1.6vw, 20px)';
+        btn.style.background = 'linear-gradient(180deg, #ffc61e 0%, #e4940a 90%, #915505 100%)';
+        btn.style.borderColor = '#915505';
+      }
+
+      // Update 3D boat hull & stripe colors
+      if (boatHullMat) {
+        boatHullMat.color.setHex(b.color);
+      }
+      if (boatStripeMat) {
+        boatStripeMat.color.setHex(b.stripe);
+      }
+
+      // Update thumbnails selection
+      const slots = document.querySelectorAll('.boat-thumb-slot');
+      slots.forEach((s, i) => {
+        s.classList.toggle('selected', i === idx);
+      });
+    }
+
+    function cycleBoat(dir) {
+      playClick();
+      currentBoatIdx = (currentBoatIdx + dir + boatsDB.length) % boatsDB.length;
+      renderBoatStats(currentBoatIdx);
+    }
+
+    function chooseBoat(idx) {
+      playClick();
+      currentBoatIdx = idx;
+      renderBoatStats(idx);
+    }
+
+    function confirmSelectBoat() {
+      playClick();
+      const b = boatsDB[currentBoatIdx];
+      if (!b.unlocked) {
+        if (userCoins >= b.cost) {
+          userCoins -= b.cost;
+          b.unlocked = true;
+          selectedBoatIdx = currentBoatIdx;
+          document.getElementById('boat-select-coins').innerText = userCoins.toLocaleString();
+          // Unlock thumbnail icon
+          const thumb4 = document.querySelector('.boat-thumb-slot:nth-child(5) img');
+          if (thumb4) thumb4.src = "assets/ui/Boat_Preview_Black.png";
+          renderBoatStats(currentBoatIdx);
+          toast(`Unlocked ${b.name}!`);
+        } else {
+          toast(`Need ${b.cost - userCoins} more coins!`);
+        }
+      } else {
+        selectedBoatIdx = currentBoatIdx;
+        renderBoatStats(currentBoatIdx);
+        toast(`Equipped ${b.name}!`);
+      }
+    }
+
+    function addCoins(amount) {
+      playCoin();
+      userCoins += amount;
+      document.getElementById('boat-select-coins').innerText = userCoins.toLocaleString();
+      toast(`+${amount} Coins!`);
+    }
+
+    /* ==========================================================
+       MAP SELECTION LOGIC
+       ========================================================== */
+    const mapsDB = [
+      { name: "Tropical River", fog: 0x1f668a, water: 0x0ea8be, sky: 0x18628e, rock: 0x6e604d, foliage: 0x258c30 },
+      { name: "Forest River", fog: 0x164228, water: 0x178262, sky: 0x1a4a2c, rock: 0x485844, foliage: 0x1a6624 },
+      { name: "Mountain River", fog: 0x324d68, water: 0x2e86d1, sky: 0x263d58, rock: 0x55606e, foliage: 0x34543b },
+      { name: "Canyon River", fog: 0x6e3825, water: 0x14798f, sky: 0x5e301f, rock: 0x8c4b2e, foliage: 0x7a6336 }
+    ];
+    let selectedMapIdx = 0;
+
+    function chooseMap(idx) {
+      playClick();
+      selectedMapIdx = idx;
+      const cards = document.querySelectorAll('.map-card');
+      cards.forEach((c, i) => c.classList.toggle('selected', i === idx));
+
+      // Update 3D environment atmosphere
+      const m = mapsDB[idx];
+      scene.background.setHex(m.sky);
+      scene.fog.color.setHex(m.fog);
+      if (skyMesh) skyMesh.material.color.setHex(m.sky);
+      if (waterMesh) waterMesh.material.color.setHex(m.water);
+      rockMaterials.forEach(mat => mat.color.setHex(m.rock));
+      foliageMaterials.forEach(mat => mat.color.setHex(m.foliage));
+      toast(`Loaded ${m.name}!`);
+    }
+
+    /* ==========================================================
+       SCREEN NAVIGATION & GAMEPLAY LIFECYCLE
+       ========================================================== */
+    function switchScreen(screenKey) {
+      playClick();
+      steerDir = 0;
+      keysPressed.left = false;
+      keysPressed.right = false;
+
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+      const scr = document.getElementById(`screen-${screenKey}`);
+      if (scr) scr.classList.add('active');
+
+      // Update Toolbar active button
+      const navButtons = document.querySelectorAll('.nav-btn');
+      const keyMap = { 'main-menu': 0, 'hud': 1, 'pause': 2, 'gameover': 3, 'boat-select': 4, 'map-select': 5 };
+      if (keyMap[screenKey] !== undefined) {
+        navButtons[keyMap[screenKey]].classList.add('active');
+      }
+
+      const prevActive = gameActive;
+      gameActive = (screenKey === 'hud');
+      if (!prevActive && gameActive) {
+        clock.getDelta(); // flush delta time so distance doesn't jump
+      }
+
+      if (screenKey === 'boat-select') {
+        renderBoatStats(currentBoatIdx);
+      }
+    }
+
+    function startGame() {
+      playEngine();
+      currentDistance = 0;
+      collectedCoins = 0;
+      playerLives = 3;
+      boatTargetX = 0;
+      boatCurrentX = 0;
+      steerDir = 0;
+      cameraShake = 0;
+      invulnerableTimer = 0;
+      keysPressed.left = false;
+      keysPressed.right = false;
+
+      if (boatGroup) {
+        boatGroup.position.set(0, -0.06, -1.2);
+        boatGroup.rotation.set(0.038, 0, 0);
+        boatGroup.visible = true;
+      }
+      if (camera) {
+        camera.position.set(0, CAM_BASE_Y, CAM_BASE_Z);
+        camera.lookAt(0, CAM_LOOK_Y, CAM_LOOK_Z);
+      }
+
+      document.getElementById('hud-distance-val').innerText = '0 m';
+      document.getElementById('hud-coins-val').innerText = '0';
+      document.getElementById('hud-lives-val').innerText = '3';
+      document.getElementById('hud-speed-val').innerText = `${Math.round(baseSpeed * 3.6)}`;
+      resetObstaclesAndCoins();
+      clock.getDelta();
+      switchScreen('hud');
+    }
+
+    function restartGame() {
+      startGame();
+    }
+
+    function startSteer(dir) {
+      if (!gameActive) {
+        steerDir = 0;
+        return;
+      }
+      steerDir = dir;
+    }
+
+    function stopSteer() {
+      steerDir = 0;
+    }
+
+    function setupSteerButton(btnId, dir) {
+      const btn = document.getElementById(btnId);
+      if (!btn) return;
+
+      const onDown = (e) => {
+        e.preventDefault();
+        if (!gameActive) return;
+        try { btn.setPointerCapture(e.pointerId); } catch (_) {}
+        startSteer(dir);
+      };
+
+      const onUp = (e) => {
+        e.preventDefault();
+        try {
+          if (btn.hasPointerCapture && btn.hasPointerCapture(e.pointerId)) {
+            btn.releasePointerCapture(e.pointerId);
+          }
+        } catch (_) {}
+        stopSteer();
+      };
+
+      btn.addEventListener('pointerdown', onDown);
+      btn.addEventListener('pointerup', onUp);
+      btn.addEventListener('pointercancel', onUp);
+      btn.addEventListener('pointerleave', (e) => {
+        if (!btn.hasPointerCapture || !btn.hasPointerCapture(e.pointerId)) {
+          onUp(e);
+        }
+      });
+      btn.addEventListener('contextmenu', (e) => e.preventDefault());
+    }
+
+    // Keyboard controls (Left: -1, Right: 1) with key conflict resolution
+    window.addEventListener('keydown', (e) => {
+      if (e.repeat) return;
+      if (!gameActive) {
+        if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') switchScreen('pause');
+        return;
+      }
+      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+        keysPressed.left = true;
+        startSteer(-1);
+      } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+        keysPressed.right = true;
+        startSteer(1);
+      } else if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') {
+        switchScreen('pause');
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+        keysPressed.left = false;
+        if (keysPressed.right && gameActive) startSteer(1);
+        else stopSteer();
+      } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+        keysPressed.right = false;
+        if (keysPressed.left && gameActive) startSteer(-1);
+        else stopSteer();
+      }
+    });
+
+    function toggleDeviceFrame() {
+      const c = document.getElementById('game-container');
+      c.classList.toggle('device-frame');
+      setTimeout(onWindowResize, 100);
+    }
+
+    function toggleAudio(type) {
+      playClick();
+      const btn = document.getElementById(`audio-${type}`);
+      btn.classList.toggle('off');
+      toast(`${type.toUpperCase()} toggled`);
+    }
+
+    /* ==========================================================
+       SYNTHESIZED WEB AUDIO (ZERO EXTERNAL DEPENDENCIES)
+       ========================================================== */
+    let audioCtx;
+    function getAudioCtx() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      return audioCtx;
+    }
+
+    function playClick() {
+      try {
+        const ctx = getAudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(180, ctx.currentTime + 0.06);
+        gain.gain.setValueAtTime(0.2, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.06);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.06);
+      } catch (e) {}
+    }
+
+    function playCoin() {
+      try {
+        const ctx = getAudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(987.77, ctx.currentTime); // B5
+        osc.frequency.setValueAtTime(1318.51, ctx.currentTime + 0.08); // E6
+        gain.gain.setValueAtTime(0.25, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.3);
+      } catch (e) {}
+    }
+
+    function playEngine() {
+      try {
+        const ctx = getAudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(80, ctx.currentTime);
+        osc.frequency.linearRampToValueAtTime(220, ctx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.15, ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 0.35);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.35);
+      } catch (e) {}
+    }
+
+    function playCrash() {
+      try {
+        const ctx = getAudioCtx();
+        const bufferSize = ctx.sampleRate * 0.3;
+        const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * 0.07));
+        }
+        const noise = ctx.createBufferSource();
+        noise.buffer = buffer;
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(500, ctx.currentTime);
+        filter.frequency.linearRampToValueAtTime(80, ctx.currentTime + 0.25);
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(0.45, ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(ctx.destination);
+        noise.start();
+      } catch (e) {}
+    }
+
+    let toastTimer;
+    function toast(msg) {
+      const el = document.getElementById('toast');
+      el.innerText = msg;
+      el.style.display = 'block';
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => { el.style.display = 'none'; }, 2000);
+    }
+
+    // Initialize on load
+    window.addEventListener('DOMContentLoaded', () => {
+      init3D();
+      setupSteerButton('btn-steer-l', -1);
+      setupSteerButton('btn-steer-r', 1);
+      renderBoatStats(0);
+    });
+  </script>
+</body>
+</html>
