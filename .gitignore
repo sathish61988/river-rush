@@ -61,6 +61,7 @@ preview/*.bak*
 preview/debug_screens/
 preview/upgraded_screens/
 preview/verified_screens/
+preview/audit_screens/
 
 # ------------------------------------------------------------------------------
 # 5. Root Intermediate Image Slices & Slicing Tests
