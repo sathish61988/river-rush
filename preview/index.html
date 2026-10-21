@@ -3088,6 +3088,7 @@
     const canvas = document.getElementById('webgl-canvas');
     let scene, camera, renderer, clock;
     let waterMesh, boatGroup, boatHullMat, boatStripeMat, boatWakeMesh, skyMesh;
+    let boatMeshVariants = [];
     let sprayPlaneL, sprayPlaneR, waterfallMeshL, waterfallMeshR, churnMesh;
     let bowSprayL, bowSprayR;
     // Bounded Particle Pool (Phase 3)
@@ -3145,11 +3146,11 @@
     let maxComboReached = 1;
     let nearMissPopupTimeout = null;
 
-    // Camera chase settings & dynamic follow (Phase 4B tuned for complete boat visibility & breathing room)
-    const CAM_BASE_Y = 3.85;
-    const CAM_BASE_Z = -7.4;
-    const CAM_LOOK_Y = 0.50;
-    const CAM_LOOK_Z = 14.5;
+    // Camera chase settings & dynamic follow (Phase 9: Elevated framing for complete boat visibility & cinematic depth)
+    const CAM_BASE_Y = 3.92;
+    const CAM_BASE_Z = -7.8;
+    const CAM_LOOK_Y = 0.95;
+    const CAM_LOOK_Z = 16.0;
     const BASE_FOV = 58;
     const MAX_FOV = 64;
     let currentFOV = BASE_FOV;
@@ -3171,34 +3172,34 @@
       c.height = 512;
       const ctx = c.getContext('2d');
 
-      // Sky Gradient: deep tropical blue at zenith to golden peach horizon glow
+      // Sky Gradient: deep zenith tropical sapphire to warm golden peach horizon
       const grad = ctx.createLinearGradient(0, 0, 0, 512);
-      grad.addColorStop(0.0, '#0a365c');
-      grad.addColorStop(0.35, '#136794');
-      grad.addColorStop(0.65, '#229ec2');
-      grad.addColorStop(0.82, '#64c2d4');
-      grad.addColorStop(0.93, '#f8d29b');
-      grad.addColorStop(1.0, '#fdead0');
+      grad.addColorStop(0.0, '#0a3a66');
+      grad.addColorStop(0.28, '#12608e');
+      grad.addColorStop(0.58, '#2096be');
+      grad.addColorStop(0.78, '#58bcd0');
+      grad.addColorStop(0.90, '#f2ca92');
+      grad.addColorStop(1.0, '#fae6cb');
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, 1024, 512);
 
-      // Distant warm tropical sun halo
-      const sunGrad = ctx.createRadialGradient(720, 360, 8, 720, 360, 240);
-      sunGrad.addColorStop(0, 'rgba(255, 255, 235, 0.95)');
-      sunGrad.addColorStop(0.25, 'rgba(255, 225, 140, 0.65)');
-      sunGrad.addColorStop(0.55, 'rgba(255, 180, 85, 0.25)');
-      sunGrad.addColorStop(1, 'rgba(255, 180, 85, 0)');
+      // Warm radiant tropical sun halo at upper right
+      const sunGrad = ctx.createRadialGradient(720, 360, 6, 720, 360, 260);
+      sunGrad.addColorStop(0, 'rgba(255, 255, 240, 0.98)');
+      sunGrad.addColorStop(0.20, 'rgba(255, 230, 150, 0.70)');
+      sunGrad.addColorStop(0.50, 'rgba(255, 185, 95, 0.28)');
+      sunGrad.addColorStop(1, 'rgba(255, 185, 95, 0)');
       ctx.fillStyle = sunGrad;
       ctx.beginPath();
-      ctx.arc(720, 360, 240, 0, Math.PI * 2);
+      ctx.arc(720, 360, 260, 0, Math.PI * 2);
       ctx.fill();
 
-      // Atmospheric Cumulus Clouds along horizon
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.28)';
-      for (let i = 0; i < 9; i++) {
-        const cx = (i * 125 + 30) % 1024;
-        const cy = 375 + (i % 3) * 16;
-        const r = 38 + (i % 4) * 9;
+      // Atmospheric soft cumulus cloud haze along horizon
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.26)';
+      for (let i = 0; i < 11; i++) {
+        const cx = (i * 105 + 25) % 1024;
+        const cy = 380 + (i % 3) * 14;
+        const r = 36 + (i % 4) * 10;
         ctx.beginPath();
         ctx.arc(cx, cy, r, 0, Math.PI * 2);
         ctx.arc(cx + r * 0.75, cy - r * 0.2, r * 0.8, 0, Math.PI * 2);
@@ -3220,21 +3221,20 @@
       const ctx = c.getContext('2d');
 
       // Base warm weathered sedimentary tone
-      ctx.fillStyle = '#655443';
+      ctx.fillStyle = '#5c4b3c';
       ctx.fillRect(0, 0, 512, 512);
 
       // Organic undulating geological strata layers
       for (let y = 0; y < 512; y += 3) {
         const cycle = y % 80;
         let col;
-        if (cycle < 16) col = '#4c3e31'; // deep shadow seam
+        if (cycle < 16) col = '#3f3226'; // deep shadow seam
         else if (cycle < 36) col = '#84715b'; // sunlit limestone layer
-        else if (cycle < 56) col = '#72604c'; // warm ochre sandstone
-        else if (cycle < 68) col = '#594a3a'; // granite band
-        else col = '#3e3226'; // dark basalt fissure
+        else if (cycle < 56) col = '#74614e'; // warm ochre sandstone
+        else if (cycle < 68) col = '#5a4a3a'; // granite band
+        else col = '#3a2e24'; // dark basalt fissure
 
         ctx.fillStyle = col;
-        // Draw slightly wavy horizontal bands
         ctx.beginPath();
         ctx.moveTo(0, y);
         for (let x = 0; x <= 512; x += 32) {
@@ -3344,41 +3344,41 @@
 
     function createWaterColorCanvasTexture() {
       const c = document.createElement('canvas');
-      c.width = 256;
+      c.width = 512;
       c.height = 512;
       const ctx = c.getContext('2d');
 
-      // Across the width (0 to 256), blend vivid shoreline turquoise into deep crystalline emerald-teal
-      const grad = ctx.createLinearGradient(0, 0, 256, 0);
-      grad.addColorStop(0.0, '#0a887e');  // Shoreline turquoise reef
-      grad.addColorStop(0.06, '#087578'); // Shallow edge
-      grad.addColorStop(0.15, '#04525c'); // Channel transition emerald
-      grad.addColorStop(0.32, '#023844'); // Deep river channel
-      grad.addColorStop(0.50, '#012832'); // Deepest central sapphire-emerald abyss
-      grad.addColorStop(0.68, '#023844'); // Deep river channel
-      grad.addColorStop(0.85, '#04525c'); // Channel transition emerald
-      grad.addColorStop(0.94, '#087578'); // Shallow edge
-      grad.addColorStop(1.0, '#0a887e');  // Shoreline turquoise reef
+      // Across the width (0 to 512), blend vivid shoreline turquoise into deep crystalline emerald-teal
+      const grad = ctx.createLinearGradient(0, 0, 512, 0);
+      grad.addColorStop(0.00, '#0ec4b2'); // Crystal turquoise shoreline
+      grad.addColorStop(0.08, '#0ba398'); // Shallow edge
+      grad.addColorStop(0.18, '#06707c'); // Channel transition emerald
+      grad.addColorStop(0.35, '#034556'); // Deep river channel
+      grad.addColorStop(0.50, '#023042'); // Deepest central sapphire-emerald abyss
+      grad.addColorStop(0.65, '#034556'); // Deep river channel
+      grad.addColorStop(0.82, '#06707c'); // Channel transition emerald
+      grad.addColorStop(0.92, '#0ba398'); // Shallow edge
+      grad.addColorStop(1.00, '#0ec4b2'); // Crystal turquoise shoreline
       ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, 256, 512);
+      ctx.fillRect(0, 0, 512, 512);
 
       // Organic longitudinal river current streaks in deep turquoise
-      ctx.fillStyle = 'rgba(12, 140, 130, 0.18)';
-      for (let i = 0; i < 80; i++) {
-        const x = 16 + Math.random() * 224;
+      ctx.fillStyle = 'rgba(18, 175, 165, 0.18)';
+      for (let i = 0; i < 90; i++) {
+        const x = 20 + Math.random() * 472;
         const y = Math.random() * 512;
-        const w = 2 + Math.random() * 8;
-        const h = 45 + Math.random() * 95;
+        const w = 2 + Math.random() * 10;
+        const h = 50 + Math.random() * 110;
         ctx.fillRect(x, y, w, h);
       }
 
       // Crisp sparkling wave caustics
-      ctx.fillStyle = 'rgba(120, 230, 220, 0.08)';
-      for (let i = 0; i < 40; i++) {
-        const x = 32 + Math.random() * 192;
+      ctx.fillStyle = 'rgba(160, 245, 235, 0.12)';
+      for (let i = 0; i < 60; i++) {
+        const x = 30 + Math.random() * 452;
         const y = Math.random() * 512;
-        const w = 1.5 + Math.random() * 4;
-        const h = 20 + Math.random() * 40;
+        const w = 2 + Math.random() * 6;
+        const h = 25 + Math.random() * 50;
         ctx.fillRect(x, y, w, h);
       }
 
@@ -3394,12 +3394,12 @@
       c.height = 512;
       const ctx = c.getContext('2d');
 
-      ctx.fillStyle = '#0a4256';
-      ctx.fillRect(0, 0, 512, 512);
+      // Genuine transparent alpha background (eliminates dark rectangular box artifacts)
+      ctx.clearRect(0, 0, 512, 512);
 
       // Cellular bubbly whitewater foam
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
-      for (let i = 0; i < 550; i++) {
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.94)';
+      for (let i = 0; i < 650; i++) {
         const x = Math.random() * 512;
         const y = Math.random() * 512;
         const r = 2.0 + Math.random() * 8.5;
@@ -3408,9 +3408,9 @@
         ctx.fill();
       }
 
-      // Aerated frothy swirls
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
-      for (let i = 0; i < 220; i++) {
+      // Aerated frothy swirls with soft blue-white rim
+      ctx.fillStyle = 'rgba(235, 250, 255, 0.50)';
+      for (let i = 0; i < 280; i++) {
         const x = Math.random() * 512;
         const y = Math.random() * 512;
         ctx.beginPath();
@@ -3536,8 +3536,8 @@
 
     function init3D() {
       scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x1a5880);
-      scene.fog = new THREE.FogExp2(0x1a5880, 0.0075);
+      scene.background = new THREE.Color(0x164c72);
+      scene.fog = new THREE.FogExp2(0x164c72, 0.0068);
 
       camera = new THREE.PerspectiveCamera(58, 16 / 9, 0.1, 1000);
       camera.position.set(0, CAM_BASE_Y, CAM_BASE_Z);
@@ -3548,7 +3548,7 @@
       renderer.setSize(container.clientWidth, container.clientHeight);
       renderer.outputEncoding = THREE.sRGBEncoding;
       renderer.toneMapping = THREE.ACESFilmicToneMapping;
-      renderer.toneMappingExposure = 0.94;
+      renderer.toneMappingExposure = 0.96;
       renderer.shadowMap.enabled = true;
       renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
@@ -3576,13 +3576,13 @@
       scene.add(skyMesh);
 
       // Balanced Hemisphere Ambient Bounce (Sky: tropical azure, Ground: deep jungle earth)
-      const hemiLight = new THREE.HemisphereLight(0x388cb8, 0x14281a, 0.45);
+      const hemiLight = new THREE.HemisphereLight(0x56a4d4, 0x162c1e, 0.58);
       hemiLight.position.set(0, 50, 0);
       scene.add(hemiLight);
 
       // Sun Directional Light positioned overhead-balanced to evenly light both riverbanks
-      const dirLight = new THREE.DirectionalLight(0xfff0d0, 1.15);
-      dirLight.position.set(8, 54, -20);
+      const dirLight = new THREE.DirectionalLight(0xfff6e4, 1.30);
+      dirLight.position.set(12, 52, -18);
       dirLight.castShadow = true;
       dirLight.shadow.mapSize.width = 1024;
       dirLight.shadow.mapSize.height = 1024;
@@ -3597,17 +3597,17 @@
       scene.add(dirLight);
 
       // Soft River Canyon Fill Light from opposing riverbank
-      const fillLight = new THREE.DirectionalLight(0x187892, 0.25);
+      const fillLight = new THREE.DirectionalLight(0x1488a4, 0.32);
       fillLight.position.set(-25, 20, 30);
       scene.add(fillLight);
 
       // Downriver Gorge Warm Atmospheric Rim Accent
-      const gorgeRimLight = new THREE.DirectionalLight(0xf0aa65, 0.20);
+      const gorgeRimLight = new THREE.DirectionalLight(0xffaa68, 0.35);
       gorgeRimLight.position.set(8, 18, 130);
       scene.add(gorgeRimLight);
 
       // Underwater Up-Glow for rich tropical translucency
-      const underwaterGlow = new THREE.DirectionalLight(0x08566c, 0.18);
+      const underwaterGlow = new THREE.DirectionalLight(0x0c748c, 0.22);
       underwaterGlow.position.set(0, -20, 10);
       scene.add(underwaterGlow);
 
@@ -3616,24 +3616,28 @@
       const waterMat = new THREE.MeshStandardMaterial({
         map: waterColorTex,
         normalMap: waterNormalTex,
-        normalScale: new THREE.Vector2(0.32, 0.32),
-        roughness: 0.16,
-        metalness: 0.08,
+        normalScale: new THREE.Vector2(0.35, 0.35),
+        roughness: 0.12,
+        metalness: 0.15,
         transparent: true,
         opacity: 0.96,
         wireframe: false
       });
-      // Lightweight GPU Fresnel grazing-angle sky highlight (Zero external dependencies)
+      // Lightweight GPU Sun Glint & Fresnel grazing-angle sky reflection
       waterMat.onBeforeCompile = function(shader) {
         shader.fragmentShader = shader.fragmentShader.replace(
           '#include <color_fragment>',
           `
           #include <color_fragment>
           vec3 viewDir = normalize(vViewPosition);
+          vec3 lightDir = normalize(vec3(0.25, 0.88, -0.35));
+          vec3 halfDir = normalize(lightDir + viewDir);
+          float specAngle = max(0.0, dot(vNormal, halfDir));
+          float sunGlint = pow(specAngle, 96.0) * 1.5 + pow(specAngle, 24.0) * 0.30;
           float NdotV = max(0.0, dot(vNormal, viewDir));
-          float fresnel = pow(1.0 - NdotV, 5.0);
-          vec3 fresnelSkyColor = vec3(0.08, 0.38, 0.58);
-          diffuseColor.rgb = mix(diffuseColor.rgb, fresnelSkyColor, fresnel * 0.22);
+          float fresnel = pow(1.0 - NdotV, 4.0);
+          vec3 skyReflection = mix(vec3(0.12, 0.54, 0.82), vec3(0.96, 0.84, 0.68), fresnel * 0.55);
+          diffuseColor.rgb = mix(diffuseColor.rgb, skyReflection, fresnel * 0.62) + vec3(1.0, 0.97, 0.88) * sunGlint;
           `
         );
       };
@@ -3728,11 +3732,11 @@
       });
       sharedPalmNutMat = new THREE.MeshStandardMaterial({ color: 0x3a2512, roughness: 0.9 });
       sharedPalmFrondMat = new THREE.MeshStandardMaterial({
-        color: 0x1f9426,
-        roughness: 0.65,
+        color: 0x22a82a,
+        roughness: 0.55,
         side: THREE.DoubleSide
       });
-      sharedPalmBushMat = new THREE.MeshStandardMaterial({ color: 0x187a20, roughness: 0.75 });
+      sharedPalmBushMat = new THREE.MeshStandardMaterial({ color: 0x1c8824, roughness: 0.70 });
 
       foliageMaterials.push(sharedPalmTrunkMat);
       foliageMaterials.push(sharedPalmFrondMat);
@@ -3761,8 +3765,8 @@
       // Shared Canopy Tree Materials & Geometries
       sharedCanopyTrunkMat = new THREE.MeshStandardMaterial({ color: 0x4a311c, roughness: 0.90 });
       sharedCanopyLeavesMat = new THREE.MeshStandardMaterial({
-        color: 0x166e20,
-        roughness: 0.72,
+        color: 0x187a24,
+        roughness: 0.70,
         flatShading: true
       });
       foliageMaterials.push(sharedCanopyTrunkMat);
@@ -3775,16 +3779,15 @@
         new THREE.DodecahedronGeometry(1.6, 1)
       ];
 
-      // Shared Boulder Materials & Geometries (4 organic rock variations)
+      // Shared Boulder Materials & Geometries (organic weathered river stone with moss caps)
       sharedBoulderRockMat = new THREE.MeshStandardMaterial({
-        color: 0x3e3428,
-        roughness: 0.90,
-        flatShading: true
+        color: 0x483e32,
+        roughness: 0.82,
+        metalness: 0.05
       });
       sharedBoulderMossMat = new THREE.MeshStandardMaterial({
-        color: 0x1c6e22,
-        roughness: 0.82,
-        flatShading: true
+        color: 0x228028,
+        roughness: 0.75
       });
       rockMaterials.push(sharedBoulderRockMat);
       foliageMaterials.push(sharedBoulderMossMat);
@@ -3938,9 +3941,9 @@
       const shelfGeo = new THREE.BoxGeometry(6.5, 1.1, 160);
       const shelfMat = new THREE.MeshStandardMaterial({
         map: cliffTex,
-        color: 0x8a7a66,
-        roughness: 0.88,
-        metalness: 0.02
+        color: 0x766654,
+        roughness: 0.82,
+        metalness: 0.04
       });
       shelfMat.map.repeat.set(2, 28);
       rockMaterials.push(shelfMat);
@@ -3955,35 +3958,37 @@
       shelfR.receiveShadow = true;
       scene.add(shelfR);
 
-      // Sloped beach transition ledges along waterline
+      // Sloped beach transition ledges along waterline (warm tropical riverbed sand)
       const beachMat = new THREE.MeshStandardMaterial({
-        color: 0x5a4834,
-        roughness: 0.94,
-        metalness: 0.01
+        color: 0xc8aa78,
+        roughness: 0.82,
+        metalness: 0.02
       });
       const beachGeo = new THREE.PlaneGeometry(2.8, 160);
       const beachL = new THREE.Mesh(beachGeo, beachMat);
       beachL.rotation.x = -Math.PI / 2;
       beachL.rotation.y = 0.12;
       beachL.position.set(-8.8, 0.06, 40);
+      beachL.receiveShadow = true;
       scene.add(beachL);
 
       const beachR = new THREE.Mesh(beachGeo, beachMat);
       beachR.rotation.x = -Math.PI / 2;
       beachR.rotation.y = -0.12;
       beachR.position.set(8.8, 0.06, 40);
+      beachR.receiveShadow = true;
       scene.add(beachR);
 
       // 2. High Stratified Karst Bluffs and Rock Pillars (staggered with open sky)
       const cliffMat = new THREE.MeshStandardMaterial({
         map: cliffTex,
-        roughness: 0.85,
+        roughness: 0.80,
         flatShading: true
       });
       cliffMat.map.repeat.set(2, 6);
       rockMaterials.push(cliffMat);
 
-      const topMat = new THREE.MeshStandardMaterial({ color: 0x17681e, roughness: 0.78, flatShading: true });
+      const topMat = new THREE.MeshStandardMaterial({ color: 0x1b7826, roughness: 0.72, flatShading: true });
       foliageMaterials.push(topMat);
 
       // Left Bank Karst Spires (open sky between them)
@@ -4143,205 +4148,540 @@
 
     function buildSpeedboat() {
       boatGroup = new THREE.Group();
+      boatMeshVariants = [];
 
-      // Main Gelcoat Materials (matching BG_InGameRiver.png & Boat_Preview_Red.png)
+      // Premium Gelcoat & Metallic PBR Materials
       boatHullMat = new THREE.MeshStandardMaterial({
         color: 0xe02816,
-        roughness: 0.20,
-        metalness: 0.12
+        roughness: 0.16,
+        metalness: 0.32
       });
 
       boatStripeMat = new THREE.MeshStandardMaterial({
         color: 0xffffff,
-        roughness: 0.22,
-        metalness: 0.15
+        roughness: 0.20,
+        metalness: 0.22
       });
 
       const chromeMat = new THREE.MeshStandardMaterial({
-        color: 0xe8edf2,
-        metalness: 0.95,
-        roughness: 0.08
+        color: 0xf4f7fa,
+        metalness: 0.98,
+        roughness: 0.05
       });
 
-      const blackArchMat = new THREE.MeshStandardMaterial({
-        color: 0x1e2024,
-        roughness: 0.35,
-        metalness: 0.82
+      const darkCarbonMat = new THREE.MeshStandardMaterial({
+        color: 0x181a1e,
+        roughness: 0.42,
+        metalness: 0.70
       });
 
       const cockpitInteriorMat = new THREE.MeshStandardMaterial({
-        color: 0x14161a,
-        roughness: 0.7
+        color: 0x121417,
+        roughness: 0.75
       });
 
       const seatMat = new THREE.MeshStandardMaterial({
-        color: 0x2e3238,
+        color: 0x22262c,
         roughness: 0.55
       });
 
       const seatCushionMat = new THREE.MeshStandardMaterial({
-        color: 0xd4c2a8,
-        roughness: 0.45
+        color: 0xd8c8b0,
+        roughness: 0.40
       });
 
-      // 1. Lower Deep-V Racing Hull with aerodynamic chine flare
-      const hullGeo = new THREE.BoxGeometry(1.56, 0.48, 3.2);
-      const hull = new THREE.Mesh(hullGeo, boatHullMat);
-      hull.position.y = 0.24;
-      hull.castShadow = true;
-      boatGroup.add(hull);
-
-      // Aerodynamic Tapered Bow Provis
-      const bowGeo = new THREE.CylinderGeometry(0.02, 1.54, 1.42, 4);
-      const bow = new THREE.Mesh(bowGeo, boatHullMat);
-      bow.rotation.y = Math.PI / 4;
-      bow.position.set(0, 0.24, 2.22);
-      bow.scale.set(1.0, 1.0, 0.56);
-      bow.castShadow = true;
-      boatGroup.add(bow);
-
-      // Flared Chrome Chine Spray Rails & Gunwale Rubrails
-      const railL = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.08, 3.5), chromeMat);
-      railL.position.set(-0.79, 0.38, 0.1);
-      boatGroup.add(railL);
-      const railR = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.08, 3.5), chromeMat);
-      railR.position.set(0.79, 0.38, 0.1);
-      boatGroup.add(railR);
-
-      // Center Racing Stripe on Foredeck
-      const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.04, 2.45), boatStripeMat);
-      stripe.position.set(0, 0.48, 1.05);
-      boatGroup.add(stripe);
-
-      // Chrome Bow Cleat and Nav Light
-      const bowCleat = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.05, 0.08), chromeMat);
-      bowCleat.position.set(0, 0.5, 2.5);
-      boatGroup.add(bowCleat);
-
-      // 2. Cockpit Well with Teak Wood Decking & Dashboard
-      const well = new THREE.Mesh(new THREE.BoxGeometry(1.24, 0.3, 1.84), cockpitInteriorMat);
-      well.position.set(0, 0.45, -0.22);
-      boatGroup.add(well);
-
-      const teakDeckGeo = new THREE.PlaneGeometry(1.22, 1.8);
-      const teakDeckMat = new THREE.MeshStandardMaterial({
-        map: teakDeckTex,
-        roughness: 0.38
-      });
-      const teakDeck = new THREE.Mesh(teakDeckGeo, teakDeckMat);
-      teakDeck.rotation.x = -Math.PI / 2;
-      teakDeck.position.set(0, 0.48, -0.22);
-      boatGroup.add(teakDeck);
-
-      // Dashboard console with dials
-      const dash = new THREE.Mesh(new THREE.BoxGeometry(1.18, 0.24, 0.22), cockpitInteriorMat);
-      dash.position.set(0, 0.62, 0.58);
-      dash.rotation.x = -0.22;
-      boatGroup.add(dash);
-
-      // Wrap-around Aerodynamic Tinted Windshield
       const glassMat = new THREE.MeshPhysicalMaterial({
-        color: 0x4fc2f0,
+        color: 0x48c4f0,
         transparent: true,
-        opacity: 0.68,
-        roughness: 0.06,
+        opacity: 0.72,
+        roughness: 0.05,
+        transmission: 0.76,
+        reflectivity: 0.96
+      });
+
+      const cyanGlassMat = new THREE.MeshPhysicalMaterial({
+        color: 0x00f0ff,
+        transparent: true,
+        opacity: 0.75,
+        roughness: 0.05,
         transmission: 0.78,
+        reflectivity: 0.96
+      });
+
+      const darkGlassMat = new THREE.MeshPhysicalMaterial({
+        color: 0x222630,
+        transparent: true,
+        opacity: 0.85,
+        roughness: 0.08,
+        transmission: 0.60,
+        reflectivity: 0.92
+      });
+
+      const greenGlassMat = new THREE.MeshPhysicalMaterial({
+        color: 0x30e868,
+        transparent: true,
+        opacity: 0.72,
+        roughness: 0.06,
+        transmission: 0.75,
         reflectivity: 0.95
       });
-      const glass = new THREE.Mesh(new THREE.BoxGeometry(1.20, 0.38, 0.12), glassMat);
-      glass.rotation.x = -0.42;
-      glass.position.set(0, 0.72, 0.64);
-      boatGroup.add(glass);
 
-      // Chrome Windshield Frame Bar
-      const frameBar = new THREE.Mesh(new THREE.BoxGeometry(1.24, 0.04, 0.06), chromeMat);
-      frameBar.position.set(0, 0.88, 0.58);
-      boatGroup.add(frameBar);
-
-      // Side Windshield Wings
-      const wingL = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.3, 0.64), glassMat);
-      wingL.position.set(-0.60, 0.70, 0.38);
-      boatGroup.add(wingL);
-      const wingR = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.3, 0.64), glassMat);
-      wingR.position.set(0.60, 0.70, 0.38);
-      boatGroup.add(wingR);
-
-      // Ergonomic Racing Bucket Seats with Headrests (matching Speedster artwork)
-      [-0.32, 0.32].forEach(sx => {
-        const seatBase = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.22, 0.38), seatMat);
-        seatBase.position.set(sx, 0.54, -0.32);
-        boatGroup.add(seatBase);
-
-        const seatBack = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.46, 0.12), seatCushionMat);
-        seatBack.position.set(sx, 0.82, -0.48);
-        seatBack.rotation.x = -0.15;
-        boatGroup.add(seatBack);
-
-        const headrest = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.15, 0.1), seatCushionMat);
-        headrest.position.set(sx, 1.08, -0.52);
-        boatGroup.add(headrest);
+      const violetGlassMat = new THREE.MeshPhysicalMaterial({
+        color: 0x9d4edd,
+        transparent: true,
+        opacity: 0.78,
+        roughness: 0.05,
+        transmission: 0.72,
+        reflectivity: 0.95
       });
 
-      // Chrome 3-Spoke Steering Wheel
-      const wheelRing = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.024, 8, 18), chromeMat);
-      wheelRing.position.set(-0.32, 0.74, 0.3);
-      wheelRing.rotation.x = 0.52;
-      boatGroup.add(wheelRing);
+      const neonCyanMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff });
+      const neonPurpleMat = new THREE.MeshBasicMaterial({ color: 0xc752ff });
 
-      // 3. Sport Roll-Bar Arch (Offshore Wakeboard Tower matching artwork)
-      const archGroup = new THREE.Group();
-      archGroup.position.set(0, 0.48, -0.74);
+      // ==========================================================
+      // VARIANT 0: SPEEDSTER (Classic Deep-V Offshore Racer)
+      // ==========================================================
+      const v0Group = new THREE.Group();
+      {
+        const hullGeo = new THREE.BoxGeometry(1.56, 0.48, 3.2);
+        const hull = new THREE.Mesh(hullGeo, boatHullMat);
+        hull.position.y = 0.24;
+        hull.castShadow = true;
+        v0Group.add(hull);
 
-      const pilL = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 1.18, 9), blackArchMat);
-      pilL.position.set(-0.64, 0.55, 0);
-      pilL.rotation.z = -0.16;
-      archGroup.add(pilL);
+        const bowGeo = new THREE.CylinderGeometry(0.02, 1.54, 1.42, 4);
+        const bow = new THREE.Mesh(bowGeo, boatHullMat);
+        bow.rotation.y = Math.PI / 4;
+        bow.position.set(0, 0.24, 2.22);
+        bow.scale.set(1.0, 1.0, 0.56);
+        bow.castShadow = true;
+        v0Group.add(bow);
 
-      const pilR = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 1.18, 9), blackArchMat);
-      pilR.position.set(0.64, 0.55, 0);
-      pilR.rotation.z = 0.16;
-      archGroup.add(pilR);
+        // Flared Chrome Chine Spray Rails & Gunwale Rubrails
+        const railL = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.08, 3.5), chromeMat);
+        railL.position.set(-0.79, 0.38, 0.1);
+        v0Group.add(railL);
+        const railR = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.08, 3.5), chromeMat);
+        railR.position.set(0.79, 0.38, 0.1);
+        v0Group.add(railR);
 
-      const crossbar = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.4, 9), blackArchMat);
-      crossbar.rotation.z = Math.PI / 2;
-      crossbar.position.set(0, 1.1, 0);
-      archGroup.add(crossbar);
+        // Center Racing Stripe on Foredeck
+        const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.04, 2.45), boatStripeMat);
+        stripe.position.set(0, 0.48, 1.05);
+        v0Group.add(stripe);
 
-      const navLight = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), new THREE.MeshBasicMaterial({ color: 0xff2818 }));
-      navLight.position.set(0, 1.2, 0);
-      archGroup.add(navLight);
-      boatGroup.add(archGroup);
+        // Chrome Bow Cleat and Nav Light
+        const bowCleat = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.05, 0.08), chromeMat);
+        bowCleat.position.set(0, 0.5, 2.5);
+        v0Group.add(bowCleat);
 
-      // 4. Dual High-Performance Outboard Motors on Transom
-      [-0.42, 0.42].forEach(mx => {
-        const motorGroup = new THREE.Group();
-        motorGroup.position.set(mx, 0.44, -1.7);
+        // Cockpit Well with Teak Wood Decking & Dashboard
+        const well = new THREE.Mesh(new THREE.BoxGeometry(1.24, 0.3, 1.84), cockpitInteriorMat);
+        well.position.set(0, 0.45, -0.22);
+        v0Group.add(well);
 
-        const cowl = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.54, 0.44), boatHullMat);
-        cowl.position.y = 0.16;
-        cowl.castShadow = true;
-        motorGroup.add(cowl);
+        const teakDeck = new THREE.Mesh(new THREE.PlaneGeometry(1.22, 1.8), new THREE.MeshStandardMaterial({ map: teakDeckTex, roughness: 0.38 }));
+        teakDeck.rotation.x = -Math.PI / 2;
+        teakDeck.position.set(0, 0.48, -0.22);
+        v0Group.add(teakDeck);
 
-        const cowlTop = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.08, 0.4), boatStripeMat);
-        cowlTop.position.y = 0.44;
-        motorGroup.add(cowlTop);
+        const dash = new THREE.Mesh(new THREE.BoxGeometry(1.18, 0.24, 0.22), cockpitInteriorMat);
+        dash.position.set(0, 0.62, 0.58);
+        dash.rotation.x = -0.22;
+        v0Group.add(dash);
 
-        const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.07, 0.58, 8), chromeMat);
-        shaft.position.set(0, -0.3, -0.05);
-        motorGroup.add(shaft);
+        // Windshield
+        const glass = new THREE.Mesh(new THREE.BoxGeometry(1.20, 0.38, 0.12), glassMat);
+        glass.rotation.x = -0.42;
+        glass.position.set(0, 0.72, 0.64);
+        v0Group.add(glass);
 
-        const skeg = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.18, 0.22), chromeMat);
-        skeg.position.set(0, -0.5, -0.08);
-        motorGroup.add(skeg);
+        const frameBar = new THREE.Mesh(new THREE.BoxGeometry(1.24, 0.04, 0.06), chromeMat);
+        frameBar.position.set(0, 0.88, 0.58);
+        v0Group.add(frameBar);
 
-        // Chrome Twin Propeller
-        const prop = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.04, 6), chromeMat);
-        prop.rotation.x = Math.PI / 2;
-        prop.position.set(0, -0.42, 0.08);
-        motorGroup.add(prop);
+        const wingL = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.3, 0.64), glassMat);
+        wingL.position.set(-0.60, 0.70, 0.38);
+        v0Group.add(wingL);
+        const wingR = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.3, 0.64), glassMat);
+        wingR.position.set(0.60, 0.70, 0.38);
+        v0Group.add(wingR);
 
-        boatGroup.add(motorGroup);
-      });
+        // Racing Bucket Seats
+        [-0.32, 0.32].forEach(sx => {
+          const seatBase = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.22, 0.38), seatMat);
+          seatBase.position.set(sx, 0.54, -0.32);
+          v0Group.add(seatBase);
+          const seatBack = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.46, 0.12), seatCushionMat);
+          seatBack.position.set(sx, 0.82, -0.48);
+          seatBack.rotation.x = -0.15;
+          v0Group.add(seatBack);
+          const headrest = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.15, 0.1), seatCushionMat);
+          headrest.position.set(sx, 1.08, -0.52);
+          v0Group.add(headrest);
+        });
+
+        // 3-Spoke Steering Wheel
+        const wheelRing = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.024, 8, 18), chromeMat);
+        wheelRing.position.set(-0.32, 0.74, 0.3);
+        wheelRing.rotation.x = 0.52;
+        v0Group.add(wheelRing);
+
+        // Sport Roll-Bar Arch
+        const arch = new THREE.Group();
+        arch.position.set(0, 0.48, -0.74);
+        const pilL = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 1.18, 9), darkCarbonMat);
+        pilL.position.set(-0.64, 0.55, 0);
+        pilL.rotation.z = -0.16;
+        arch.add(pilL);
+        const pilR = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 1.18, 9), darkCarbonMat);
+        pilR.position.set(0.64, 0.55, 0);
+        pilR.rotation.z = 0.16;
+        arch.add(pilR);
+        const crossbar = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 1.4, 9), darkCarbonMat);
+        crossbar.rotation.z = Math.PI / 2;
+        crossbar.position.set(0, 1.1, 0);
+        arch.add(crossbar);
+        const navLight = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), new THREE.MeshBasicMaterial({ color: 0xff2818 }));
+        navLight.position.set(0, 1.2, 0);
+        arch.add(navLight);
+        v0Group.add(arch);
+
+        // Dual Outboards
+        [-0.42, 0.42].forEach(mx => {
+          const motorGroup = new THREE.Group();
+          motorGroup.position.set(mx, 0.44, -1.7);
+          const cowl = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.54, 0.44), boatHullMat);
+          cowl.position.y = 0.16;
+          cowl.castShadow = true;
+          motorGroup.add(cowl);
+          const cowlTop = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.08, 0.4), boatStripeMat);
+          cowlTop.position.y = 0.44;
+          motorGroup.add(cowlTop);
+          const shaft = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.07, 0.58, 8), chromeMat);
+          shaft.position.set(0, -0.3, -0.05);
+          motorGroup.add(shaft);
+          const skeg = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.18, 0.22), chromeMat);
+          skeg.position.set(0, -0.5, -0.08);
+          motorGroup.add(skeg);
+          const prop = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.04, 6), chromeMat);
+          prop.rotation.x = Math.PI / 2;
+          prop.position.set(0, -0.42, 0.08);
+          motorGroup.add(prop);
+          v0Group.add(motorGroup);
+        });
+      }
+      boatGroup.add(v0Group);
+      boatMeshVariants.push(v0Group);
+
+      // ==========================================================
+      // VARIANT 1: HYDRO WAVE (Twin-Sponson Tunnel Hydroplane)
+      // ==========================================================
+      const v1Group = new THREE.Group();
+      {
+        // Left Sponson & Bow Knife
+        const spL = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.46, 3.4), boatHullMat);
+        spL.position.set(-0.58, 0.23, 0.1);
+        spL.castShadow = true;
+        v1Group.add(spL);
+        const bowL = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.52, 1.4, 4), boatHullMat);
+        bowL.rotation.y = Math.PI / 4;
+        bowL.position.set(-0.58, 0.23, 2.3);
+        bowL.scale.set(1.0, 1.0, 0.55);
+        bowL.castShadow = true;
+        v1Group.add(bowL);
+
+        // Right Sponson & Bow Knife
+        const spR = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.46, 3.4), boatHullMat);
+        spR.position.set(0.58, 0.23, 0.1);
+        spR.castShadow = true;
+        v1Group.add(spR);
+        const bowR = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.52, 1.4, 4), boatHullMat);
+        bowR.rotation.y = Math.PI / 4;
+        bowR.position.set(0.58, 0.23, 2.3);
+        bowR.scale.set(1.0, 1.0, 0.55);
+        bowR.castShadow = true;
+        v1Group.add(bowR);
+
+        // Elevated Center Tunnel Aerobridge
+        const bridge = new THREE.Mesh(new THREE.BoxGeometry(0.70, 0.22, 2.8), boatHullMat);
+        bridge.position.set(0, 0.36, 0.0);
+        v1Group.add(bridge);
+
+        // Cyan Wave Stripe Trim along sponsons
+        [-0.85, 0.85].forEach(sx => {
+          const wStripe = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.08, 3.2), boatStripeMat);
+          wStripe.position.set(sx, 0.38, 0.1);
+          v1Group.add(wStripe);
+        });
+
+        // Foredeck Air Scoop
+        const scoop = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.18, 0.78), darkCarbonMat);
+        scoop.position.set(0, 0.54, 1.1);
+        v1Group.add(scoop);
+
+        // Cockpit Well
+        const well = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.3, 1.7), cockpitInteriorMat);
+        well.position.set(0, 0.45, -0.2);
+        v1Group.add(well);
+
+        // Low-Profile Wraparound Cyan Windshield
+        const glass = new THREE.Mesh(new THREE.BoxGeometry(1.06, 0.32, 0.10), cyanGlassMat);
+        glass.rotation.x = -0.46;
+        glass.position.set(0, 0.68, 0.62);
+        v1Group.add(glass);
+
+        // Dual Racing Seats with Cyan Highlights
+        [-0.26, 0.26].forEach(sx => {
+          const sBase = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.20, 0.34), seatMat);
+          sBase.position.set(sx, 0.54, -0.3);
+          v1Group.add(sBase);
+          const sBack = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.42, 0.10), seatMat);
+          sBack.position.set(sx, 0.80, -0.44);
+          sBack.rotation.x = -0.15;
+          v1Group.add(sBack);
+        });
+
+        // Dual Chrome Exhaust Pipes on Sponsons
+        [-0.72, 0.72].forEach(ex => {
+          const pipe = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.07, 0.85, 8), chromeMat);
+          pipe.rotation.x = Math.PI / 2.4;
+          pipe.position.set(ex, 0.48, -1.2);
+          v1Group.add(pipe);
+        });
+
+        // Rear Aerofoil Bridge Wing between sponsons
+        const wing = new THREE.Mesh(new THREE.BoxGeometry(1.72, 0.06, 0.38), boatStripeMat);
+        wing.position.set(0, 0.94, -1.25);
+        v1Group.add(wing);
+        [-0.82, 0.82].forEach(fx => {
+          const fin = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.45, 0.42), darkCarbonMat);
+          fin.position.set(fx, 0.76, -1.25);
+          v1Group.add(fin);
+        });
+
+        // Dual Racing Outboards
+        [-0.56, 0.56].forEach(mx => {
+          const mot = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.52, 0.40), boatHullMat);
+          mot.position.set(mx, 0.45, -1.68);
+          v1Group.add(mot);
+          const sh = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.06, 0.54, 8), chromeMat);
+          sh.position.set(mx, 0.16, -1.72);
+          v1Group.add(sh);
+        });
+      }
+      boatGroup.add(v1Group);
+      boatMeshVariants.push(v1Group);
+
+      // ==========================================================
+      // VARIANT 2: THUNDERBOLT (Muscle Offshore Cigarette Speedster)
+      // ==========================================================
+      const v2Group = new THREE.Group();
+      {
+        // Extended Needle Hull
+        const hull = new THREE.Mesh(new THREE.BoxGeometry(1.50, 0.48, 3.8), boatHullMat);
+        hull.position.set(0, 0.24, 0.18);
+        hull.castShadow = true;
+        v2Group.add(hull);
+
+        const bow = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 1.48, 1.8, 4), boatHullMat);
+        bow.rotation.y = Math.PI / 4;
+        bow.position.set(0, 0.24, 2.7);
+        bow.scale.set(1.0, 1.0, 0.54);
+        bow.castShadow = true;
+        v2Group.add(bow);
+
+        // Bold Center Racing Stripe
+        const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.04, 3.0), boatStripeMat);
+        stripe.position.set(0, 0.49, 1.2);
+        v2Group.add(stripe);
+
+        // Gunmetal Chine Rails
+        [-0.76, 0.76].forEach(rx => {
+          const rail = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.08, 4.0), darkCarbonMat);
+          rail.position.set(rx, 0.38, 0.2);
+          v2Group.add(rail);
+        });
+
+        // Cockpit Well
+        const well = new THREE.Mesh(new THREE.BoxGeometry(1.18, 0.3, 1.7), cockpitInteriorMat);
+        well.position.set(0, 0.45, -0.35);
+        v2Group.add(well);
+
+        // Dark Tinted Raked Aerodynamic Windshield
+        const glass = new THREE.Mesh(new THREE.BoxGeometry(1.22, 0.34, 0.12), darkGlassMat);
+        glass.rotation.x = -0.48;
+        glass.position.set(0, 0.70, 0.48);
+        v2Group.add(glass);
+
+        // Racing Seats
+        [-0.30, 0.30].forEach(sx => {
+          const sBase = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.20, 0.36), seatMat);
+          sBase.position.set(sx, 0.54, -0.4);
+          v2Group.add(sBase);
+          const sBack = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.44, 0.12), darkCarbonMat);
+          sBack.position.set(sx, 0.82, -0.56);
+          sBack.rotation.x = -0.15;
+          v2Group.add(sBack);
+        });
+
+        // Twin Chrome Turbo Velocity Stacks / Cowl Scoop on Aft Hatch
+        [-0.34, 0.34].forEach(vx => {
+          const stack = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.06, 0.32, 12), chromeMat);
+          stack.position.set(vx, 0.62, -1.05);
+          v2Group.add(stack);
+          const rim = new THREE.Mesh(new THREE.TorusGeometry(0.09, 0.02, 6, 14), chromeMat);
+          rim.rotation.x = Math.PI / 2;
+          rim.position.set(vx, 0.76, -1.05);
+          v2Group.add(rim);
+        });
+
+        // Full-Width GT Downforce Rear Wing
+        const wing = new THREE.Mesh(new THREE.BoxGeometry(1.68, 0.06, 0.42), darkCarbonMat);
+        wing.position.set(0, 0.98, -1.48);
+        v2Group.add(wing);
+        [-0.78, 0.78].forEach(fx => {
+          const endFin = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.48, 0.46), boatStripeMat);
+          endFin.position.set(fx, 0.80, -1.48);
+          v2Group.add(endFin);
+        });
+
+        // Dual Inboard Drives on Transom
+        [-0.38, 0.38].forEach(dx => {
+          const drive = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.35, 0.45), chromeMat);
+          drive.position.set(dx, 0.24, -1.82);
+          v2Group.add(drive);
+        });
+      }
+      boatGroup.add(v2Group);
+      boatMeshVariants.push(v2Group);
+
+      // ==========================================================
+      // VARIANT 3: VIPER JET (Aerodynamic Fighter Jet Boat)
+      // ==========================================================
+      const v3Group = new THREE.Group();
+      {
+        // Faceted Fuselage
+        const hull = new THREE.Mesh(new THREE.BoxGeometry(1.62, 0.46, 3.4), boatHullMat);
+        hull.position.set(0, 0.24, 0.05);
+        hull.castShadow = true;
+        v3Group.add(hull);
+
+        const bow = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 1.60, 1.6, 4), boatHullMat);
+        bow.rotation.y = Math.PI / 4;
+        bow.position.set(0, 0.24, 2.3);
+        bow.scale.set(1.0, 1.0, 0.54);
+        bow.castShadow = true;
+        v3Group.add(bow);
+
+        // Angled Lateral Chines & NACA Jet Scoops
+        [-0.86, 0.86].forEach((sx, sIdx) => {
+          const strake = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.12, 3.2), boatStripeMat);
+          strake.position.set(sx, 0.36, 0.1);
+          strake.rotation.z = sIdx === 0 ? -0.25 : 0.25;
+          v3Group.add(strake);
+
+          const scoop = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.20, 0.65), darkCarbonMat);
+          scoop.position.set(sx * 0.92, 0.44, 0.35);
+          v3Group.add(scoop);
+        });
+
+        // Enclosed Aerospace Bubble Canopy Cockpit
+        const canopy = new THREE.Mesh(new THREE.SphereGeometry(0.58, 16, 12), greenGlassMat);
+        canopy.scale.set(1.05, 0.62, 2.1);
+        canopy.position.set(0, 0.60, 0.22);
+        v3Group.add(canopy);
+
+        // Canopy Spine & Frame Rib
+        const spine = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.10, 2.2), darkCarbonMat);
+        spine.position.set(0, 0.88, 0.22);
+        v3Group.add(spine);
+
+        // Twin Hydrojet Turbine Propulsion Cowlings
+        [-0.44, 0.44].forEach(jx => {
+          const jetCowl = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.24, 0.95, 14), darkCarbonMat);
+          jetCowl.rotation.x = Math.PI / 2;
+          jetCowl.position.set(jx, 0.44, -1.35);
+          v3Group.add(jetCowl);
+
+          // Glowing Neon Exhaust Ring
+          const thrustRing = new THREE.Mesh(new THREE.TorusGeometry(0.18, 0.04, 8, 16), neonCyanMat);
+          thrustRing.position.set(jx, 0.44, -1.82);
+          v3Group.add(thrustRing);
+        });
+
+        // Transom Stabilizer Winglets
+        [-0.82, 0.82].forEach((wx, wIdx) => {
+          const winglet = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.06, 0.48), boatStripeMat);
+          winglet.position.set(wx, 0.48, -1.5);
+          winglet.rotation.z = wIdx === 0 ? 0.35 : -0.35;
+          v3Group.add(winglet);
+        });
+      }
+      boatGroup.add(v3Group);
+      boatMeshVariants.push(v3Group);
+
+      // ==========================================================
+      // VARIANT 4: PHANTOM X (Stealth Faceted Interceptor Hyper-Boat)
+      // ==========================================================
+      const v4Group = new THREE.Group();
+      {
+        // Stealth Angular Hull
+        const hull = new THREE.Mesh(new THREE.BoxGeometry(1.68, 0.48, 3.5), darkCarbonMat);
+        hull.position.set(0, 0.24, 0.1);
+        hull.castShadow = true;
+        v4Group.add(hull);
+
+        const bow = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 1.66, 1.7, 4), darkCarbonMat);
+        bow.rotation.y = Math.PI / 4;
+        bow.position.set(0, 0.24, 2.4);
+        bow.scale.set(1.0, 1.0, 0.54);
+        bow.castShadow = true;
+        v4Group.add(bow);
+
+        // Stealth Faceted Foredeck Ridge
+        const ridge = new THREE.Mesh(new THREE.ConeGeometry(0.38, 2.2, 4), darkCarbonMat);
+        ridge.rotation.x = Math.PI / 2;
+        ridge.position.set(0, 0.54, 1.1);
+        v4Group.add(ridge);
+
+        // Luminous Neon Purple Edge Strakes
+        [-0.86, 0.86].forEach(px => {
+          const pStrake = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.06, 3.4), neonPurpleMat);
+          pStrake.position.set(px, 0.42, 0.1);
+          v4Group.add(pStrake);
+        });
+
+        // Stealth Visor Cockpit
+        const visor = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.65, 0.38, 5), violetGlassMat);
+        visor.rotation.y = Math.PI / 5;
+        visor.position.set(0, 0.66, 0.32);
+        v4Group.add(visor);
+
+        // Twin Stealth Turbine Thruster Nacelles
+        [-0.45, 0.45].forEach(tx => {
+          const nacelle = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.38, 1.1), darkCarbonMat);
+          nacelle.position.set(tx, 0.46, -1.35);
+          v4Group.add(nacelle);
+
+          // Glowing Purple Nozzle
+          const pRing = new THREE.Mesh(new THREE.TorusGeometry(0.16, 0.035, 6, 14), neonPurpleMat);
+          pRing.position.set(tx, 0.46, -1.88);
+          v4Group.add(pRing);
+        });
+
+        // Stealth Telemetry Dorsal Fin
+        const dFin = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.45, 0.72), darkCarbonMat);
+        dFin.position.set(0, 0.82, -1.1);
+        dFin.rotation.x = -0.32;
+        v4Group.add(dFin);
+      }
+      boatGroup.add(v4Group);
+      boatMeshVariants.push(v4Group);
+
+      // ==========================================================
+      // SHARED BOAT PROPULSION & WATER INTERACTION EFFECTS
+      // ==========================================================
 
       // 5. Trailing V-Wake Foam Plane with Procedural Foam Texture
       const wakeGeo = new THREE.PlaneGeometry(8.5, 12.0, 4, 8);
@@ -4425,10 +4765,25 @@
       bowSprayR.position.set(0.76, 0.16, 1.35);
       boatGroup.add(bowSprayR);
 
-      // Natural immersed waterline stance with slight planing pitch (raised 4cm for clear hull visibility)
-      boatGroup.position.set(0, -0.02, -1.2);
+      // Elevated camera framing position for complete boat visibility
+      boatGroup.position.set(0, -0.02, -0.85);
       boatGroup.rotation.x = 0.038;
       scene.add(boatGroup);
+
+      // Activate initial selected boat model variant
+      updateBoatModel(selectedBoatIdx);
+    }
+
+    function updateBoatModel(idx) {
+      if (idx < 0 || idx >= boatsDB.length) idx = 0;
+      if (boatMeshVariants && boatMeshVariants.length) {
+        boatMeshVariants.forEach((v, i) => {
+          if (v) v.visible = (i === idx);
+        });
+      }
+      const b = boatsDB[idx];
+      if (boatHullMat) boatHullMat.color.setHex(b.color);
+      if (boatStripeMat) boatStripeMat.color.setHex(b.stripe);
     }
 
     function buildPickupsAndObstacles() {
@@ -4899,15 +5254,18 @@
         waterNormalTex.offset.x = Math.sin(t * 0.7) * 0.025;
       }
 
-      // Animate Water ripples & Dynamic Boat Wake
+      // Animate Water ripples & Dynamic Boat Wake (with Rapids turbulence & froth)
       const pos = waterMesh.geometry.attributes.position;
-      const bZ = boatGroup ? boatGroup.position.z : -1.2;
+      const bZ = boatGroup ? boatGroup.position.z : -0.85;
+      const isRapids = (typeof currentEvent !== 'undefined' && currentEvent === RIVER_EVENTS.RAPIDS) || (typeof rapidSpeedBoost !== 'undefined' && rapidSpeedBoost > 0);
+      const waveAmp = isRapids ? 0.32 : 0.12;
+      const waveFreq = isRapids ? 6.4 : 4.0;
       for (let i = 0; i < pos.count; i++) {
         const u = pos.getX(i);
         const v = pos.getY(i);
-        let wave = Math.sin(u * 0.38 + t * 4.2) * 0.13
-                 + Math.cos(v * 0.26 - currentDistance * 0.22) * 0.15
-                 + Math.sin((u * 0.8 + v * 0.6) + t * 3.0) * 0.05;
+        let wave = Math.sin(u * 0.38 + t * waveFreq) * waveAmp
+                 + Math.cos(v * 0.26 - currentDistance * (isRapids ? 0.36 : 0.22)) * (waveAmp * 1.15)
+                 + Math.sin((u * 0.8 + v * 0.6) + t * (waveFreq * 0.7)) * (waveAmp * 0.45);
 
         // Realistic V-Wake behind speedboat
         const dz = v - bZ;
@@ -4915,14 +5273,16 @@
           const dx = Math.abs(u - boatCurrentX);
           const wakeWidth = 1.0 - dz * 0.25;
           if (dx < wakeWidth) {
-            wave += Math.cos(dx * 3.2 + dz * 1.6 - t * 8.5) * (0.22 * (1.0 + dz / 28));
+            wave += Math.cos(dx * 3.2 + dz * 1.6 - t * 8.5) * (0.24 * (1.0 + dz / 28));
           }
         }
         pos.setZ(i, wave);
       }
       pos.needsUpdate = true;
-      // Note: CPU computeVertexNormals removed to eliminate per-frame CPU bottleneck;
-      // PBR normalMap handles high-frequency lighting and reflections seamlessly.
+      if (waterMesh && waterMesh.material) {
+        const targetNormal = isRapids ? 0.62 : 0.35;
+        waterMesh.material.normalScale.set(targetNormal, targetNormal);
+      }
 
       // Animate Coins spin
       coins.forEach(c => {
@@ -6411,12 +6771,12 @@
         }
       }
 
-      // Update 3D boat hull & stripe colors
-      if (boatHullMat) {
-        boatHullMat.color.setHex(b.color);
-      }
-      if (boatStripeMat) {
-        boatStripeMat.color.setHex(b.stripe);
+      // Update 3D boat model variant, hull & stripe colors
+      if (typeof updateBoatModel === 'function') {
+        updateBoatModel(idx);
+      } else {
+        if (boatHullMat) boatHullMat.color.setHex(b.color);
+        if (boatStripeMat) boatStripeMat.color.setHex(b.stripe);
       }
 
       // Update thumbnails selection, equipped checkmark & lock badges
@@ -6854,9 +7214,13 @@
       if (typeof updateNitroHUD === 'function') updateNitroHUD();
 
       if (boatsDB[selectedBoatIdx]) {
-        const b = boatsDB[selectedBoatIdx];
-        if (boatHullMat) boatHullMat.color.setHex(b.color);
-        if (boatStripeMat) boatStripeMat.color.setHex(b.stripe);
+        if (typeof updateBoatModel === 'function') {
+          updateBoatModel(selectedBoatIdx);
+        } else {
+          const b = boatsDB[selectedBoatIdx];
+          if (boatHullMat) boatHullMat.color.setHex(b.color);
+          if (boatStripeMat) boatStripeMat.color.setHex(b.stripe);
+        }
       }
 
       // Phase 6 Reset
@@ -6990,13 +7354,13 @@
       // Calculate relative tilt from neutral holding angle
       const relTilt = rawTiltAngle - neutralTiltAngle;
 
-      // Apply dead zone and clamp (reverse horizontal tilt mapping: left tilt -> steer left, right tilt -> steer right)
+      // Apply dead zone and clamp (direct horizontal tilt mapping: left tilt -> steer left, right tilt -> steer right)
       if (Math.abs(relTilt) <= TILT_DEADZONE) {
         targetTiltSteer = 0;
       } else {
         const sign = Math.sign(relTilt);
         const mag = Math.min(1.0, (Math.abs(relTilt) - TILT_DEADZONE) / (TILT_MAX - TILT_DEADZONE));
-        targetTiltSteer = -sign * mag;
+        targetTiltSteer = sign * mag;
       }
     }
 
@@ -7169,6 +7533,9 @@
       get() { return targetTiltSteer; },
       set(v) { targetTiltSteer = v; }
     });
+    window.updateBoatModel = updateBoatModel;
+    window.boatMeshVariants = boatMeshVariants;
+    window.renderBoatSelection = renderBoatStats;
 
     // Expose Phase 6 hooks for test harness & verification
     window.RIVER_EVENTS = RIVER_EVENTS;
