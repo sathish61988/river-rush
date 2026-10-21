@@ -2600,6 +2600,109 @@
       margin-top: 2px;
       letter-spacing: 0.5px;
     }
+
+    /* Development Tilt Sensor Diagnostics Overlay (Step 3) */
+    .tilt-diag-overlay {
+      position: absolute;
+      top: 52px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 999;
+      background: rgba(8, 18, 32, 0.94);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1.5px solid #00f0ff;
+      border-radius: 12px;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.75), 0 0 15px rgba(0, 240, 255, 0.25);
+      padding: 10px 14px;
+      color: #e2f1ff;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: clamp(10px, 1.2vw, 12px);
+      line-height: 1.45;
+      pointer-events: auto;
+      max-width: 92vw;
+      width: clamp(280px, 45vw, 420px);
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .tilt-diag-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(0, 240, 255, 0.3);
+      padding-bottom: 5px;
+      margin-bottom: 6px;
+      font-weight: 900;
+      color: #00f0ff;
+      letter-spacing: 0.8px;
+      font-size: 11px;
+    }
+    .tilt-diag-close {
+      background: transparent;
+      border: none;
+      color: #ff6060;
+      font-size: 14px;
+      cursor: pointer;
+      padding: 0 4px;
+      line-height: 1;
+      font-weight: 900;
+    }
+    .tilt-diag-body {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .tilt-diag-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+    .tilt-diag-row.td-highlight {
+      margin-top: 4px;
+      padding-top: 4px;
+      border-top: 1px dashed rgba(255, 255, 255, 0.18);
+    }
+    .td-lbl {
+      color: #8cb8e0;
+      font-weight: 700;
+    }
+    .td-val {
+      color: #ffffff;
+      font-weight: 600;
+      text-align: right;
+    }
+    .td-dir {
+      font-weight: 900;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      letter-spacing: 0.5px;
+    }
+    .td-dir.left {
+      background: rgba(0, 230, 118, 0.25);
+      color: #00ff88;
+      border: 1px solid #00ff88;
+      box-shadow: 0 0 10px rgba(0, 255, 136, 0.4);
+    }
+    .td-dir.right {
+      background: rgba(255, 145, 0, 0.25);
+      color: #ff9900;
+      border: 1px solid #ff9900;
+      box-shadow: 0 0 10px rgba(255, 153, 0, 0.4);
+    }
+    .td-dir.neutral {
+      background: rgba(140, 170, 200, 0.15);
+      color: #a0c4e8;
+      border: 1px solid rgba(140, 170, 200, 0.3);
+    }
+    .hud-diag-pill {
+      background: linear-gradient(135deg, #1b3d5c 0%, #0d2238 100%) !important;
+      border: 1.5px solid #00c8e0 !important;
+      color: #7ce8ff !important;
+      font-size: clamp(9.5px, 1.05vw, 11.5px) !important;
+      font-weight: 800 !important;
+    }
   </style>
 </head>
 <body>
@@ -2825,6 +2928,9 @@
           <button class="hud-pill hud-calibrate-pill" id="btn-calibrate-motion" onclick="calibrateTilt()" title="Calibrate Neutral Tilt Position" style="display: none;">
             <span>🎯 Center</span>
           </button>
+          <button class="hud-pill hud-diag-pill" id="btn-diag-motion" onclick="toggleTiltDiagnostics()" title="Toggle Tilt Sensor Diagnostics Overlay" style="display: none;">
+            <span>🛠️ Diag</span>
+          </button>
         </div>
       </div>
 
@@ -2907,6 +3013,24 @@
         </div>
         <div class="ach-reward-badge" id="ach-popup-reward">+300</div>
       </div>
+
+      <!-- Development-Only Tilt Sensor Diagnostics Overlay (Step 3) -->
+      <div id="tilt-diag-overlay" class="tilt-diag-overlay" style="display: none;">
+        <div class="tilt-diag-header">
+          <span>📱 TILT SENSOR DIAGNOSTICS</span>
+          <button class="tilt-diag-close" onclick="toggleTiltDiagnostics(false)" title="Close Diagnostics">✕</button>
+        </div>
+        <div class="tilt-diag-body">
+          <div class="tilt-diag-row"><span class="td-lbl">Sensors:</span><span id="td-sensors" class="td-val">β: -- | γ: --</span></div>
+          <div class="tilt-diag-row"><span class="td-lbl">Orientation:</span><span id="td-orient" class="td-val">--</span></div>
+          <div class="tilt-diag-row"><span class="td-lbl">Axis / Map:</span><span id="td-axis" class="td-val">--</span></div>
+          <div class="tilt-diag-row"><span class="td-lbl">Raw Tilt:</span><span id="td-raw" class="td-val">--</span></div>
+          <div class="tilt-diag-row"><span class="td-lbl">Neutral / Rel:</span><span id="td-rel" class="td-val">--</span></div>
+          <div class="tilt-diag-row"><span class="td-lbl">Target Steer:</span><span id="td-steer" class="td-val">--</span></div>
+          <div class="tilt-diag-row"><span class="td-lbl">Active Control:</span><span id="td-control" class="td-val">--</span></div>
+          <div class="tilt-diag-row td-highlight"><span class="td-lbl">FINAL STEER:</span><span id="td-final" class="td-dir neutral">NEUTRAL</span></div>
+        </div>
+      </div>
     </div>
 
     <!-- SCREEN 5: PAUSE MENU (Modal overlay) -->
@@ -2943,6 +3067,7 @@
             </div>
             <button class="nav-btn" id="btn-pause-motion-toggle" onclick="requestMotionPermissionAndEnable()" style="font-size:11px; padding:5px 12px;">Enable Tilt</button>
           </div>
+          <button class="nav-btn" id="btn-pause-tilt-diag" onclick="toggleTiltDiagnostics()" style="font-size:11px; padding:6px 12px; margin-top: 8px; width:100%; border:1px solid #00c8e0; background:rgba(0,180,220,0.15); color:#7ce8ff;">🛠️ Toggle Tilt Diagnostics</button>
 
           <div class="pause-audio-row">
             <button class="btn-circle-audio" id="audio-music" onclick="toggleAudio('music')">
@@ -5394,22 +5519,28 @@
         const steerInterp = 12.0 * (1.0 + handlingLvl * 0.06);
 
         // Priority: Active manual keys or touch buttons override tilt
+        let activeSteerControl = 'NONE';
         if (keysPressed.left) {
           steerDir = -1;
+          activeSteerControl = 'KEYBOARD (Left)';
         } else if (keysPressed.right) {
           steerDir = 1;
+          activeSteerControl = 'KEYBOARD (Right)';
         } else if (touchSteerActive !== 0) {
           steerDir = touchSteerActive;
+          activeSteerControl = `TOUCH (${touchSteerActive < 0 ? 'Left' : 'Right'})`;
         } else if (motionControlsActive) {
           smoothedTiltSteer += (targetTiltSteer - smoothedTiltSteer) * Math.min(1.0, TILT_SMOOTHING * dt);
           if (Math.abs(smoothedTiltSteer) < 0.005 && targetTiltSteer === 0) {
             smoothedTiltSteer = 0;
           }
           steerDir = smoothedTiltSteer;
+          activeSteerControl = 'TILT SENSOR';
         } else {
           if (touchSteerActive === 0 && !keysPressed.left && !keysPressed.right) {
             steerDir = 0;
           }
+          activeSteerControl = 'NONE';
         }
 
         if (steerDir !== 0) {
@@ -5417,6 +5548,10 @@
         }
         boatTargetX = Math.max(-5.0, Math.min(5.0, boatTargetX));
         boatCurrentX += (boatTargetX - boatCurrentX) * Math.min(1.0, steerInterp * dt);
+
+        if (typeof updateTiltDiagnostics === 'function' && tiltDiagnosticsActive) {
+          updateTiltDiagnostics(steerDir, activeSteerControl);
+        }
 
         // Turn dynamics combines position delta and active steering input so banking persists during sustained carves
         const turnDelta = (boatTargetX - boatCurrentX) * 0.7 + (-steerDir * 0.35);
@@ -7294,6 +7429,21 @@
     const TILT_MAX = 20.0;      // Degrees for 100% full steering lock
     const TILT_SMOOTHING = 8.5; // Smoothing interpolation rate
 
+    // Telemetry state for Step 3 Diagnostic Overlay
+    let tiltDiagnosticsActive = false;
+    const tiltTelemetry = {
+      beta: 0,
+      gamma: 0,
+      orientDesc: '--',
+      orientSource: '--',
+      axisDesc: '--',
+      rawTilt: 0,
+      neutralTilt: 0,
+      relTilt: 0,
+      targetSteer: 0,
+      activeControl: 'NONE'
+    };
+
     function isSecureContextAvailable() {
       // Browsers restrict DeviceOrientation to secure contexts (HTTPS or localhost)
       if (typeof window.isSecureContext === 'boolean') {
@@ -7307,6 +7457,101 @@
       setTimeout(onWindowResize, 100);
     }
 
+    // Step 2: Robust orientation detection with explicit diagnostic state
+    function getOrientationInfo() {
+      let angle = 0;
+      let type = '';
+      let source = 'unknown';
+
+      // 1. Standard screen.orientation API
+      if (window.screen && window.screen.orientation) {
+        if (typeof window.screen.orientation.angle === 'number') {
+          angle = window.screen.orientation.angle;
+          source = 'screen.orientation.angle';
+        }
+        if (typeof window.screen.orientation.type === 'string') {
+          type = window.screen.orientation.type;
+          if (source === 'unknown') source = 'screen.orientation.type';
+        }
+      }
+
+      // 2. Fallback to legacy window.orientation (iOS Safari, older Android WebViews)
+      if (source === 'unknown' && typeof window.orientation === 'number') {
+        angle = window.orientation;
+        source = 'window.orientation';
+      }
+
+      // Normalize negative angle (-90 -> 270)
+      if (angle === -90) angle = 270;
+
+      // 3. Check orientation type if angle was 0 but type states landscape
+      if (angle === 0 && type) {
+        if (type.includes('landscape-secondary')) {
+          angle = 270;
+          source = 'screen.orientation.type-secondary';
+        } else if (type.includes('landscape-primary') || type === 'landscape') {
+          angle = 90;
+          source = 'screen.orientation.type-primary';
+        }
+      }
+
+      // 4. Fallback only when orientation source is completely unknown (no orientation API available)
+      const isLandscapeViewport = (window.innerWidth > window.innerHeight) ||
+        (window.matchMedia && window.matchMedia('(orientation: landscape)').matches);
+
+      if (source === 'unknown') {
+        if (isLandscapeViewport) {
+          angle = 90;
+          source = 'viewport-inferred-landscape';
+        } else {
+          angle = 0;
+          source = 'viewport-inferred-portrait';
+        }
+      }
+
+      // Determine steering axis and inversion according to physical phone movement
+      let axis = 'beta';
+      let inverted = false;
+      let desc = '';
+
+      if (angle === 90) {
+        // Landscape-Primary (top of phone rotated left into player's left hand)
+        // Dipping left hand tilts top of phone DOWN towards floor -> beta decreases (negative).
+        // Direct mapping: negative beta -> negative tilt -> negative steerDir -> boat moves LEFT.
+        axis = 'beta';
+        inverted = false;
+        desc = 'Landscape-Primary (90°): +beta';
+      } else if (angle === 270) {
+        // Landscape-Secondary (top of phone rotated right into player's right hand)
+        // Dipping left hand tilts bottom of phone DOWN, raising top UP -> beta increases (positive).
+        // Inverted mapping: negate beta so positive beta -> negative tilt -> boat moves LEFT.
+        axis = 'beta';
+        inverted = true;
+        desc = 'Landscape-Secondary (270°): -beta';
+      } else if (angle === 0) {
+        // Portrait-Primary (upright phone)
+        // Tilting left dips left edge DOWN -> W3C gamma is negative.
+        // Direct mapping: negative gamma -> negative tilt -> boat moves LEFT.
+        axis = 'gamma';
+        inverted = false;
+        desc = 'Portrait-Primary (0°): +gamma';
+      } else if (angle === 180) {
+        // Portrait-Secondary (inverted phone)
+        // Tilting left dips right edge of phone DOWN -> W3C gamma is positive.
+        // Inverted mapping: negate gamma -> negative tilt -> boat moves LEFT.
+        axis = 'gamma';
+        inverted = true;
+        desc = 'Portrait-Secondary (180°): -gamma';
+      } else {
+        // Indeterminate angle
+        axis = isLandscapeViewport ? 'beta' : 'gamma';
+        inverted = false;
+        desc = `Indeterminate (${angle}°): fallback +${axis}`;
+      }
+
+      return { angle, type, source, axis, inverted, desc, isLandscapeViewport };
+    }
+
     function handleDeviceOrientation(e) {
       // Discard invalid / dummy sensor events (desktop/emulators often return null or NaN)
       if (e.gamma === null || e.beta === null || typeof e.gamma === 'undefined' || typeof e.beta === 'undefined' || isNaN(e.gamma) || isNaN(e.beta)) {
@@ -7318,32 +7563,20 @@
         onMotionSensorVerified();
       }
 
-      // Read screen orientation (Portrait = 0, Landscape-Primary = 90, Landscape-Secondary = -90 or 270)
-      let screenAngle = 0;
-      if (screen.orientation && typeof screen.orientation.angle === 'number') {
-        screenAngle = screen.orientation.angle;
-      } else if (typeof window.orientation === 'number') {
-        screenAngle = window.orientation;
+      const orientInfo = getOrientationInfo();
+      let rawVal = 0;
+
+      if (orientInfo.axis === 'beta') {
+        rawVal = e.beta || 0;
+      } else {
+        rawVal = e.gamma || 0;
       }
 
-      let tilt = 0;
-      if (screenAngle === 0) {
-        // Portrait: gamma is left/right roll (-90 to +90).
-        // Tilted left -> negative gamma. Tilted right -> positive gamma.
-        tilt = e.gamma || 0;
-      } else if (screenAngle === 90) {
-        // Landscape (top of phone rotated left to player's left hand)
-        // Dipping left hand tilts top downward (+beta on mobile), so negate beta for negative steering
-        tilt = -(e.beta || 0);
-      } else if (screenAngle === -90 || screenAngle === 270) {
-        // Landscape (top of phone rotated right to player's right hand)
-        tilt = e.beta || 0;
-      } else if (screenAngle === 180) {
-        // Inverted portrait
-        tilt = -(e.gamma || 0);
+      if (orientInfo.inverted) {
+        rawVal = -rawVal;
       }
 
-      rawTiltAngle = tilt;
+      rawTiltAngle = rawVal;
 
       // Auto-calibrate neutral on initial reading if not yet calibrated
       if (!isTiltCalibrated) {
@@ -7362,6 +7595,17 @@
         const mag = Math.min(1.0, (Math.abs(relTilt) - TILT_DEADZONE) / (TILT_MAX - TILT_DEADZONE));
         targetTiltSteer = sign * mag;
       }
+
+      // Update telemetry for diagnostic overlay
+      tiltTelemetry.beta = e.beta || 0;
+      tiltTelemetry.gamma = e.gamma || 0;
+      tiltTelemetry.orientDesc = orientInfo.desc;
+      tiltTelemetry.orientSource = orientInfo.source;
+      tiltTelemetry.axisDesc = `${orientInfo.inverted ? '-' : '+'}${orientInfo.axis}`;
+      tiltTelemetry.rawTilt = rawTiltAngle;
+      tiltTelemetry.neutralTilt = neutralTiltAngle;
+      tiltTelemetry.relTilt = relTilt;
+      tiltTelemetry.targetSteer = targetTiltSteer;
     }
 
     function onMotionSensorVerified() {
@@ -7466,6 +7710,7 @@
       const toggleBtn = document.getElementById('btn-toggle-motion');
       const statusText = document.getElementById('motion-status-text');
       const calBtn = document.getElementById('btn-calibrate-motion');
+      const diagBtn = document.getElementById('btn-diag-motion');
       const pauseToggle = document.getElementById('btn-pause-motion-toggle');
 
       if (state === true) {
@@ -7476,6 +7721,7 @@
         }
         if (statusText) statusText.innerText = 'TILT: ON';
         if (calBtn) calBtn.style.display = 'inline-flex';
+        if (diagBtn) diagBtn.style.display = 'inline-flex';
         if (pauseToggle) pauseToggle.innerText = 'Disable Tilt';
       } else if (state === 'connecting') {
         if (statusText) statusText.innerText = 'CONNECTING...';
@@ -7491,9 +7737,75 @@
           statusText.innerText = reason ? `Tilt: ${reason}` : 'ENABLE TILT';
         }
         if (calBtn) calBtn.style.display = 'none';
+        if (diagBtn) diagBtn.style.display = 'none';
         if (pauseToggle) pauseToggle.innerText = 'Enable Tilt';
       }
     }
+
+    // Step 3: Development Tilt Sensor Diagnostics Controls & Telemetry
+    function toggleTiltDiagnostics(force) {
+      tiltDiagnosticsActive = (typeof force === 'boolean') ? force : !tiltDiagnosticsActive;
+      window.tiltDiagnosticsActive = tiltDiagnosticsActive;
+      const overlay = document.getElementById('tilt-diag-overlay');
+      if (overlay) {
+        overlay.style.display = tiltDiagnosticsActive ? 'block' : 'none';
+      }
+      const pauseBtn = document.getElementById('btn-pause-tilt-diag');
+      if (pauseBtn) {
+        pauseBtn.innerText = tiltDiagnosticsActive ? '🛠️ Hide Tilt Diagnostics' : '🛠️ Toggle Tilt Diagnostics';
+      }
+      toast(tiltDiagnosticsActive ? "🛠️ Tilt Diagnostics ON" : "🛠️ Tilt Diagnostics OFF");
+      return tiltDiagnosticsActive;
+    }
+
+    function updateTiltDiagnostics(steerDir, activeControl) {
+      if (!tiltDiagnosticsActive) return;
+      const overlay = document.getElementById('tilt-diag-overlay');
+      if (!overlay || overlay.style.display === 'none') return;
+
+      const elSensors = document.getElementById('td-sensors');
+      if (elSensors) elSensors.innerText = `β: ${tiltTelemetry.beta.toFixed(1)}° | γ: ${tiltTelemetry.gamma.toFixed(1)}°`;
+
+      const elOrient = document.getElementById('td-orient');
+      if (elOrient) elOrient.innerText = `${tiltTelemetry.orientDesc}`;
+
+      const elAxis = document.getElementById('td-axis');
+      if (elAxis) elAxis.innerText = `${tiltTelemetry.axisDesc} (${tiltTelemetry.orientSource})`;
+
+      const elRaw = document.getElementById('td-raw');
+      if (elRaw) elRaw.innerText = `${tiltTelemetry.rawTilt.toFixed(1)}°`;
+
+      const elRel = document.getElementById('td-rel');
+      if (elRel) elRel.innerText = `rel: ${tiltTelemetry.relTilt.toFixed(1)}° (neut: ${tiltTelemetry.neutralTilt.toFixed(1)}°)`;
+
+      const elSteer = document.getElementById('td-steer');
+      if (elSteer) elSteer.innerText = `target: ${tiltTelemetry.targetSteer.toFixed(2)} | smooth: ${smoothedTiltSteer.toFixed(2)}`;
+
+      const elControl = document.getElementById('td-control');
+      if (elControl) elControl.innerText = activeControl;
+
+      const elFinal = document.getElementById('td-final');
+      if (elFinal) {
+        if (steerDir < -0.05) {
+          elFinal.className = 'td-dir left';
+          elFinal.innerText = `◀ LEFT (${steerDir.toFixed(2)})`;
+        } else if (steerDir > 0.05) {
+          elFinal.className = 'td-dir right';
+          elFinal.innerText = `RIGHT (${steerDir.toFixed(2)}) ▶`;
+        } else {
+          elFinal.className = 'td-dir neutral';
+          elFinal.innerText = `• NEUTRAL •`;
+        }
+      }
+    }
+
+    // Auto-enable diagnostics if URL contains ?diag=1, ?debug=1 or ?tiltdebug=1
+    try {
+      const sp = new URLSearchParams(window.location.search);
+      if (sp.has('diag') || sp.has('debug') || sp.has('tiltdebug')) {
+        toggleTiltDiagnostics(true);
+      }
+    } catch (_) {}
 
     function onOrientationChange() {
       // Re-calibrate neutral holding angle on orientation change to prevent sudden veering
@@ -7524,7 +7836,15 @@
     window.toggleMotionControls = requestMotionPermissionAndEnable; // alias
     window.calibrateTilt = calibrateTilt;
     window.handleDeviceOrientation = handleDeviceOrientation;
+    window.getOrientationInfo = getOrientationInfo;
+    window.toggleTiltDiagnostics = toggleTiltDiagnostics;
+    window.updateTiltDiagnostics = updateTiltDiagnostics;
+    window.tiltTelemetry = tiltTelemetry;
     window.dismissRotatePrompt = dismissRotatePrompt;
+    Object.defineProperty(window, 'tiltDiagnosticsActive', {
+      get() { return tiltDiagnosticsActive; },
+      set(v) { toggleTiltDiagnostics(v); }
+    });
     Object.defineProperty(window, 'motionControlsActive', {
       get() { return motionControlsActive; },
       set(v) { motionControlsActive = v; updateMotionUI(v); }
