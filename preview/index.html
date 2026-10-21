@@ -825,6 +825,656 @@
       }
     }
 
+    /* =========================================
+       DYNAMIC RIVER EVENT BANNER (Phase 6)
+       ========================================= */
+    .hud-event-banner {
+      position: absolute;
+      top: 12px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-75px);
+      background: linear-gradient(135deg, rgba(10, 24, 44, 0.94) 0%, rgba(18, 42, 74, 0.96) 100%);
+      border: 2px solid #ffcc00;
+      border-radius: 24px;
+      padding: 6px 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65), 0 0 16px rgba(255, 204, 0, 0.45);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      pointer-events: none;
+      opacity: 0;
+      transition: transform 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28), opacity 0.3s ease;
+      z-index: 120;
+      max-width: 90vw;
+    }
+    .hud-event-banner.active {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+    .hud-event-banner.event-gold {
+      border-color: #ffd700;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.65), 0 0 18px rgba(255, 215, 0, 0.55);
+    }
+    .hud-event-banner.event-orange {
+      border-color: #ff7700;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.65), 0 0 18px rgba(255, 119, 0, 0.55);
+    }
+    .hud-event-banner.event-amber {
+      border-color: #ffaa00;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.65), 0 0 18px rgba(255, 170, 0, 0.55);
+    }
+    .hud-event-banner.event-cyan {
+      border-color: #00e5ff;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.65), 0 0 18px rgba(0, 229, 255, 0.55);
+    }
+    .event-icon {
+      font-size: clamp(18px, 2.2vw, 24px);
+      filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5));
+    }
+    .event-text-group {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      line-height: 1.1;
+    }
+    .event-title {
+      font-family: 'Teko', sans-serif;
+      font-size: clamp(18px, 2.2vw, 25px);
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #ffffff;
+      text-transform: uppercase;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.6);
+    }
+    .event-subtitle {
+      font-size: clamp(10px, 1.1vw, 12px);
+      font-weight: 700;
+      color: #ffd700;
+      letter-spacing: 0.5px;
+    }
+
+    /* =========================================
+       COMBO MULTIPLIER & NEAR-MISS BADGE (Phase 6)
+       ========================================= */
+    .hud-combo-container {
+      position: absolute;
+      top: 56px;
+      left: 50%;
+      transform: translateX(-50%) scale(0.85);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+      z-index: 110;
+    }
+    .hud-combo-container.active {
+      opacity: 1;
+      transform: translateX(-50%) scale(1);
+    }
+    .combo-pill {
+      background: linear-gradient(135deg, #18283e 0%, #0d1a2c 100%);
+      border: 1.5px solid #ff9900;
+      border-radius: 16px;
+      padding: 3px 12px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6), 0 0 12px rgba(255, 153, 0, 0.4);
+      backdrop-filter: blur(6px);
+    }
+    .combo-flame {
+      font-size: 14px;
+      animation: flameFlicker 0.6s infinite alternate ease-in-out;
+    }
+    @keyframes flameFlicker {
+      0% { transform: scale(1) rotate(-3deg); }
+      100% { transform: scale(1.18) rotate(4deg); }
+    }
+    .combo-label {
+      font-family: 'Teko', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      color: #ffc466;
+    }
+    .combo-val {
+      font-family: 'Teko', sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      color: #ff9900;
+      line-height: 1;
+    }
+    .combo-timer-track {
+      width: 78px;
+      height: 4px;
+      background: rgba(0, 0, 0, 0.55);
+      border-radius: 2px;
+      overflow: hidden;
+      border: 0.5px solid rgba(255, 255, 255, 0.15);
+    }
+    .combo-timer-fill {
+      height: 100%;
+      width: 100%;
+      background: #ff9900;
+      transition: width 0.05s linear;
+      border-radius: 2px;
+    }
+
+    /* Near-Miss Floating Arcade Notification */
+    .hud-nearmiss-popup {
+      position: absolute;
+      top: 96px;
+      left: 50%;
+      transform: translateX(-50%) translateY(10px) scale(0.6);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      pointer-events: none;
+      opacity: 0;
+      z-index: 130;
+      text-align: center;
+    }
+    .hud-nearmiss-popup.active {
+      animation: nearMissPop 0.85s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+    }
+    @keyframes nearMissPop {
+      0% {
+        opacity: 0;
+        transform: translateX(-50%) translateY(14px) scale(0.6);
+      }
+      18% {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0) scale(1.16);
+      }
+      65% {
+        opacity: 1;
+        transform: translateX(-50%) translateY(-6px) scale(1.0);
+      }
+      100% {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-22px) scale(0.85);
+      }
+    }
+    .nearmiss-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: clamp(14px, 1.6vw, 18px);
+      font-weight: 900;
+      color: #00f0ff;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      text-shadow: 0 0 10px rgba(0, 240, 255, 0.8), 0 2px 4px rgba(0, 0, 0, 0.7);
+    }
+    .nearmiss-pts {
+      font-family: 'Teko', sans-serif;
+      font-size: clamp(22px, 2.5vw, 30px);
+      font-weight: 700;
+      color: #ffd700;
+      line-height: 0.9;
+      text-shadow: 0 0 12px rgba(255, 215, 0, 0.85), 0 2px 4px rgba(0, 0, 0, 0.7);
+    }
+
+    /* Game Over Secondary Metrics Row */
+    .score-summary-row {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 8px;
+      margin-bottom: 4px;
+      flex-wrap: wrap;
+    }
+    .score-pill-mini {
+      background: rgba(14, 28, 48, 0.75);
+      border: 1px solid #2a5280;
+      border-radius: 12px;
+      padding: 4px 10px;
+      font-size: clamp(11px, 1.2vw, 13px);
+      font-weight: 800;
+      color: #9ac4f8;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .score-pill-mini span {
+      color: #ffd700;
+      font-weight: 900;
+    }
+
+    /* =========================================
+       PHASE 7: MISSIONS, DAILY & ACHIEVEMENTS
+       ========================================= */
+    /* Main Menu Top Missions Banner Button */
+    .main-menu-top-bar {
+      position: absolute;
+      top: 3.5%;
+      right: 3.5%;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      z-index: 25;
+    }
+    .btn-top-missions {
+      background: linear-gradient(135deg, rgba(24, 40, 62, 0.95) 0%, rgba(13, 26, 44, 0.95) 100%);
+      border: 2px solid #ffaa00;
+      border-radius: 20px;
+      padding: 6px 14px 6px 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6), 0 0 15px rgba(255, 170, 0, 0.35);
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      transition: transform 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28), box-shadow 0.2s;
+    }
+    .btn-top-missions:hover {
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.7), 0 0 20px rgba(255, 170, 0, 0.55);
+    }
+    .top-mission-icon {
+      font-size: clamp(20px, 2.2vw, 26px);
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));
+    }
+    .top-mission-text {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      line-height: 1.1;
+    }
+    .top-mission-title {
+      font-family: 'Teko', sans-serif;
+      font-size: clamp(16px, 1.8vw, 20px);
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      color: #ffd700;
+      text-transform: uppercase;
+    }
+    .top-mission-sub {
+      font-size: clamp(9px, 1vw, 11px);
+      font-weight: 700;
+      color: #92b8ea;
+      letter-spacing: 0.3px;
+    }
+    .top-mission-badge {
+      background: linear-gradient(180deg, #ff4d4d 0%, #c41c1c 100%);
+      border: 1px solid #ff9999;
+      color: #ffffff;
+      font-family: 'Outfit', sans-serif;
+      font-size: 11px;
+      font-weight: 900;
+      min-width: 20px;
+      height: 20px;
+      padding: 0 5px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    }
+    .mission-util-btn {
+      position: relative;
+      border-color: #d49515 !important;
+      background: linear-gradient(180deg, #2b394d 0%, #152233 100%) !important;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.45), 0 0 10px rgba(255, 180, 20, 0.25) !important;
+    }
+    .mission-badge-dot {
+      position: absolute;
+      top: -3px;
+      right: -3px;
+      width: 12px;
+      height: 12px;
+      background: #ff3333;
+      border: 2px solid #0d1a2c;
+      border-radius: 50%;
+      animation: pulseGlow 1.2s infinite;
+    }
+
+    /* Missions Modal Card */
+    .missions-modal-card {
+      width: min(560px, 94%);
+      max-height: 90%;
+      background: linear-gradient(180deg, #101e30 0%, #0a1320 100%);
+      border: 3px solid #2c4c74;
+      border-radius: 24px;
+      padding: clamp(14px, 1.8vw, 20px) clamp(16px, 2vw, 24px);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      position: relative;
+      box-shadow: 0 15px 45px rgba(0, 0, 0, 0.85), 0 0 30px rgba(44, 76, 116, 0.35);
+      animation: popIn 0.2s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    }
+    .missions-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      padding-bottom: 2px;
+    }
+    .missions-header-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'Teko', sans-serif;
+      font-size: clamp(24px, 3vw, 32px);
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      color: #ffffff;
+      text-shadow: 0 0 12px rgba(88, 164, 255, 0.4);
+    }
+    .missions-header-icon {
+      font-size: clamp(20px, 2.5vw, 28px);
+      filter: drop-shadow(0 2px 6px rgba(255, 200, 0, 0.5));
+    }
+    .missions-tab-bar {
+      display: flex;
+      gap: 8px;
+      width: 100%;
+    }
+    .mission-tab-btn {
+      flex: 1;
+      height: clamp(34px, 4vw, 42px);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1.5px solid #25446a;
+      color: #8bb0dc;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: clamp(11px, 1.2vw, 13px);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+    .mission-tab-btn:hover {
+      background: rgba(88, 164, 255, 0.12);
+      border-color: #3b6b9e;
+      color: #fff;
+    }
+    .mission-tab-btn.active {
+      background: linear-gradient(180deg, #1f4f82 0%, #102e52 100%);
+      border-color: #ffaa00;
+      color: #ffffff;
+      box-shadow: 0 4px 15px rgba(16, 46, 82, 0.6), 0 0 10px rgba(255, 170, 0, 0.3);
+    }
+    .tab-badge {
+      background: #ff3b30;
+      color: #ffffff;
+      border-radius: 8px;
+      padding: 0 5px;
+      font-size: 10px;
+      font-weight: 900;
+      min-width: 14px;
+      height: 15px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+    .missions-content-container {
+      flex: 1;
+      max-height: clamp(180px, 42vh, 320px);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding-right: 4px;
+    }
+    .missions-content-container::-webkit-scrollbar {
+      width: 5px;
+    }
+    .missions-content-container::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.25);
+      border-radius: 3px;
+    }
+    .missions-content-container::-webkit-scrollbar-thumb {
+      background: #28476c;
+      border-radius: 3px;
+    }
+    .missions-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .mission-card-item {
+      background: rgba(18, 34, 56, 0.75);
+      border: 1.5px solid #234368;
+      border-radius: 14px;
+      padding: clamp(8px, 1.2vw, 12px) clamp(10px, 1.5vw, 16px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      transition: all 0.2s ease;
+    }
+    .mission-card-item.completed {
+      border-color: #d49515;
+      background: rgba(28, 48, 76, 0.85);
+      box-shadow: 0 0 12px rgba(255, 180, 20, 0.2);
+    }
+    .mission-card-item.claimed {
+      border-color: #1e4228;
+      background: rgba(14, 25, 38, 0.6);
+      opacity: 0.75;
+    }
+    .mission-left-col {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+      min-width: 0;
+    }
+    .mission-icon-box {
+      width: clamp(34px, 3.8vw, 42px);
+      height: clamp(34px, 3.8vw, 42px);
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(18px, 2vw, 22px);
+      flex-shrink: 0;
+    }
+    .mission-info-box {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      flex: 1;
+      min-width: 0;
+    }
+    .mission-item-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: clamp(12px, 1.3vw, 14px);
+      font-weight: 800;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .mission-item-desc {
+      font-size: clamp(10px, 1.1vw, 11px);
+      color: #92b6e2;
+      line-height: 1.2;
+    }
+    .mission-prog-track {
+      width: 100%;
+      height: 5px;
+      background: rgba(0, 0, 0, 0.55);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 4px;
+      border: 0.5px solid rgba(255, 255, 255, 0.1);
+    }
+    .mission-prog-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #ffc61e 0%, #ff8800 100%);
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+    .mission-prog-fill.completed {
+      background: linear-gradient(90deg, #4ec322 0%, #299312 100%);
+    }
+    .mission-prog-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: #ffcc66;
+      margin-top: 1px;
+    }
+    .mission-right-col {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 5px;
+      flex-shrink: 0;
+    }
+    .mission-reward-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: rgba(255, 198, 30, 0.15);
+      border: 1px solid rgba(255, 198, 30, 0.35);
+      border-radius: 8px;
+      padding: 2px 7px;
+      font-size: 11px;
+      font-weight: 800;
+      color: #ffd700;
+    }
+    .mission-reward-badge img {
+      width: 13px;
+      height: 13px;
+    }
+    .mission-action-btn {
+      padding: 5px 12px;
+      border-radius: 10px;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 11px;
+      letter-spacing: 0.4px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .mission-action-btn.in-progress {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid #27466d;
+      color: #729ecb;
+      cursor: default;
+    }
+    .mission-action-btn.claim-ready {
+      background: linear-gradient(180deg, #ffc61e 0%, #d48206 100%);
+      border: 1.5px solid #ffe166;
+      color: #0b1522;
+      font-weight: 900;
+      box-shadow: 0 0 12px rgba(255, 198, 30, 0.6);
+      animation: pulseGlow 1.2s infinite;
+    }
+    .mission-action-btn.claim-ready:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 18px rgba(255, 198, 30, 0.85);
+    }
+    .mission-action-btn.claimed {
+      background: rgba(30, 80, 40, 0.35);
+      border: 1px solid #2a743a;
+      color: #72db8a;
+      cursor: default;
+    }
+    .missions-card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 8px;
+      font-size: 12px;
+    }
+    .footer-coin-bank {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #ffffff;
+      font-weight: 800;
+    }
+    .footer-coin-label {
+      font-size: 11px;
+      color: #92bae9;
+    }
+    .footer-coin-bank img {
+      width: 16px;
+      height: 16px;
+    }
+    .footer-coin-val {
+      color: #ffd700;
+      font-weight: 900;
+    }
+    .footer-hint {
+      font-size: 10px;
+      color: #6d90b8;
+      font-style: italic;
+    }
+
+    /* In-Game Achievement Unlock Slide-In Toast */
+    .hud-achievement-popup {
+      position: absolute;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-60px);
+      background: linear-gradient(135deg, rgba(20, 36, 58, 0.96) 0%, rgba(10, 20, 34, 0.98) 100%);
+      border: 2px solid #ffd700;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 215, 0, 0.5);
+      border-radius: 18px;
+      padding: 6px 16px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      pointer-events: none;
+      opacity: 0;
+      transition: transform 0.35s cubic-bezier(0.18, 0.89, 0.32, 1.28), opacity 0.3s ease;
+      z-index: 150;
+      backdrop-filter: blur(8px);
+    }
+    .hud-achievement-popup.active {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+    .ach-icon {
+      font-size: clamp(20px, 2.3vw, 26px);
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+    }
+    .ach-text-group {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.15;
+    }
+    .ach-sub-title {
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      color: #ffd700;
+      text-transform: uppercase;
+    }
+    .ach-main-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 14px;
+      font-weight: 800;
+      color: #ffffff;
+    }
+    .ach-reward-badge {
+      background: rgba(255, 215, 0, 0.2);
+      border: 1px solid #ffd700;
+      color: #ffd700;
+      font-family: 'Teko', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      padding: 1px 7px;
+      border-radius: 8px;
+    }
+
     /* Rotate Device Prompt Overlay */
     #screen-rotate-prompt {
       position: fixed;
@@ -973,6 +1623,137 @@
       .hud-test-trigger {
         font-size: 9px;
         padding: 3px 8px;
+      }
+      .hud-event-banner {
+        top: 6px;
+        padding: 3px 12px;
+        gap: 8px;
+        border-radius: 14px;
+      }
+      .hud-combo-container {
+        top: 48px;
+      }
+      .combo-pill {
+        padding: 2px 9px;
+        gap: 4px;
+      }
+      .combo-label { font-size: 13px; }
+      .combo-val { font-size: 18px; }
+      .hud-nearmiss-popup {
+        top: 80px;
+      }
+      /* Phase 7 Mobile Landscape Adjustments */
+      .missions-modal-card {
+        padding: 8px 12px;
+        gap: 6px;
+        max-height: 94%;
+        width: 95%;
+      }
+      .missions-header-title {
+        font-size: 22px;
+      }
+      .mission-tab-btn {
+        height: 30px;
+        font-size: 10px;
+      }
+      .missions-content-container {
+        max-height: 155px;
+        gap: 6px;
+      }
+      .mission-card-item {
+        padding: 6px 10px;
+        gap: 8px;
+      }
+      .mission-icon-box {
+        width: 30px;
+        height: 30px;
+        font-size: 16px;
+      }
+      .mission-item-title {
+        font-size: 12px;
+      }
+      .mission-item-desc {
+        font-size: 9.5px;
+      }
+      .main-menu-top-bar {
+        top: 2%;
+        right: 2%;
+      }
+      .btn-top-missions {
+        padding: 4px 10px 4px 8px;
+        gap: 6px;
+      }
+      .top-mission-title {
+        font-size: 15px;
+      }
+      .top-mission-sub {
+        display: none;
+      }
+      /* Phase 8 Mobile Landscape Adjustments */
+      .hud-nitro-gauge {
+        top: 76px;
+        right: 2%;
+        width: 72px;
+        padding: 3px 5px;
+      }
+      .nitro-gauge-title {
+        display: none;
+      }
+      .nitro-gauge-status {
+        font-size: 8px;
+      }
+      .nitro-track {
+        height: 6px;
+      }
+      .hud-nitro-btn {
+        width: 50px;
+        height: 50px;
+        bottom: 66px;
+        right: 2%;
+      }
+      .nitro-flame-icon {
+        width: 18px;
+        height: 18px;
+      }
+      .nitro-btn-label {
+        font-size: 9px;
+      }
+      .nitro-btn-key {
+        display: none;
+      }
+      .garage-tab-toggle {
+        height: 32px;
+      }
+      .tab-toggle-btn {
+        font-size: 11px;
+        padding: 0 14px;
+      }
+      .upgrades-container {
+        padding: 6px 12px;
+        gap: 8px;
+        max-height: 82%;
+      }
+      .upgrade-card {
+        padding: 8px 12px;
+        gap: 6px;
+      }
+      .upgrade-icon-box {
+        width: 32px;
+        height: 32px;
+        font-size: 18px;
+      }
+      .upgrade-title {
+        font-size: 13px;
+      }
+      .upgrade-desc {
+        font-size: 9px;
+      }
+      .upgrade-stats-box {
+        font-size: 9.5px;
+      }
+      .btn-upgrade-action {
+        padding: 5px 12px;
+        font-size: 11px;
       }
     }
 
@@ -1275,6 +2056,550 @@
     .hit-flash-overlay.active {
       opacity: 1;
     }
+
+    /* ==========================================================
+       PHASE 8: NITRO BOOST, BOAT GARAGE & UPGRADES STYLING
+       ========================================================== */
+
+    /* Garage Header Tab Toggle (Boats vs Upgrades) */
+    .garage-tab-toggle {
+      display: flex;
+      background: rgba(10, 22, 38, 0.88);
+      border: 2px solid #2d5a8a;
+      border-radius: 25px;
+      padding: 3px;
+      gap: 4px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5), inset 0 1px 3px rgba(255,255,255,0.1);
+      z-index: 10;
+    }
+    .tab-toggle-btn {
+      background: transparent;
+      border: none;
+      outline: none;
+      color: #92b7d8;
+      font-family: inherit;
+      font-size: clamp(12px, 1.3vw, 15px);
+      font-weight: 800;
+      padding: 6px 18px;
+      border-radius: 20px;
+      cursor: pointer;
+      letter-spacing: 1px;
+      transition: all 0.2s cubic-bezier(0.2, 0.9, 0.3, 1);
+    }
+    .tab-toggle-btn:hover {
+      color: #ffffff;
+      background: rgba(255,255,255,0.06);
+    }
+    .tab-toggle-btn.active {
+      color: #ffffff;
+      background: linear-gradient(180deg, #ffb300 0%, #d87c00 100%);
+      box-shadow: 0 2px 10px rgba(216, 124, 0, 0.55), inset 0 1px 2px rgba(255,255,255,0.4);
+      text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+    }
+
+    /* Boat Thumbnail Lock Badge Overlay */
+    .boat-thumb-slot {
+      position: relative;
+    }
+    .boat-thumb-slot.locked-slot {
+      filter: brightness(0.65) saturate(0.6);
+    }
+    .thumb-lock-badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      background: linear-gradient(180deg, #ff3d3d 0%, #aa1414 100%);
+      color: #ffffff;
+      font-size: 11px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1.5px solid #ffffff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.6);
+      pointer-events: none;
+    }
+    .boat-thumb-slot.equipped::after {
+      content: '✓';
+      position: absolute;
+      bottom: -4px;
+      right: -4px;
+      background: linear-gradient(180deg, #4ec322 0%, #21830d 100%);
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 900;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1.5px solid #ffffff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.6);
+    }
+
+    /* ==========================================================
+       SCREEN 8: PERFORMANCE UPGRADES MODAL / SCREEN
+       ========================================================== */
+    #screen-upgrades {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding-top: clamp(65px, 8vh, 85px);
+      box-sizing: border-box;
+      background: radial-gradient(circle at center, rgba(16, 38, 64, 0.72) 0%, rgba(7, 18, 32, 0.96) 100%);
+      backdrop-filter: blur(8px);
+    }
+    #screen-upgrades.active {
+      display: flex;
+    }
+
+    .upgrades-container {
+      display: flex;
+      flex-direction: column;
+      gap: clamp(10px, 1.4vh, 18px);
+      width: min(92%, 760px);
+      max-height: 78%;
+      overflow-y: auto;
+      padding: 10px 14px;
+      box-sizing: border-box;
+      scrollbar-width: thin;
+      scrollbar-color: #ffb300 rgba(10, 22, 36, 0.6);
+    }
+    .upgrades-container::-webkit-scrollbar {
+      width: 6px;
+    }
+    .upgrades-container::-webkit-scrollbar-track {
+      background: rgba(10, 22, 36, 0.6);
+      border-radius: 3px;
+    }
+    .upgrades-container::-webkit-scrollbar-thumb {
+      background: #ffb300;
+      border-radius: 3px;
+    }
+
+    .upgrade-card {
+      background: linear-gradient(135deg, rgba(20, 44, 72, 0.92) 0%, rgba(10, 25, 42, 0.96) 100%);
+      border: 2px solid #2a537f;
+      border-radius: 18px;
+      padding: clamp(10px, 1.5vh, 16px) clamp(14px, 2vw, 20px);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.12);
+      transition: border-color 0.25s ease, transform 0.2s ease;
+    }
+    .upgrade-card:hover {
+      border-color: #438ad4;
+      transform: translateY(-2px);
+    }
+    .upgrade-card.maxed {
+      border-color: #ffd700;
+      background: linear-gradient(135deg, rgba(32, 48, 70, 0.92) 0%, rgba(18, 30, 48, 0.96) 100%);
+      box-shadow: 0 6px 22px rgba(255, 215, 0, 0.18), inset 0 1px 3px rgba(255, 215, 0, 0.25);
+    }
+
+    .upgrade-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .upgrade-icon-box {
+      width: clamp(42px, 4.5vw, 54px);
+      height: clamp(42px, 4.5vw, 54px);
+      border-radius: 14px;
+      background: radial-gradient(circle, #255282 0%, #102640 100%);
+      border: 2px solid #4a8ed4;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: clamp(22px, 2.5vw, 30px);
+      filter: drop-shadow(0 2px 8px rgba(0,0,0,0.4));
+      flex-shrink: 0;
+    }
+    .upgrade-card.maxed .upgrade-icon-box {
+      border-color: #ffd700;
+      background: radial-gradient(circle, #664d00 0%, #2a2000 100%);
+    }
+
+    .upgrade-info-box {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .upgrade-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .upgrade-title {
+      font-size: clamp(16px, 1.8vw, 20px);
+      font-weight: 900;
+      color: #ffffff;
+      letter-spacing: 0.5px;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.6);
+    }
+    .upgrade-lvl-badge {
+      font-size: clamp(11px, 1.2vw, 13px);
+      font-weight: 900;
+      padding: 3px 10px;
+      border-radius: 12px;
+      background: rgba(30, 68, 110, 0.7);
+      border: 1.5px solid #4588cc;
+      color: #6ed1ff;
+      letter-spacing: 0.8px;
+    }
+    .upgrade-lvl-badge.max {
+      background: linear-gradient(180deg, #ffd700 0%, #c49102 100%);
+      border-color: #fff;
+      color: #1a1400;
+      box-shadow: 0 2px 8px rgba(255, 215, 0, 0.45);
+    }
+    .upgrade-desc {
+      font-size: clamp(11px, 1.2vw, 13px);
+      color: #9ac2e6;
+      line-height: 1.25;
+    }
+
+    .upgrade-level-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 4px 0;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .upgrade-level-label {
+      font-size: clamp(10px, 1.1vw, 12px);
+      font-weight: 800;
+      color: #6ea6d8;
+      letter-spacing: 0.8px;
+    }
+    .upgrade-level-dots {
+      display: flex;
+      gap: 6px;
+    }
+    .upgrade-level-dot {
+      width: clamp(24px, 3.2vw, 36px);
+      height: 8px;
+      border-radius: 4px;
+      background: rgba(20, 38, 58, 0.9);
+      border: 1.5px solid #23476d;
+      transition: all 0.25s ease;
+    }
+    .upgrade-level-dot.filled {
+      background: linear-gradient(180deg, #4ec322 0%, #20870e 100%);
+      border-color: #72f043;
+      box-shadow: 0 0 8px rgba(78, 195, 34, 0.65);
+    }
+    .upgrade-card.maxed .upgrade-level-dot.filled {
+      background: linear-gradient(180deg, #ffd700 0%, #c49102 100%);
+      border-color: #fff;
+      box-shadow: 0 0 10px rgba(255, 215, 0, 0.7);
+    }
+
+    .upgrade-stats-box {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      background: rgba(8, 20, 34, 0.65);
+      border: 1px solid rgba(45, 90, 140, 0.4);
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: clamp(11px, 1.2vw, 13px);
+    }
+    .upgrade-cur-stat {
+      color: #cfe3f7;
+    }
+    .upgrade-cur-stat strong {
+      color: #55b7ff;
+    }
+    .upgrade-next-stat {
+      color: #7ce86b;
+      font-weight: 600;
+    }
+    .upgrade-next-stat.maxed {
+      color: #ffd700;
+    }
+
+    .upgrade-footer-row {
+      display: flex;
+      justify-content: flex-end;
+      align-items: center;
+    }
+    .btn-upgrade-action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 8px 20px;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: clamp(12px, 1.4vw, 16px);
+      font-weight: 900;
+      color: #ffffff;
+      border: 2px solid;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      transition: transform 0.15s ease, filter 0.15s ease, box-shadow 0.15s ease;
+    }
+    .btn-upgrade-action:active {
+      transform: scale(0.96);
+    }
+    .btn-upgrade-action img {
+      width: clamp(16px, 1.8vw, 20px);
+      height: clamp(16px, 1.8vw, 20px);
+      object-fit: contain;
+    }
+    .btn-upgrade-action.can-afford {
+      background: linear-gradient(180deg, #ffc61e 0%, #e4940a 90%, #915505 100%);
+      border-color: #ffd700;
+      color: #1a1000;
+      box-shadow: 0 4px 15px rgba(228, 148, 10, 0.45);
+    }
+    .btn-upgrade-action.insufficient {
+      background: linear-gradient(180deg, #5c6673 0%, #3a424d 100%);
+      border-color: #272d36;
+      color: #b5c0ce;
+      cursor: not-allowed;
+      opacity: 0.85;
+    }
+    .btn-upgrade-action.maxed {
+      background: linear-gradient(180deg, #2d5a35 0%, #16361c 100%);
+      border-color: #ffd700;
+      color: #ffd700;
+      cursor: default;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+    }
+
+    /* ==========================================================
+       HUD NITRO BOOST GAUGE & TOUCH BUTTON (PHASE 8)
+       ========================================================== */
+    .hud-nitro-gauge {
+      position: absolute;
+      top: calc(3% + clamp(98px, 11.2vw, 134px));
+      right: 3%;
+      width: clamp(96px, 11vw, 130px);
+      background: rgba(10, 24, 40, 0.88);
+      border: 2px solid #285482;
+      border-radius: 12px;
+      padding: 5px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.1);
+      box-sizing: border-box;
+      z-index: 20;
+    }
+    .nitro-gauge-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 4px;
+    }
+    .nitro-gauge-icon {
+      font-size: 11px;
+      color: #00f0ff;
+      filter: drop-shadow(0 0 5px #00f0ff);
+    }
+    .nitro-gauge-title {
+      font-size: 9px;
+      font-weight: 900;
+      color: #8bbce8;
+      letter-spacing: 0.8px;
+    }
+    .nitro-gauge-status {
+      font-size: 9.5px;
+      font-weight: 900;
+      color: #72aadb;
+      letter-spacing: 0.5px;
+    }
+    .nitro-gauge-status.charging {
+      color: #72aadb;
+    }
+    .nitro-gauge-status.ready {
+      color: #00f0ff;
+      text-shadow: 0 0 8px rgba(0, 240, 255, 0.9);
+      animation: pulseNitroReady 1s infinite alternate ease-in-out;
+    }
+    .nitro-gauge-status.boosting {
+      color: #ffd700;
+      text-shadow: 0 0 10px rgba(255, 215, 0, 0.95);
+      animation: pulseNitroBoost 0.4s infinite alternate ease-in-out;
+    }
+    .nitro-gauge-status.cooling {
+      color: #ff914d;
+    }
+
+    @keyframes pulseNitroReady {
+      0% { opacity: 0.8; transform: scale(0.98); }
+      100% { opacity: 1; transform: scale(1.02); }
+    }
+    @keyframes pulseNitroBoost {
+      0% { opacity: 0.85; filter: brightness(1); }
+      100% { opacity: 1; filter: brightness(1.4); }
+    }
+
+    .nitro-track {
+      width: 100%;
+      height: 8px;
+      background: rgba(5, 12, 22, 0.9);
+      border-radius: 4px;
+      border: 1px solid #1a3b5c;
+      overflow: hidden;
+      position: relative;
+    }
+    .nitro-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #0d7ec7 0%, #00e5ff 100%);
+      border-radius: 3px;
+      transition: width 0.1s linear;
+      box-shadow: 0 0 8px rgba(0, 229, 255, 0.6);
+    }
+    .nitro-fill.full {
+      background: linear-gradient(90deg, #00f0ff 0%, #76ff03 100%);
+      box-shadow: 0 0 12px rgba(0, 240, 255, 0.9);
+    }
+    .nitro-fill.active-boost {
+      background: linear-gradient(90deg, #ffd700 0%, #ff5722 100%);
+      box-shadow: 0 0 14px rgba(255, 150, 0, 0.95);
+      animation: pulseNitroBar 0.3s infinite alternate;
+    }
+    @keyframes pulseNitroBar {
+      0% { filter: brightness(1); }
+      100% { filter: brightness(1.3); }
+    }
+
+    /* On-Screen Touch-Friendly Nitro Boost Button */
+    .hud-nitro-btn {
+      position: absolute;
+      bottom: calc(4.5% + clamp(82px, 9.5vw, 110px));
+      right: 3.5%;
+      width: clamp(66px, 7.8vw, 86px);
+      height: clamp(66px, 7.8vw, 86px);
+      border-radius: 50%;
+      background: radial-gradient(circle, #0e2b47 0%, #081729 100%);
+      border: 3px solid #235485;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 6px 18px rgba(0,0,0,0.55), inset 0 2px 4px rgba(255,255,255,0.15);
+      z-index: 25;
+      padding: 0;
+      transition: transform 0.15s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    .hud-nitro-btn:active {
+      transform: scale(0.92);
+    }
+    .hud-nitro-btn.ready {
+      border-color: #00f0ff;
+      background: radial-gradient(circle, #0e4b77 0%, #062238 100%);
+      box-shadow: 0 0 20px rgba(0, 240, 255, 0.65), inset 0 0 12px rgba(0, 240, 255, 0.3);
+      animation: pulseNitroBtn 1.2s infinite alternate ease-in-out;
+    }
+    @keyframes pulseNitroBtn {
+      0% { box-shadow: 0 0 12px rgba(0, 240, 255, 0.4); transform: scale(1); }
+      100% { box-shadow: 0 0 24px rgba(0, 240, 255, 0.9), 0 0 35px rgba(0, 160, 255, 0.4); transform: scale(1.05); }
+    }
+    .hud-nitro-btn.boosting {
+      border-color: #ffd700;
+      background: radial-gradient(circle, #8a4800 0%, #3d1c00 100%);
+      box-shadow: 0 0 30px rgba(255, 170, 0, 0.95), inset 0 0 16px rgba(255, 220, 0, 0.5);
+      animation: pulseNitroBoosting 0.3s infinite alternate;
+    }
+    @keyframes pulseNitroBoosting {
+      0% { transform: scale(1.02); filter: brightness(1); }
+      100% { transform: scale(1.08); filter: brightness(1.3); }
+    }
+    .hud-nitro-btn.cooling {
+      opacity: 0.6;
+      border-color: #724b2b;
+      cursor: not-allowed;
+    }
+
+    .nitro-btn-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1px;
+      pointer-events: none;
+    }
+    .nitro-flame-icon {
+      width: clamp(22px, 2.6vw, 30px);
+      height: clamp(22px, 2.6vw, 30px);
+      fill: #5b96c7;
+      transition: fill 0.2s ease, filter 0.2s ease;
+    }
+    .hud-nitro-btn.ready .nitro-flame-icon {
+      fill: #00f0ff;
+      filter: drop-shadow(0 0 6px #00f0ff);
+    }
+    .hud-nitro-btn.boosting .nitro-flame-icon {
+      fill: #ffd700;
+      filter: drop-shadow(0 0 10px #ff9800);
+    }
+    .nitro-btn-label {
+      font-size: clamp(10px, 1.1vw, 13px);
+      font-weight: 900;
+      color: #ffffff;
+      letter-spacing: 0.8px;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+    }
+    .nitro-btn-key {
+      font-size: 8px;
+      font-weight: 800;
+      color: #92c4f2;
+      opacity: 0.85;
+      letter-spacing: 0.5px;
+    }
+    .hud-nitro-btn.ready .nitro-btn-key {
+      color: #00f0ff;
+    }
+
+    /* Nitro Boost Fullscreen Speed Streaks Overlay */
+    .hud-nitro-fx {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 15;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      background: radial-gradient(ellipse at center, rgba(0, 240, 255, 0) 45%, rgba(0, 180, 255, 0.18) 85%, rgba(0, 110, 230, 0.42) 100%);
+      box-shadow: inset 0 0 80px rgba(0, 230, 255, 0.35);
+    }
+    .hud-nitro-fx.active {
+      opacity: 1;
+      animation: nitroSpeedPulse 0.45s infinite alternate ease-in-out;
+    }
+    @keyframes nitroSpeedPulse {
+      0% { opacity: 0.75; transform: scale(1.0); }
+      100% { opacity: 1; transform: scale(1.008); }
+    }
+
+    /* Game Over Banked Coins Note */
+    .bank-deposit-note {
+      font-size: clamp(10px, 1.1vw, 12px);
+      font-weight: 800;
+      color: #72f043;
+      text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+      margin-top: 2px;
+      letter-spacing: 0.5px;
+    }
   </style>
 </head>
 <body>
@@ -1306,6 +2631,8 @@
     <button class="nav-btn" onclick="switchScreen('gameover')">4. Game Over</button>
     <button class="nav-btn" onclick="switchScreen('boat-select')">5. Select Boat</button>
     <button class="nav-btn" onclick="switchScreen('map-select')">6. Select Map</button>
+    <button class="nav-btn" onclick="openMissionsModal()">7. Missions</button>
+    <button class="nav-btn" onclick="switchScreen('upgrades')">8. Upgrades</button>
     <button class="nav-btn" onclick="toggleDeviceFrame()" id="frame-toggle-btn">Toggle Frame</button>
   </div>
 
@@ -1323,7 +2650,24 @@
         <img src="assets/ui/RiverRush_Logo.png" alt="River Rush Boat Adventure Logo">
       </div>
 
+      <!-- Top Right Missions & Challenges Quick Access (Phase 7) -->
+      <div class="main-menu-top-bar">
+        <button class="btn-top-missions" onclick="openMissionsModal()" id="btn-top-missions-banner" title="Missions, Daily Challenges & Achievements">
+          <span class="top-mission-icon">🎯</span>
+          <div class="top-mission-text">
+            <span class="top-mission-title">DAILY MISSIONS</span>
+            <span class="top-mission-sub" id="top-mission-subtext">Challenges Available</span>
+          </div>
+          <span class="top-mission-badge" id="top-mission-badge">0</span>
+        </button>
+      </div>
+
       <div class="left-side-utils">
+        <button class="square-util-btn mission-util-btn" onclick="openMissionsModal()" id="btn-missions-menu" title="Missions, Daily Challenges & Achievements">
+          <span style="font-size: clamp(22px, 2.4vw, 30px); filter: drop-shadow(0 0 8px rgba(255, 200, 0, 0.7));">🎯</span>
+          <span style="color: #ffd700; font-weight: 900;">Missions</span>
+          <span class="mission-badge-dot" id="mission-alert-dot" style="display:none;"></span>
+        </button>
         <button class="square-util-btn" onclick="playClick(); toast('Settings menu')">
           <img src="assets/ui/Icon_Settings.png" alt="Settings">
           <span>Settings</span>
@@ -1343,28 +2687,31 @@
           <svg viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"/></svg>
           <span>PLAY</span>
         </button>
-        <button class="btn-blue-main" onclick="switchScreen('boat-select')">
+        <button class="btn-blue-main" onclick="switchScreen('boat-select')" id="btn-nav-garage">
           <img src="assets/ui/Icon_Boat.png" alt="Boats">
-          <span>BOATS</span>
+          <span>GARAGE</span>
+        </button>
+        <button class="btn-blue-main" onclick="switchScreen('upgrades')" id="btn-nav-upgrades">
+          <span style="font-size: clamp(20px, 2.2vw, 26px); line-height: 1;">⚡</span>
+          <span>UPGRADES</span>
         </button>
         <button class="btn-blue-main" onclick="switchScreen('map-select')">
           <img src="assets/ui/Icon_Map.png" alt="Maps">
           <span>MAPS</span>
         </button>
-        <button class="btn-blue-main" onclick="playClick(); toast('Store coming soon')">
-          <img src="assets/ui/Icon_Store.png" alt="Store">
-          <span>STORE</span>
-        </button>
       </div>
     </div>
 
-    <!-- SCREEN 2: BOAT SELECTION -->
+    <!-- SCREEN 2: BOAT SELECTION (GARAGE) -->
     <div id="screen-boat-select" class="screen">
       <div class="top-header-row">
         <button class="btn-square-back" onclick="switchScreen('main-menu')">
           <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
         </button>
-        <div class="header-pill-title">SELECT BOAT</div>
+        <div class="garage-tab-toggle">
+          <button class="tab-toggle-btn active">BOATS</button>
+          <button class="tab-toggle-btn" onclick="switchScreen('upgrades')">UPGRADES</button>
+        </div>
         <div class="coin-counter-pill">
           <img src="assets/ui/Icon_Coin.png" alt="Coins">
           <span id="boat-select-coins">12,350</span>
@@ -1454,7 +2801,7 @@
     <!-- SCREEN 4: IN-GAME HUD -->
     <div id="screen-hud" class="screen">
       <div class="top-left-hud">
-        <button class="btn-pause-hud" onclick="switchScreen('pause')">
+        <button class="btn-pause-hud" onclick="switchScreen('pause')" id="btn-pause">
           <svg viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
         </button>
         <div class="hud-status-cluster">
@@ -1486,17 +2833,80 @@
         <div class="speedo-unit">KM/H</div>
       </div>
 
+      <!-- Nitro Boost Gauge (Phase 8) -->
+      <div id="hud-nitro-gauge" class="hud-nitro-gauge">
+        <div class="nitro-gauge-header">
+          <span class="nitro-gauge-icon">⚡</span>
+          <span class="nitro-gauge-title">NITRO BOOST</span>
+          <span id="hud-nitro-status" class="nitro-gauge-status">0%</span>
+        </div>
+        <div class="nitro-track">
+          <div id="hud-nitro-fill" class="nitro-fill" style="width: 0%;"></div>
+        </div>
+      </div>
+
       <button class="hud-steer-btn left" id="btn-steer-l">
         <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+      </button>
+
+      <!-- Touch-Friendly Nitro Boost Button (Phase 8) -->
+      <button id="btn-nitro-boost" class="hud-nitro-btn" title="Activate Nitro Boost (Spacebar / Tap)">
+        <div class="nitro-btn-inner">
+          <svg class="nitro-flame-icon" viewBox="0 0 24 24">
+            <path d="M13.5.67s.74 2.65.74 4.8c0 2.06-1.35 3.73-3.41 3.73-2.07 0-3.63-1.67-3.63-3.73l.03-.36C5.21 7.51 4 10.61 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8C20 8.61 17.41 3.8 13.5.67zM12 20c-3.31 0-6-2.69-6-6 0-1.53.58-2.92 1.53-3.98.05 1.58.84 3.01 2.16 3.84.34.22.75.14.99-.2.25-.34.18-.81-.16-1.05-.98-.7-1.52-1.85-1.52-3.11 0-.46.08-.9.23-1.31.84 1.15 2.19 1.91 3.77 1.91 2.48 0 4.5-2.02 4.5-4.5 0-.41-.06-.8-.17-1.17C15.34 7.21 17 10.41 17 14c0 3.31-2.69 6-6 6z"/>
+          </svg>
+          <span class="nitro-btn-label">NITRO</span>
+          <span class="nitro-btn-key">SPACE</span>
+        </div>
       </button>
 
       <button class="hud-steer-btn right" id="btn-steer-r">
         <svg viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
       </button>
 
+      <!-- Dynamic Nitro Boost Overlay Effect (Phase 8) -->
+      <div id="hud-nitro-fx" class="hud-nitro-fx"></div>
+
       <button class="hud-test-trigger" onclick="triggerGameOver()">
         Crash Simulation (Trigger Game Over)
       </button>
+
+      <!-- Dynamic River Event Announcement Banner (Phase 6) -->
+      <div id="hud-event-banner" class="hud-event-banner">
+        <span id="event-icon" class="event-icon">🌟</span>
+        <div class="event-text-group">
+          <div id="event-title" class="event-title">COIN TRAIL</div>
+          <div id="event-subtitle" class="event-subtitle">Carve the golden wave!</div>
+        </div>
+      </div>
+
+      <!-- Skill-Based Combo & Near-Miss Indicator (Phase 6) -->
+      <div id="hud-combo-container" class="hud-combo-container">
+        <div class="combo-pill">
+          <span class="combo-flame">🔥</span>
+          <span class="combo-label">COMBO</span>
+          <span id="hud-combo-val" class="combo-val">x1</span>
+        </div>
+        <div class="combo-timer-track">
+          <div id="hud-combo-bar" class="combo-timer-fill"></div>
+        </div>
+      </div>
+
+      <!-- Near Miss Floating Arcade Alert (Phase 6) -->
+      <div id="hud-nearmiss-popup" class="hud-nearmiss-popup">
+        <div class="nearmiss-title">NEAR MISS!</div>
+        <div id="hud-nearmiss-pts" class="nearmiss-pts">+50</div>
+      </div>
+
+      <!-- In-Game Achievement / Milestone Unlock Popup (Phase 7) -->
+      <div id="hud-achievement-popup" class="hud-achievement-popup">
+        <span class="ach-icon" id="ach-popup-icon">🏆</span>
+        <div class="ach-text-group">
+          <div class="ach-sub-title" id="ach-popup-type">ACHIEVEMENT UNLOCKED!</div>
+          <div class="ach-main-title" id="ach-popup-title">Treasure Hunter</div>
+        </div>
+        <div class="ach-reward-badge" id="ach-popup-reward">+300</div>
+      </div>
     </div>
 
     <!-- SCREEN 5: PAUSE MENU (Modal overlay) -->
@@ -1563,6 +2973,14 @@
               <img src="assets/ui/Icon_Coin.png" alt="Coins">
               <span id="go-coins-val">236</span>
             </div>
+            <div class="bank-deposit-note">+<span id="go-coins-banked">0</span> Added to Garage Wallet!</div>
+
+            <!-- Total Score & Skill Summary (Phase 6) -->
+            <div class="score-summary-row" id="go-score-summary">
+              <div class="score-pill-mini">SCORE: <span id="go-score-val">1,250</span></div>
+              <div class="score-pill-mini">NEAR MISS: <span id="go-nearmiss-val">0</span></div>
+              <div class="score-pill-mini">MAX COMBO: <span id="go-maxcombo-val">x1</span></div>
+            </div>
 
             <div class="new-best-score-badge">
               <svg viewBox="0 0 24 24"><polygon points="2 20 22 20 20 8 15 13 12 4 9 13 4 8 2 20"/></svg>
@@ -1581,6 +2999,76 @@
             </button>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- SCREEN 7: MISSIONS, DAILY CHALLENGES & ACHIEVEMENTS (Phase 7) -->
+    <div id="screen-missions" class="screen">
+      <div class="modal-overlay">
+        <div class="missions-modal-card">
+          <div class="missions-card-header">
+            <div class="missions-header-title">
+              <span class="missions-header-icon">🎯</span>
+              <span>MISSIONS & REWARDS</span>
+            </div>
+            <button class="btn-red-close" onclick="closeMissionsModal()">
+              <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18" stroke="#fff" stroke-width="3" stroke-linecap="round"/><line x1="6" y1="6" x2="18" y2="18" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg>
+            </button>
+          </div>
+
+          <!-- Navigation Tabs -->
+          <div class="missions-tab-bar">
+            <button class="mission-tab-btn active" id="tab-btn-missions" onclick="switchMissionsTab('missions')">
+              <span>🎯</span> MISSIONS
+              <span class="tab-badge" id="badge-missions" style="display:none;">0</span>
+            </button>
+            <button class="mission-tab-btn" id="tab-btn-daily" onclick="switchMissionsTab('daily')">
+              <span>📅</span> DAILY
+              <span class="tab-badge" id="badge-daily" style="display:none;">0</span>
+            </button>
+            <button class="mission-tab-btn" id="tab-btn-achievements" onclick="switchMissionsTab('achievements')">
+              <span>🏆</span> ACHIEVEMENTS
+              <span class="tab-badge" id="badge-achievements" style="display:none;">0</span>
+            </button>
+          </div>
+
+          <!-- Scrollable Content Pane -->
+          <div class="missions-content-container" id="missions-scroll-container">
+            <div id="missions-list-container" class="missions-list"></div>
+          </div>
+
+          <!-- Card Footer with Bank and Hint -->
+          <div class="missions-card-footer">
+            <div class="footer-coin-bank">
+              <span class="footer-coin-label">TOTAL COINS:</span>
+              <img src="assets/ui/Icon_Coin.png" alt="Coins">
+              <span class="footer-coin-val" id="missions-coin-val">12,350</span>
+            </div>
+            <div class="footer-hint" id="missions-footer-hint">Complete runs to progress objectives!</div>
+          </div>
+        </div>
+    </div>
+    </div>
+
+    <!-- SCREEN 8: PERFORMANCE UPGRADES (Phase 8) -->
+    <div id="screen-upgrades" class="screen">
+      <div class="top-header-row">
+        <button class="btn-square-back" onclick="switchScreen('main-menu')">
+          <svg viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
+        </button>
+        <div class="garage-tab-toggle">
+          <button class="tab-toggle-btn" onclick="switchScreen('boat-select')">BOATS</button>
+          <button class="tab-toggle-btn active">UPGRADES</button>
+        </div>
+        <div class="coin-counter-pill">
+          <img src="assets/ui/Icon_Coin.png" alt="Coins">
+          <span id="upgrades-coins-val">12,350</span>
+          <button class="btn-plus-green" onclick="addCoins(500)">+</button>
+        </div>
+      </div>
+
+      <div class="upgrades-container" id="upgrades-list-container">
+        <!-- Upgrades dynamically rendered by renderUpgradesScreen() -->
       </div>
     </div>
   </div>
@@ -1624,6 +3112,38 @@
     let cameraShake = 0;
     let invulnerableTimer = 0;
     let animFrameId = null;
+
+    // Dynamic River Events State (Phase 6)
+    const RIVER_EVENTS = {
+      IDLE: 'idle',
+      COIN_TRAIL: 'coin-trail',
+      DRIFTWOOD_RUSH: 'driftwood-rush',
+      NARROW_PASSAGE: 'narrow-passage',
+      RAPIDS: 'rapids'
+    };
+    let currentEvent = RIVER_EVENTS.IDLE;
+    let eventTimer = 0;
+    let eventCooldown = 16.0; // 16s calm water on initial run
+    let rapidSpeedBoost = 0;
+    let eventBannerTimeout = null;
+    let lastEventIdx = -1;
+    const EVENT_POOL = [
+      RIVER_EVENTS.COIN_TRAIL,
+      RIVER_EVENTS.DRIFTWOOD_RUSH,
+      RIVER_EVENTS.NARROW_PASSAGE,
+      RIVER_EVENTS.RAPIDS
+    ];
+
+    // Near-Miss & Combo Scoring System (Phase 6)
+    let comboCount = 0;
+    let comboMultiplier = 1;
+    let comboTimer = 0;
+    const COMBO_TIMEOUT = 4.5; // 4.5s window to chain next near-miss
+    let totalNearMisses = 0;
+    let nearMissScore = 0;
+    let totalGameScore = 0;
+    let maxComboReached = 1;
+    let nearMissPopupTimeout = null;
 
     // Camera chase settings & dynamic follow (Phase 4B tuned for complete boat visibility & breathing room)
     const CAM_BASE_Y = 3.85;
@@ -2938,8 +4458,8 @@
         depthWrite: false
       });
 
-      const coinZ = [12, 18, 24, 38, 44, 50, 68, 74, 80, 94];
-      const coinX = [0, 0, 0, 3.2, 3.2, 3.2, -3.2, -3.2, -3.2, 0];
+      const coinZ = [12, 18, 24, 38, 44, 50, 68, 74, 80, 94, 110, 116, 122, 138, 144, 150];
+      const coinX = [0, 0, 0, 3.2, 3.2, 3.2, -3.2, -3.2, -3.2, 0, 3.2, 3.2, 3.2, -3.2, -3.2, -3.2];
 
       for (let i = 0; i < coinZ.length; i++) {
         const coinGroup = new THREE.Group();
@@ -3002,9 +4522,9 @@
 
       // Active log starts at z = 50. Standby pooled logs at z = 240, 340 so regression suites
       // (which test multi-hit gameover sequences via obstacleLogs[0..2]) succeed cleanly.
-      const logZ = [50, 240, 340];
-      const logX = [3.2, 0, -3.2];
-      const logRots = [0.25, -0.3, 0.15];
+      const logZ = [50, 240, 340, 440, 540];
+      const logX = [3.2, 0, -3.2, 3.2, -3.2];
+      const logRots = [0.25, -0.3, 0.15, -0.22, 0.28];
 
       for (let i = 0; i < logZ.length; i++) {
         const logGroup = new THREE.Group();
@@ -3060,6 +4580,9 @@
         logGroup.position.set(logX[i], 0.3, logZ[i]);
         logGroup.active = (i < MAX_ACTIVE_LOGS);
         logGroup.visible = (i < MAX_ACTIVE_LOGS);
+        logGroup.hasNearMissed = false;
+        logGroup.hasCollided = false;
+        logGroup.passedNearMiss = false;
         scene.add(logGroup);
         obstacleLogs.push(logGroup);
       }
@@ -3255,25 +4778,28 @@
 
     function updateMotorSpray(dt) {
       if (!gameActive || !boatGroup) return;
-      // High speed threshold: boatSpeed > 37.5 m/s (~135 km/h)
-      if (boatSpeed > 37.5) {
+      const isBoosting = (typeof nitroActive !== 'undefined' && nitroActive);
+      // High speed threshold: boatSpeed > 37.5 m/s (~135 km/h) or active Nitro boost
+      if (boatSpeed > 37.5 || isBoosting) {
         motorSprayTimer += dt;
-        if (motorSprayTimer >= 0.07) {
+        const sprayInterval = isBoosting ? 0.04 : 0.07;
+        if (motorSprayTimer >= sprayInterval) {
           motorSprayTimer = 0;
-          for (let s = 0; s < 2; s++) {
+          const dropletCount = isBoosting ? 4 : 2;
+          for (let s = 0; s < dropletCount; s++) {
             const p = getPooledParticle('droplet');
             if (p) {
-              const sternX = boatGroup.position.x + (s === 0 ? -0.22 : 0.22) + (Math.random() - 0.5) * 0.1;
+              const sternX = boatGroup.position.x + ((s % 2 === 0) ? -0.22 : 0.22) + (Math.random() - 0.5) * 0.12;
               p.active = true;
               p.mesh.visible = true;
               p.mesh.position.set(sternX, 0.14, boatGroup.position.z - 1.25);
-              p.vx = (s === 0 ? -0.8 : 0.8) + (Math.random() - 0.5) * 0.6;
-              p.vy = 1.6 + Math.random() * 1.4;
-              p.vz = -7.5 - Math.random() * 3.5;
+              p.vx = ((s % 2 === 0) ? -0.9 : 0.9) + (Math.random() - 0.5) * 0.7;
+              p.vy = (isBoosting ? 2.2 : 1.6) + Math.random() * 1.5;
+              p.vz = (isBoosting ? -11.0 : -7.5) - Math.random() * 4.0;
               p.gravity = -16.0;
-              p.life = 0.25 + Math.random() * 0.1;
-              p.maxLife = 0.35;
-              p.initialScale = 0.5 + Math.random() * 0.3;
+              p.life = 0.25 + Math.random() * 0.12;
+              p.maxLife = 0.38;
+              p.initialScale = (isBoosting ? 0.65 : 0.5) + Math.random() * 0.3;
               p.rotSpeed = null;
               p.mesh.scale.setScalar(p.initialScale);
             }
@@ -3281,6 +4807,33 @@
         }
       } else {
         motorSprayTimer = 0;
+      }
+    }
+
+    function spawnNearMissSparks(boatX, obsX) {
+      if (!poolInitialized) initParticlePool();
+      const side = (obsX > boatX) ? 1 : -1;
+      const sparkX = boatX + side * 0.85;
+      const bZ = boatGroup ? boatGroup.position.z : -1.2;
+      for (let i = 0; i < 6; i++) {
+        const p = getPooledParticle('spark');
+        if (!p) continue;
+        p.active = true;
+        p.mesh.visible = true;
+        p.mesh.position.set(sparkX, 0.35, bZ + (Math.random() - 0.5) * 0.6);
+        p.vx = side * (1.6 + Math.random() * 2.2);
+        p.vy = 1.8 + Math.random() * 2.2;
+        p.vz = -2.0 + Math.random() * 3.5;
+        p.gravity = -12.0;
+        p.life = 0.25 + Math.random() * 0.15;
+        p.maxLife = 0.4;
+        p.initialScale = 0.65 + Math.random() * 0.25;
+        p.rotSpeed = {
+          x: (Math.random() - 0.5) * 10,
+          y: (Math.random() - 0.5) * 10,
+          z: (Math.random() - 0.5) * 10
+        };
+        p.mesh.scale.setScalar(p.initialScale);
       }
     }
 
@@ -3294,9 +4847,12 @@
         }
       }
 
-      const logZ = [50, 240, 340];
-      const logX = [3.2, 0, -3.2];
+      const logZ = [50, 240, 340, 440, 540];
+      const logX = [3.2, 0, -3.2, 3.2, -3.2];
       obstacleLogs.forEach((obs, i) => {
+        obs.hasNearMissed = false;
+        obs.hasCollided = false;
+        obs.passedNearMiss = false;
         if (i < MAX_ACTIVE_LOGS) {
           obs.position.set(logX[i % logX.length], 0.3, logZ[i % logZ.length]);
           obs.visible = true;
@@ -3308,8 +4864,8 @@
         }
       });
 
-      const coinZ = [12, 18, 24, 38, 44, 50, 68, 74, 80, 94];
-      const coinX = [0, 0, 0, 3.2, 3.2, 3.2, -3.2, -3.2, -3.2, 0];
+      const coinZ = [12, 18, 24, 38, 44, 50, 68, 74, 80, 94, 110, 116, 122, 138, 144, 150];
+      const coinX = [0, 0, 0, 3.2, 3.2, 3.2, -3.2, -3.2, -3.2, 0, 3.2, 3.2, 3.2, -3.2, -3.2, -3.2];
       coins.forEach((c, i) => {
         c.position.set(coinX[i % coinX.length], 0.6, coinZ[i % coinZ.length]);
         c.visible = true;
@@ -3394,17 +4950,20 @@
         }
       }
       if (churnMesh) {
-        churnMesh.material.opacity = 0.78 + Math.sin(t * 15) * 0.12;
+        const churnBoost = (typeof nitroActive !== 'undefined' && nitroActive) ? 0.95 : 0.78;
+        churnMesh.material.opacity = churnBoost + Math.sin(t * 15) * 0.12;
       }
 
       // Animate rooster-tail lateral spray
       if (sprayPlaneL && sprayPlaneR) {
-        const sprayPulse = 0.58 + Math.sin(t * 18) * 0.16;
-        sprayPlaneL.material.opacity = sprayPulse;
-        sprayPlaneR.material.opacity = sprayPulse;
+        const isBoosting = (typeof nitroActive !== 'undefined' && nitroActive);
+        const sprayPulse = (isBoosting ? 0.82 : 0.58) + Math.sin(t * 18) * 0.16;
+        sprayPlaneL.material.opacity = Math.min(1.0, sprayPulse);
+        sprayPlaneR.material.opacity = Math.min(1.0, sprayPulse);
         const turn = boatTargetX - boatCurrentX;
-        sprayPlaneL.scale.y = 1.0 + Math.max(0, -turn * 1.2);
-        sprayPlaneR.scale.y = 1.0 + Math.max(0, turn * 1.2);
+        const boostYScale = isBoosting ? 1.4 : 1.0;
+        sprayPlaneL.scale.y = (1.0 + Math.max(0, -turn * 1.2)) * boostYScale;
+        sprayPlaneR.scale.y = (1.0 + Math.max(0, turn * 1.2)) * boostYScale;
       }
 
       // Animate dynamic bow spray V-plumes flaring into turns
@@ -3450,6 +5009,11 @@
 
       // Active gameplay logic (only executes when gameActive is true)
       if (gameActive) {
+        // Phase 8: Update Nitro Charge and Timer
+        if (typeof updateNitro === 'function') {
+          updateNitro(dt);
+        }
+
         // Boat Invulnerability Flash
         if (invulnerableTimer > 0) {
           invulnerableTimer -= dt;
@@ -3459,13 +5023,15 @@
         }
 
         // ==========================================================
-        // STEERING DIRECTION
+        // STEERING DIRECTION & HANDLING UPGRADE (PHASE 8)
         // Camera at z = -5.5 looking forward along +Z.
         // Screen-LEFT = increasing X (+X). Screen-RIGHT = decreasing X (-X).
         // LEFT input (steerDir = -1) -> boatTargetX increases (+X).
         // RIGHT input (steerDir = +1) -> boatTargetX decreases (-X).
         // ==========================================================
-        const steerRate = 14.0;
+        const handlingLvl = (typeof upgradesState !== 'undefined' && upgradesState.handling) ? upgradesState.handling : 0;
+        const steerRate = 14.0 * (1.0 + handlingLvl * 0.05);
+        const steerInterp = 12.0 * (1.0 + handlingLvl * 0.06);
 
         // Priority: Active manual keys or touch buttons override tilt
         if (keysPressed.left) {
@@ -3490,7 +5056,7 @@
           boatTargetX -= steerDir * steerRate * dt;
         }
         boatTargetX = Math.max(-5.0, Math.min(5.0, boatTargetX));
-        boatCurrentX += (boatTargetX - boatCurrentX) * Math.min(1.0, 12.0 * dt);
+        boatCurrentX += (boatTargetX - boatCurrentX) * Math.min(1.0, steerInterp * dt);
 
         // Turn dynamics combines position delta and active steering input so banking persists during sustained carves
         const turnDelta = (boatTargetX - boatCurrentX) * 0.7 + (-steerDir * 0.35);
@@ -3521,10 +5087,14 @@
         camera.lookAt(smoothLookX, CAM_LOOK_Y, CAM_LOOK_Z);
 
         // ==========================================================
-        // SPEED-BASED PROGRESSION & DYNAMIC FOV (PHASE 2)
+        // SPEED-BASED PROGRESSION, NITRO & ENGINE ACCELERATION (PHASE 8)
         // ==========================================================
+        const engineLvl = (typeof upgradesState !== 'undefined' && upgradesState.engine) ? upgradesState.engine : 0;
         const speedMultiplier = 1.0 + Math.min(0.22, (currentDistance / 1500) * 0.22);
-        boatSpeed = baseSpeed * speedMultiplier;
+        const nitroSpeedBonus = (typeof nitroActive !== 'undefined' && nitroActive) ? (baseSpeed * 0.22) : 0;
+        const targetSpeed = Math.min(baseSpeed * 1.48, (baseSpeed + rapidSpeedBoost + nitroSpeedBonus) * speedMultiplier);
+        const accelRate = 7.0 * (1.0 + engineLvl * 0.20);
+        boatSpeed += (targetSpeed - boatSpeed) * Math.min(1.0, accelRate * dt);
 
         const speedNorm = Math.max(0, Math.min(1.0, (boatSpeed - baseSpeed) / (baseSpeed * 0.22)));
         const targetFOV = BASE_FOV + speedNorm * (MAX_FOV - BASE_FOV);
@@ -3558,10 +5128,54 @@
         boatGroup.position.y = -0.02 + Math.sin(t * 4.8) * 0.028 - Math.abs(smoothBoatRoll) * 0.035;
 
         // ==========================================================
+        // DYNAMIC RIVER EVENTS MANAGER (Phase 6)
+        // ==========================================================
+        if (currentEvent === RIVER_EVENTS.IDLE) {
+          eventCooldown -= dt;
+          if (eventCooldown <= 0) {
+            let nextIdx = Math.floor(Math.random() * EVENT_POOL.length);
+            if (nextIdx === lastEventIdx) {
+              nextIdx = (nextIdx + 1) % EVENT_POOL.length;
+            }
+            lastEventIdx = nextIdx;
+            triggerRiverEvent(EVENT_POOL[nextIdx]);
+          }
+        } else {
+          eventTimer -= dt;
+          if (currentEvent === RIVER_EVENTS.RAPIDS) {
+            rapidSpeedBoost += (baseSpeed * 0.16 - rapidSpeedBoost) * Math.min(1.0, 3.0 * dt);
+          }
+          if (eventTimer <= 0) {
+            const completedEvt = currentEvent;
+            endCurrentRiverEvent();
+            if (completedEvt !== RIVER_EVENTS.IDLE && typeof onRiverEventCompleted === 'function') {
+              onRiverEventCompleted(completedEvt);
+            }
+          }
+        }
+
+        if (currentEvent !== RIVER_EVENTS.RAPIDS && rapidSpeedBoost > 0) {
+          rapidSpeedBoost = Math.max(0, rapidSpeedBoost - baseSpeed * 0.25 * dt);
+        }
+
+        // ==========================================================
+        // COMBO TIMEOUT & DECAY (Phase 6)
+        // ==========================================================
+        if (comboCount > 0) {
+          comboTimer -= dt;
+          if (comboTimer <= 0) {
+            resetCombo();
+          } else {
+            updateComboHUD();
+          }
+        }
+
+        // ==========================================================
         // FORWARD MOVEMENT, COLLISIONS & RECYCLING
         // ==========================================================
         const forwardStep = boatSpeed * dt;
         currentDistance += forwardStep;
+        totalGameScore = Math.floor(currentDistance) + (collectedCoins * 20) + nearMissScore;
 
         // Move riverbank scenery objects toward and past boat
         sceneryObjects.forEach(obj => {
@@ -3571,21 +5185,30 @@
           }
         });
 
-        // Move obstacle logs toward boat and detect collisions
+        // Move obstacle logs toward boat and detect collisions & near-misses
         const lanes = [3.2, 0, -3.2];
         obstacleLogs.forEach((obs, idx) => {
-          if (!obs.active && !obs.visible && idx >= MAX_ACTIVE_LOGS) return;
+          if (!obs.active && !obs.visible && idx >= MAX_ACTIVE_LOGS && currentEvent === RIVER_EVENTS.IDLE) return;
 
           const prevZ = obs.position.z;
           obs.position.z -= forwardStep;
 
           // Recycle when passed behind camera
           if (obs.position.z < -8) {
-            if (idx < MAX_ACTIVE_LOGS) {
-              obs.position.z = 85 + Math.random() * 45;
-              obs.position.x = lanes[Math.floor(Math.random() * lanes.length)];
-              obs.visible = true;
-              obs.active = true;
+            obs.hasNearMissed = false;
+            obs.hasCollided = false;
+            obs.passedNearMiss = false;
+            if (currentEvent === RIVER_EVENTS.IDLE) {
+              if (idx < MAX_ACTIVE_LOGS) {
+                obs.position.z = 85 + Math.random() * 45;
+                obs.position.x = lanes[Math.floor(Math.random() * lanes.length)];
+                obs.visible = true;
+                obs.active = true;
+              } else {
+                obs.visible = false;
+                obs.active = false;
+                obs.position.set(0, 0.3, 240 + idx * 100);
+              }
             } else {
               obs.visible = false;
               obs.active = false;
@@ -3593,8 +5216,8 @@
             }
           }
 
-          // Real Collision Detection (robust swept z-interval against frame deltas):
-          if (obs.active) {
+          // Real Collision & Near-Miss Detection:
+          if (obs.active && !obs.hasCollided) {
             if (!obs.visible && obs.position.z > -4 && obs.position.z < 25) {
               obs.visible = true;
             }
@@ -3603,10 +5226,20 @@
             if (inZ) {
               const dx = Math.abs(obs.position.x - boatGroup.position.x);
               if (dx < 1.55) {
+                // Direct collision!
+                obs.hasCollided = true;
+                obs.hasNearMissed = false;
                 obs.active = false;
                 obs.visible = false;
+                resetCombo();
                 spawnSplashExplosion(boatGroup.position.x, 0.3, obs.position.z);
                 handleObstacleHit();
+              } else if (dx <= 2.95 && !obs.hasNearMissed && !obs.hasCollided) {
+                // Genuine near miss as obstacle aligns with boat hull
+                if (obs.position.z <= bZ + 0.45) {
+                  obs.hasNearMissed = true;
+                  triggerNearMiss(obs.position.x);
+                }
               }
             }
           }
@@ -3634,6 +5267,7 @@
                 document.getElementById('hud-coins-val').innerText = collectedCoins;
                 triggerCoinFloatingBadge();
                 playCoin();
+                if (typeof onCoinCollected === 'function') onCoinCollected();
               }
             }
           });
@@ -3643,6 +5277,7 @@
         document.getElementById('hud-distance-val').innerText = `${Math.floor(currentDistance).toLocaleString()} m`;
         const speedKmh = Math.round(boatSpeed * 3.6);
         document.getElementById('hud-speed-val').innerText = `${speedKmh}`;
+        if (typeof onDistanceUpdated === 'function') onDistanceUpdated(currentDistance);
       } else {
         // Paused or Game Over: smoothly damp camera follow & freeze gameplay movement (Phase 2)
         if (camera) {
@@ -3673,10 +5308,255 @@
       renderer.render(scene, camera);
     }
 
+    /* ==========================================================
+       DYNAMIC RIVER EVENTS & NEAR-MISS COMBO SCORING (PHASE 6)
+       ========================================================== */
+    function triggerRiverEvent(eventName) {
+      if (!gameActive) return;
+      currentEvent = eventName;
+
+      const banner = document.getElementById('hud-event-banner');
+      const iconEl = document.getElementById('event-icon');
+      const titleEl = document.getElementById('event-title');
+      const subEl = document.getElementById('event-subtitle');
+
+      if (banner) {
+        banner.className = 'hud-event-banner active';
+      }
+
+      if (eventName === RIVER_EVENTS.COIN_TRAIL) {
+        eventTimer = 9.5;
+        if (banner) banner.classList.add('event-gold');
+        if (iconEl) iconEl.innerText = '🌟';
+        if (titleEl) titleEl.innerText = 'COIN TRAIL';
+        if (subEl) subEl.innerText = 'Follow the golden sine wave!';
+        // Arrange coins in a curved sinusoidal trail ahead of the boat
+        const startZ = 70;
+        const spacingZ = 8.0;
+        coins.forEach((c, i) => {
+          const zPos = startZ + i * spacingZ;
+          const xPos = Math.sin(i * 0.58) * 3.1;
+          c.position.set(xPos, 0.6, zPos);
+          c.visible = true;
+        });
+      } else if (eventName === RIVER_EVENTS.DRIFTWOOD_RUSH) {
+        eventTimer = 8.5;
+        if (banner) banner.classList.add('event-orange');
+        if (iconEl) iconEl.innerText = '🪵';
+        if (titleEl) titleEl.innerText = 'DRIFTWOOD RUSH';
+        if (subEl) subEl.innerText = 'Slalom through surging logs!';
+        // Stagger logs sequentially with plenty of reaction distance and guaranteed open passing lanes
+        const rushSetup = [
+          { x: -3.2, z: 75 },  // Left blocked, center & right safe
+          { x: 3.2,  z: 110 }, // Right blocked, center & left safe
+          { x: 0.0,  z: 145 }, // Center blocked, left & right safe
+          { x: -3.2, z: 180 }, // Left blocked, center & right safe
+          { x: 3.2,  z: 215 }  // Right blocked, center & left safe
+        ];
+        obstacleLogs.forEach((obs, i) => {
+          if (i < rushSetup.length) {
+            obs.position.set(rushSetup[i].x, 0.3, rushSetup[i].z);
+            obs.active = true;
+            obs.visible = true;
+            obs.hasNearMissed = false;
+            obs.hasCollided = false;
+            obs.passedNearMiss = false;
+          } else {
+            obs.active = false;
+            obs.visible = false;
+            obs.position.set(0, 0.3, 300 + i * 50);
+          }
+        });
+      } else if (eventName === RIVER_EVENTS.NARROW_PASSAGE) {
+        eventTimer = 8.0;
+        if (banner) banner.classList.add('event-amber');
+        if (iconEl) iconEl.innerText = '⚠️';
+        if (titleEl) titleEl.innerText = 'NARROW PASSAGE';
+        if (subEl) subEl.innerText = 'Precision corridor ahead!';
+        // Dual hazards flanking the river to create a center corridor, then side exits
+        const passageSetup = [
+          { x: -3.2, z: 80 },  // Left flank
+          { x: 3.2,  z: 80 },  // Right flank -> Center open (x=0)
+          { x: -3.2, z: 125 }, // Left flank
+          { x: 3.2,  z: 125 }, // Right flank -> Center open (x=0)
+          { x: 0.0,  z: 170 }  // Center hazard -> Both flanks open
+        ];
+        obstacleLogs.forEach((obs, i) => {
+          if (i < passageSetup.length) {
+            obs.position.set(passageSetup[i].x, 0.3, passageSetup[i].z);
+            obs.active = true;
+            obs.visible = true;
+            obs.hasNearMissed = false;
+            obs.hasCollided = false;
+            obs.passedNearMiss = false;
+          } else {
+            obs.active = false;
+            obs.visible = false;
+            obs.position.set(0, 0.3, 300 + i * 50);
+          }
+        });
+      } else if (eventName === RIVER_EVENTS.RAPIDS) {
+        eventTimer = 7.5;
+        if (banner) banner.classList.add('event-cyan');
+        if (iconEl) iconEl.innerText = '⚡';
+        if (titleEl) titleEl.innerText = 'RIVER RAPIDS';
+        if (subEl) subEl.innerText = 'White-water speed surge!';
+        // Clear obstacles far ahead so high speed is thrilling and fair
+        const rapidSetup = [
+          { x: 3.2,  z: 95 },
+          { x: -3.2, z: 165 },
+          { x: 0.0,  z: 235 }
+        ];
+        obstacleLogs.forEach((obs, i) => {
+          if (i < rapidSetup.length) {
+            obs.position.set(rapidSetup[i].x, 0.3, rapidSetup[i].z);
+            obs.active = true;
+            obs.visible = true;
+            obs.hasNearMissed = false;
+            obs.hasCollided = false;
+            obs.passedNearMiss = false;
+          } else {
+            obs.active = false;
+            obs.visible = false;
+            obs.position.set(0, 0.3, 300 + i * 50);
+          }
+        });
+      }
+
+      playEventFanfare();
+
+      if (eventBannerTimeout) clearTimeout(eventBannerTimeout);
+      eventBannerTimeout = setTimeout(() => {
+        if (banner) banner.classList.remove('active');
+      }, 3200);
+    }
+
+    function endCurrentRiverEvent() {
+      currentEvent = RIVER_EVENTS.IDLE;
+      eventTimer = 0;
+      eventCooldown = 15.0 + Math.random() * 8.0;
+      const banner = document.getElementById('hud-event-banner');
+      if (banner) {
+        banner.classList.remove('active');
+      }
+    }
+
+    function triggerNearMiss(obsX) {
+      if (!gameActive) return;
+
+      // Increase Combo
+      comboCount++;
+      if (comboCount > maxComboReached) {
+        maxComboReached = comboCount;
+      }
+      // Combo multiplier ladder: x1 (1-2), x2 (3-4), x3 (5-6), x4 (7-8), x5 (9+)
+      comboMultiplier = Math.min(5, 1 + Math.floor((comboCount - 1) / 2));
+      comboTimer = COMBO_TIMEOUT;
+
+      const baseBonus = 50;
+      const pts = baseBonus * comboMultiplier;
+      nearMissScore += pts;
+      totalNearMisses++;
+
+      // Subtle dynamic boat roll kick away from hazard (arcade feel)
+      smoothBoatRoll += (boatCurrentX < obsX ? -0.065 : 0.065);
+
+      // Spawn subtle near miss spark particles
+      spawnNearMissSparks(boatCurrentX, obsX);
+
+      // Play audio & show visual feedback
+      playNearMissSound();
+      showNearMissPopup(pts, comboMultiplier);
+      updateComboHUD();
+      if (typeof onNearMissTriggered === 'function') onNearMissTriggered();
+    }
+
+    function resetCombo() {
+      comboCount = 0;
+      comboMultiplier = 1;
+      comboTimer = 0;
+      updateComboHUD();
+    }
+
+    function updateComboHUD() {
+      const container = document.getElementById('hud-combo-container');
+      const valEl = document.getElementById('hud-combo-val');
+      const barEl = document.getElementById('hud-combo-bar');
+
+      if (!container || !valEl || !barEl) return;
+
+      if (comboCount > 0 && gameActive) {
+        container.classList.add('active');
+        valEl.innerText = `x${comboMultiplier}`;
+        const pct = Math.max(0, Math.min(100, (comboTimer / COMBO_TIMEOUT) * 100));
+        barEl.style.width = `${pct.toFixed(1)}%`;
+      } else {
+        container.classList.remove('active');
+        barEl.style.width = '0%';
+      }
+    }
+
+    function showNearMissPopup(pts, mult) {
+      const popup = document.getElementById('hud-nearmiss-popup');
+      const ptsEl = document.getElementById('hud-nearmiss-pts');
+      if (!popup || !ptsEl) return;
+
+      ptsEl.innerText = mult > 1 ? `+${pts} (${mult}x)` : `+${pts}`;
+
+      popup.classList.remove('active');
+      void popup.offsetWidth; // Force reflow for keyframe animation restart
+      popup.classList.add('active');
+
+      if (nearMissPopupTimeout) clearTimeout(nearMissPopupTimeout);
+      nearMissPopupTimeout = setTimeout(() => {
+        popup.classList.remove('active');
+      }, 850);
+    }
+
+    function playNearMissSound() {
+      try {
+        const ctx = getAudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(520, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1180, ctx.currentTime + 0.14);
+        gain.gain.setValueAtTime(0.22, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.18);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.18);
+      } catch (e) {}
+    }
+
+    function playEventFanfare() {
+      try {
+        const ctx = getAudioCtx();
+        const notes = [440, 554.37, 659.25, 880]; // A4, C#5, E5, A5
+        notes.forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          const startTime = ctx.currentTime + idx * 0.08;
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, startTime);
+          gain.gain.setValueAtTime(0.18, startTime);
+          gain.gain.exponentialRampToValueAtTime(0.01, startTime + 0.16);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(startTime);
+          osc.stop(startTime + 0.16);
+        });
+      } catch (e) {}
+    }
+
     function handleObstacleHit() {
       if (!gameActive || invulnerableTimer > 0) return;
-      invulnerableTimer = 0.9;
-      cameraShake = 0.85;
+      const hullLvl = (typeof upgradesState !== 'undefined' && upgradesState.hull) ? upgradesState.hull : 0;
+      // Hull upgrade grants extended crash recovery invulnerability and dampens camera disorientation shock
+      invulnerableTimer = 0.9 + hullLvl * 0.15;
+      cameraShake = 0.85 * (1.0 - hullLvl * 0.12);
+      resetCombo();
       playerLives = Math.max(0, playerLives - 1);
       document.getElementById('hud-lives-val').innerText = playerLives;
       playCrash();
@@ -3701,28 +5581,791 @@
       if (boatGroup) {
         boatGroup.visible = true;
       }
+      endCurrentRiverEvent();
+      resetCombo();
+
       document.getElementById('go-dist-val').innerText = `${Math.floor(currentDistance).toLocaleString()} m`;
       document.getElementById('go-coins-val').innerText = `${collectedCoins}`;
+
+      // Phase 8: Bank collected coins into persistent spendable balance exactly once
+      if (collectedCoins > 0) {
+        userCoins += collectedCoins;
+        SafeStorage.setItem('river_rush_user_coins', userCoins.toString());
+        if (typeof updateAllCoinDisplays === 'function') updateAllCoinDisplays();
+        const goBankedEl = document.getElementById('go-coins-banked');
+        if (goBankedEl) goBankedEl.innerText = collectedCoins.toLocaleString();
+      } else {
+        const goBankedEl = document.getElementById('go-coins-banked');
+        if (goBankedEl) goBankedEl.innerText = '0';
+      }
+
+      // Safely deactivate Nitro Boost on Game Over
+      nitroActive = false;
+      nitroTimer = 0;
+      nitroCooldownTimer = 0;
+      const nBtn = document.getElementById('btn-nitro-boost');
+      if (nBtn) nBtn.className = 'hud-nitro-btn';
+      const nFx = document.getElementById('hud-nitro-fx');
+      if (nFx) nFx.className = 'hud-nitro-fx';
+      if (typeof updateNitroHUD === 'function') updateNitroHUD();
+
+      // Populate Phase 6 summary stats
+      const finalScore = Math.floor(currentDistance) + (collectedCoins * 20) + nearMissScore;
+      const scoreValEl = document.getElementById('go-score-val');
+      const nearMissValEl = document.getElementById('go-nearmiss-val');
+      const maxComboValEl = document.getElementById('go-maxcombo-val');
+      if (scoreValEl) scoreValEl.innerText = finalScore.toLocaleString();
+      if (nearMissValEl) nearMissValEl.innerText = `${totalNearMisses} (+${nearMissScore.toLocaleString()} pts)`;
+      if (maxComboValEl) {
+        const topMult = Math.min(5, 1 + Math.floor(Math.max(0, maxComboReached - 1) / 2));
+        maxComboValEl.innerText = maxComboReached > 1 ? `x${topMult} (${maxComboReached})` : 'x1';
+      }
+
+      // High Score Persistence & Best Score Badge
+      let bestScore = 0;
+      try {
+        bestScore = parseInt(localStorage.getItem('river_rush_high_score') || '0', 10);
+      } catch (e) {}
+      const isNewBest = finalScore > bestScore;
+      if (isNewBest) {
+        bestScore = finalScore;
+        try {
+          localStorage.setItem('river_rush_high_score', bestScore.toString());
+        } catch (e) {}
+      }
+      const bestBadge = document.querySelector('.new-best-score-badge');
+      if (bestBadge) {
+        bestBadge.style.display = isNewBest ? 'flex' : 'none';
+      }
+
+      if (typeof onGameOverPhase7 === 'function') {
+        onGameOverPhase7();
+      }
+
       switchScreen('gameover');
     }
 
     /* ==========================================================
-       BOAT DATABASE & SELECTION LOGIC
+       PHASE 7: MISSIONS, DAILY CHALLENGES & ACHIEVEMENTS SYSTEM
+       ========================================================== */
+    const SafeStorage = {
+      memoryFallback: {},
+      getItem(key) {
+        try {
+          if (typeof window.localStorage !== 'undefined' && window.localStorage !== null) {
+            const val = window.localStorage.getItem(key);
+            if (val !== null) return val;
+          }
+        } catch (_) {}
+        return this.memoryFallback[key] !== undefined ? this.memoryFallback[key] : null;
+      },
+      setItem(key, val) {
+        const strVal = String(val);
+        try {
+          if (typeof window.localStorage !== 'undefined' && window.localStorage !== null) {
+            window.localStorage.setItem(key, strVal);
+          }
+        } catch (_) {}
+        this.memoryFallback[key] = strVal;
+      },
+      getJSON(key, defaultVal) {
+        try {
+          const raw = this.getItem(key);
+          if (!raw) return defaultVal;
+          const parsed = JSON.parse(raw);
+          return (parsed !== null && typeof parsed === 'object') ? parsed : defaultVal;
+        } catch (_) {
+          return defaultVal;
+        }
+      },
+      setJSON(key, obj) {
+        try {
+          this.setItem(key, JSON.stringify(obj));
+        } catch (_) {}
+      }
+    };
+
+    const MISSIONS_CONFIG = [
+      {
+        id: 'm_coins_30',
+        title: 'Gold Diver',
+        desc: 'Collect 30 coins in a single run',
+        type: 'run_coins',
+        target: 30,
+        reward: 200,
+        icon: '<img src="assets/ui/Icon_Coin.png" style="width:24px;height:24px;object-fit:contain;" alt="Coin">'
+      },
+      {
+        id: 'm_nearmiss_5',
+        title: 'Close Shave',
+        desc: 'Achieve 5 near misses in a single run',
+        type: 'run_nearmiss',
+        target: 5,
+        reward: 250,
+        icon: '⚡'
+      },
+      {
+        id: 'm_distance_1000',
+        title: 'River Voyager',
+        desc: 'Travel 1,000 meters in a single run',
+        type: 'run_distance',
+        target: 1000,
+        reward: 300,
+        icon: '🌊'
+      },
+      {
+        id: 'm_event_complete',
+        title: 'Rapid Survivor',
+        desc: 'Survive any River Event without game over',
+        type: 'run_event',
+        target: 1,
+        reward: 350,
+        icon: '🌟'
+      }
+    ];
+
+    const DAILY_POOL = [
+      { id: 'daily_combo', title: 'Adrenaline Rush', desc: 'Reach a x3 combo multiplier in a run', type: 'combo_mult', target: 3, reward: 250, icon: '🔥' },
+      { id: 'daily_coins', title: 'River Gold', desc: 'Collect 40 coins in a run', type: 'run_coins', target: 40, reward: 200, icon: '<img src="assets/ui/Icon_Coin.png" style="width:24px;height:24px;object-fit:contain;" alt="Coin">' },
+      { id: 'daily_dist', title: 'Marathon Run', desc: 'Travel 1,500 meters in a run', type: 'run_distance', target: 1500, reward: 300, icon: '🧭' },
+      { id: 'daily_slalom', title: 'Slalom Master', desc: 'Achieve 8 near misses in a run', type: 'run_nearmiss', target: 8, reward: 300, icon: '⚡' },
+      { id: 'daily_events', title: 'Wild Waters', desc: 'Survive 2 River Events in a run', type: 'run_event', target: 2, reward: 400, icon: '🌊' },
+      { id: 'daily_score', title: 'High Scorer', desc: 'Achieve 2,500 total score in a run', type: 'run_score', target: 2500, reward: 350, icon: '🏆' }
+    ];
+
+    const ACHIEVEMENTS_CONFIG = [
+      {
+        id: 'ach_coins_100',
+        title: 'Treasure Hunter',
+        desc: 'Collect 100 total coins across all runs',
+        metric: 'lifetimeCoins',
+        target: 100,
+        reward: 300,
+        icon: '💰'
+      },
+      {
+        id: 'ach_nearmiss_10',
+        title: 'Daredevil',
+        desc: 'Perform 10 total near misses across all runs',
+        metric: 'lifetimeNearMisses',
+        target: 10,
+        reward: 350,
+        icon: '⚡'
+      },
+      {
+        id: 'ach_distance_5000',
+        title: 'Grand Explorer',
+        desc: 'Travel 5,000 total meters across all runs',
+        metric: 'lifetimeDistance',
+        target: 5000,
+        reward: 500,
+        icon: '🗺️'
+      },
+      {
+        id: 'ach_combo_x4',
+        title: 'Combo Maestro',
+        desc: 'Reach a x4 Combo Multiplier in any run',
+        metric: 'maxLifetimeMultiplier',
+        target: 4,
+        reward: 400,
+        icon: '🔥'
+      },
+      {
+        id: 'ach_maps_all',
+        title: 'River Connoisseur',
+        desc: 'Explore and play on all 4 river maps',
+        metric: 'mapsPlayedCount',
+        target: 4,
+        reward: 450,
+        icon: '🏝️'
+      }
+    ];
+
+    function getLocalDateKey() {
+      const d = new Date();
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const dd = String(d.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    function hashDateString(str) {
+      let h = 2166136261;
+      for (let i = 0; i < str.length; i++) {
+        h ^= str.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+      }
+      h += h << 13;
+      h ^= h >>> 7;
+      h += h << 3;
+      h ^= h >>> 17;
+      h += h << 5;
+      return Math.abs(h >>> 0);
+    }
+
+    function getDailyChallengesForDate(dateKey) {
+      const seed = hashDateString(dateKey);
+      const chosen = [];
+      let cur = seed;
+      while (chosen.length < 3) {
+        const idx = cur % DAILY_POOL.length;
+        if (!chosen.some(c => c.id === DAILY_POOL[idx].id)) {
+          chosen.push(DAILY_POOL[idx]);
+        }
+        cur = (cur * 1664525 + 1013904223) >>> 0;
+      }
+      return chosen;
+    }
+
+    let missionsState = {};
+    let dailyState = { date: '', challenges: {} };
+    let currentDailyChallenges = [];
+    let lifetimeStats = {
+      lifetimeCoins: 0,
+      lifetimeNearMisses: 0,
+      lifetimeDistance: 0,
+      maxLifetimeMultiplier: 1,
+      mapsPlayed: ['Tropical River']
+    };
+    let achievementsState = {};
+    let currentMissionTab = 'missions';
+    let runEventsCompleted = 0;
+    let previousScreen = 'main-menu';
+
+    function initPhase7State() {
+      // 1. Missions State
+      missionsState = SafeStorage.getJSON('river_rush_missions_v1', {});
+      MISSIONS_CONFIG.forEach(m => {
+        if (!missionsState[m.id]) {
+          missionsState[m.id] = { progress: 0, completed: false, claimed: false };
+        }
+      });
+
+      // 2. Daily State
+      const todayKey = getLocalDateKey();
+      dailyState = SafeStorage.getJSON('river_rush_daily_v1', { date: '', challenges: {} });
+      if (dailyState.date !== todayKey) {
+        dailyState.date = todayKey;
+        dailyState.challenges = {};
+      }
+      currentDailyChallenges = getDailyChallengesForDate(todayKey);
+      currentDailyChallenges.forEach(c => {
+        if (!dailyState.challenges[c.id]) {
+          dailyState.challenges[c.id] = { progress: 0, completed: false, claimed: false };
+        }
+      });
+      SafeStorage.setJSON('river_rush_daily_v1', dailyState);
+
+      // 3. Lifetime Stats & Achievements
+      const savedStats = SafeStorage.getJSON('river_rush_lifetime_stats_v1', {});
+      lifetimeStats = Object.assign(lifetimeStats, savedStats);
+      if (!Array.isArray(lifetimeStats.mapsPlayed)) {
+        lifetimeStats.mapsPlayed = ['Tropical River'];
+      }
+
+      achievementsState = SafeStorage.getJSON('river_rush_achievements_v1', {});
+      ACHIEVEMENTS_CONFIG.forEach(a => {
+        if (!achievementsState[a.id]) {
+          achievementsState[a.id] = { unlocked: false, claimed: false };
+        }
+      });
+
+      checkAchievements();
+      updateMissionsBadges();
+    }
+
+    function claimMission(missionId) {
+      playClick();
+      const m = MISSIONS_CONFIG.find(item => item.id === missionId);
+      if (!m) return;
+      const st = missionsState[m.id];
+      if (!st || !st.completed || st.claimed) return;
+
+      st.claimed = true;
+      SafeStorage.setJSON('river_rush_missions_v1', missionsState);
+      addCoins(m.reward);
+      toast(`🎯 Claimed +${m.reward} Coins: ${m.title}!`);
+      renderMissionsModal();
+      updateMissionsBadges();
+    }
+
+    function claimDaily(challengeId) {
+      playClick();
+      const c = currentDailyChallenges.find(item => item.id === challengeId);
+      if (!c) return;
+      const st = dailyState.challenges[c.id];
+      if (!st || !st.completed || st.claimed) return;
+
+      st.claimed = true;
+      SafeStorage.setJSON('river_rush_daily_v1', dailyState);
+      addCoins(c.reward);
+      toast(`📅 Claimed +${c.reward} Coins: ${c.title}!`);
+      renderMissionsModal();
+      updateMissionsBadges();
+    }
+
+    function claimAchievement(achId) {
+      playClick();
+      const a = ACHIEVEMENTS_CONFIG.find(item => item.id === achId);
+      if (!a) return;
+      const st = achievementsState[a.id];
+      if (!st || !st.unlocked || st.claimed) return;
+
+      st.claimed = true;
+      SafeStorage.setJSON('river_rush_achievements_v1', achievementsState);
+      addCoins(a.reward);
+      toast(`🏆 Claimed +${a.reward} Coins: ${a.title}!`);
+      renderMissionsModal();
+      updateMissionsBadges();
+    }
+
+    function checkAchievements() {
+      let newlyUnlocked = false;
+      ACHIEVEMENTS_CONFIG.forEach(a => {
+        const st = achievementsState[a.id];
+        if (st && !st.unlocked) {
+          let currentVal = 0;
+          if (a.metric === 'lifetimeCoins') currentVal = lifetimeStats.lifetimeCoins;
+          else if (a.metric === 'lifetimeNearMisses') currentVal = lifetimeStats.lifetimeNearMisses;
+          else if (a.metric === 'lifetimeDistance') currentVal = lifetimeStats.lifetimeDistance;
+          else if (a.metric === 'maxLifetimeMultiplier') currentVal = lifetimeStats.maxLifetimeMultiplier;
+          else if (a.metric === 'mapsPlayedCount') currentVal = lifetimeStats.mapsPlayed.length;
+
+          if (currentVal >= a.target) {
+            st.unlocked = true;
+            newlyUnlocked = true;
+            showAchievementUnlockNotification(a);
+          }
+        }
+      });
+
+      if (newlyUnlocked) {
+        SafeStorage.setJSON('river_rush_achievements_v1', achievementsState);
+        updateMissionsBadges();
+      }
+    }
+
+    let achPopupTimeout = null;
+    function showAchievementUnlockNotification(ach) {
+      const popup = document.getElementById('hud-achievement-popup');
+      const iconEl = document.getElementById('ach-popup-icon');
+      const titleEl = document.getElementById('ach-popup-title');
+      const rewardEl = document.getElementById('ach-popup-reward');
+      if (!popup || !iconEl || !titleEl || !rewardEl) return;
+
+      iconEl.innerHTML = ach.icon || '🏆';
+      titleEl.innerText = ach.title;
+      rewardEl.innerText = `+${ach.reward}`;
+
+      popup.classList.remove('active');
+      void popup.offsetWidth;
+      popup.classList.add('active');
+      playEventFanfare();
+
+      if (achPopupTimeout) clearTimeout(achPopupTimeout);
+      achPopupTimeout = setTimeout(() => {
+        popup.classList.remove('active');
+      }, 3500);
+    }
+
+    function updateMissionsBadges() {
+      let mClaimable = 0;
+      MISSIONS_CONFIG.forEach(m => {
+        const st = missionsState[m.id];
+        if (st && st.completed && !st.claimed) mClaimable++;
+      });
+
+      let dClaimable = 0;
+      currentDailyChallenges.forEach(c => {
+        const st = dailyState.challenges[c.id];
+        if (st && st.completed && !st.claimed) dClaimable++;
+      });
+
+      let aClaimable = 0;
+      ACHIEVEMENTS_CONFIG.forEach(a => {
+        const st = achievementsState[a.id];
+        if (st && st.unlocked && !st.claimed) aClaimable++;
+      });
+
+      const totalClaimable = mClaimable + dClaimable + aClaimable;
+
+      const bM = document.getElementById('badge-missions');
+      const bD = document.getElementById('badge-daily');
+      const bA = document.getElementById('badge-achievements');
+      if (bM) { bM.innerText = mClaimable; bM.style.display = mClaimable > 0 ? 'inline-flex' : 'none'; }
+      if (bD) { bD.innerText = dClaimable; bD.style.display = dClaimable > 0 ? 'inline-flex' : 'none'; }
+      if (bA) { bA.innerText = aClaimable; bA.style.display = aClaimable > 0 ? 'inline-flex' : 'none'; }
+
+      const topBadge = document.getElementById('top-mission-badge');
+      const topSub = document.getElementById('top-mission-subtext');
+      const alertDot = document.getElementById('mission-alert-dot');
+
+      if (topBadge) {
+        topBadge.innerText = totalClaimable > 0 ? totalClaimable : currentDailyChallenges.length;
+        topBadge.style.background = totalClaimable > 0 ? 'linear-gradient(180deg, #ff4d4d 0%, #c41c1c 100%)' : 'linear-gradient(180deg, #1f4f82 0%, #102e52 100%)';
+      }
+      if (topSub) {
+        topSub.innerText = totalClaimable > 0 ? `${totalClaimable} Ready to Claim!` : '3 Challenges Available';
+      }
+      if (alertDot) {
+        alertDot.style.display = totalClaimable > 0 ? 'block' : 'none';
+      }
+
+      const coinBankEl = document.getElementById('missions-coin-val');
+      if (coinBankEl && typeof userCoins !== 'undefined') {
+        coinBankEl.innerText = userCoins.toLocaleString();
+      }
+    }
+
+    function getLiveMissionProgress(m) {
+      if (m.type === 'run_coins') return collectedCoins;
+      if (m.type === 'run_nearmiss') return totalNearMisses;
+      if (m.type === 'run_distance') return Math.floor(currentDistance);
+      if (m.type === 'run_event') return runEventsCompleted;
+      return 0;
+    }
+
+    function getLiveDailyProgress(c) {
+      if (c.type === 'combo_mult') return comboMultiplier;
+      if (c.type === 'run_coins') return collectedCoins;
+      if (c.type === 'run_distance') return Math.floor(currentDistance);
+      if (c.type === 'run_nearmiss') return totalNearMisses;
+      if (c.type === 'run_event') return runEventsCompleted;
+      if (c.type === 'run_score') return totalGameScore;
+      return 0;
+    }
+
+    function updateProgressTracker(type, val) {
+      let changed = false;
+
+      MISSIONS_CONFIG.forEach(m => {
+        if (m.type === type) {
+          const st = missionsState[m.id];
+          if (st && !st.completed) {
+            if (val > (st.progress || 0)) {
+              st.progress = val;
+              changed = true;
+            }
+            if (st.progress >= m.target) {
+              st.completed = true;
+              changed = true;
+              toast(`🎯 Mission Completed: ${m.title}!`);
+            }
+          }
+        }
+      });
+      if (changed) {
+        SafeStorage.setJSON('river_rush_missions_v1', missionsState);
+      }
+
+      let dailyChanged = false;
+      currentDailyChallenges.forEach(c => {
+        if (c.type === type) {
+          const st = dailyState.challenges[c.id];
+          if (st && !st.completed) {
+            if (val > (st.progress || 0)) {
+              st.progress = val;
+              dailyChanged = true;
+            }
+            if (st.progress >= c.target) {
+              st.completed = true;
+              dailyChanged = true;
+              toast(`📅 Daily Challenge Completed: ${c.title}!`);
+            }
+          }
+        }
+      });
+      if (dailyChanged) {
+        SafeStorage.setJSON('river_rush_daily_v1', dailyState);
+      }
+
+      if (changed || dailyChanged) {
+        updateMissionsBadges();
+      }
+    }
+
+    function switchMissionsTab(tab) {
+      playClick();
+      currentMissionTab = tab;
+      ['missions', 'daily', 'achievements'].forEach(t => {
+        const btn = document.getElementById(`tab-btn-${t}`);
+        if (btn) btn.classList.toggle('active', t === tab);
+      });
+      renderMissionsModal();
+    }
+
+    function renderMissionsModal() {
+      const container = document.getElementById('missions-list-container');
+      if (!container) return;
+
+      let html = '';
+
+      if (currentMissionTab === 'missions') {
+        MISSIONS_CONFIG.forEach(m => {
+          const st = missionsState[m.id] || { progress: 0, completed: false, claimed: false };
+          const curProg = Math.min(m.target, Math.max(st.progress || 0, getLiveMissionProgress(m)));
+          const isComp = st.completed || (curProg >= m.target);
+          if (isComp && !st.completed) {
+            st.completed = true;
+            SafeStorage.setJSON('river_rush_missions_v1', missionsState);
+          }
+          const pct = Math.min(100, Math.round((curProg / m.target) * 100));
+
+          let actionBtn = '';
+          if (st.claimed) {
+            actionBtn = `<button class="mission-action-btn claimed" disabled>CLAIMED ✓</button>`;
+          } else if (isComp) {
+            actionBtn = `<button class="mission-action-btn claim-ready" onclick="claimMission('${m.id}')">CLAIM</button>`;
+          } else {
+            actionBtn = `<button class="mission-action-btn in-progress" disabled>IN PROGRESS</button>`;
+          }
+
+          html += `
+            <div class="mission-card-item ${isComp ? (st.claimed ? 'claimed' : 'completed') : ''}">
+              <div class="mission-left-col">
+                <div class="mission-icon-box">${m.icon}</div>
+                <div class="mission-info-box">
+                  <div class="mission-item-title">${m.title}</div>
+                  <div class="mission-item-desc">${m.desc}</div>
+                  <div class="mission-prog-track">
+                    <div class="mission-prog-fill ${isComp ? 'completed' : ''}" style="width: ${pct}%"></div>
+                  </div>
+                  <div class="mission-prog-label">${curProg.toLocaleString()} / ${m.target.toLocaleString()} (${pct}%)</div>
+                </div>
+              </div>
+              <div class="mission-right-col">
+                <div class="mission-reward-badge">
+                  <img src="assets/ui/Icon_Coin.png" alt="Coins">
+                  <span>+${m.reward}</span>
+                </div>
+                ${actionBtn}
+              </div>
+            </div>
+          `;
+        });
+      } else if (currentMissionTab === 'daily') {
+        currentDailyChallenges.forEach(c => {
+          const st = dailyState.challenges[c.id] || { progress: 0, completed: false, claimed: false };
+          const curProg = Math.min(c.target, Math.max(st.progress || 0, getLiveDailyProgress(c)));
+          const isComp = st.completed || (curProg >= c.target);
+          if (isComp && !st.completed) {
+            st.completed = true;
+            SafeStorage.setJSON('river_rush_daily_v1', dailyState);
+          }
+          const pct = Math.min(100, Math.round((curProg / c.target) * 100));
+
+          let actionBtn = '';
+          if (st.claimed) {
+            actionBtn = `<button class="mission-action-btn claimed" disabled>CLAIMED ✓</button>`;
+          } else if (isComp) {
+            actionBtn = `<button class="mission-action-btn claim-ready" onclick="claimDaily('${c.id}')">CLAIM</button>`;
+          } else {
+            actionBtn = `<button class="mission-action-btn in-progress" disabled>IN PROGRESS</button>`;
+          }
+
+          html += `
+            <div class="mission-card-item ${isComp ? (st.claimed ? 'claimed' : 'completed') : ''}">
+              <div class="mission-left-col">
+                <div class="mission-icon-box">${c.icon}</div>
+                <div class="mission-info-box">
+                  <div class="mission-item-title">${c.title}</div>
+                  <div class="mission-item-desc">${c.desc}</div>
+                  <div class="mission-prog-track">
+                    <div class="mission-prog-fill ${isComp ? 'completed' : ''}" style="width: ${pct}%"></div>
+                  </div>
+                  <div class="mission-prog-label">${curProg.toLocaleString()} / ${c.target.toLocaleString()} (${pct}%)</div>
+                </div>
+              </div>
+              <div class="mission-right-col">
+                <div class="mission-reward-badge">
+                  <img src="assets/ui/Icon_Coin.png" alt="Coins">
+                  <span>+${c.reward}</span>
+                </div>
+                ${actionBtn}
+              </div>
+            </div>
+          `;
+        });
+      } else if (currentMissionTab === 'achievements') {
+        ACHIEVEMENTS_CONFIG.forEach(a => {
+          const st = achievementsState[a.id] || { unlocked: false, claimed: false };
+          let curVal = 0;
+          if (a.metric === 'lifetimeCoins') curVal = lifetimeStats.lifetimeCoins;
+          else if (a.metric === 'lifetimeNearMisses') curVal = lifetimeStats.lifetimeNearMisses;
+          else if (a.metric === 'lifetimeDistance') curVal = lifetimeStats.lifetimeDistance;
+          else if (a.metric === 'maxLifetimeMultiplier') curVal = lifetimeStats.maxLifetimeMultiplier;
+          else if (a.metric === 'mapsPlayedCount') curVal = lifetimeStats.mapsPlayed.length;
+
+          const displayVal = Math.min(a.target, curVal);
+          const isUnlocked = st.unlocked || (curVal >= a.target);
+          if (isUnlocked && !st.unlocked) {
+            st.unlocked = true;
+            SafeStorage.setJSON('river_rush_achievements_v1', achievementsState);
+          }
+          const pct = Math.min(100, Math.round((displayVal / a.target) * 100));
+
+          let actionBtn = '';
+          if (st.claimed) {
+            actionBtn = `<button class="mission-action-btn claimed" disabled>CLAIMED ✓</button>`;
+          } else if (isUnlocked) {
+            actionBtn = `<button class="mission-action-btn claim-ready" onclick="claimAchievement('${a.id}')">CLAIM</button>`;
+          } else {
+            actionBtn = `<button class="mission-action-btn in-progress" disabled>IN PROGRESS</button>`;
+          }
+
+          html += `
+            <div class="mission-card-item ${isUnlocked ? (st.claimed ? 'claimed' : 'completed') : ''}">
+              <div class="mission-left-col">
+                <div class="mission-icon-box">${a.icon}</div>
+                <div class="mission-info-box">
+                  <div class="mission-item-title">${a.title}</div>
+                  <div class="mission-item-desc">${a.desc}</div>
+                  <div class="mission-prog-track">
+                    <div class="mission-prog-fill ${isUnlocked ? 'completed' : ''}" style="width: ${pct}%"></div>
+                  </div>
+                  <div class="mission-prog-label">${displayVal.toLocaleString()} / ${a.target.toLocaleString()} (${pct}%)</div>
+                </div>
+              </div>
+              <div class="mission-right-col">
+                <div class="mission-reward-badge">
+                  <img src="assets/ui/Icon_Coin.png" alt="Coins">
+                  <span>+${a.reward}</span>
+                </div>
+                ${actionBtn}
+              </div>
+            </div>
+          `;
+        });
+      }
+
+      container.innerHTML = html;
+      updateMissionsBadges();
+    }
+
+    function openMissionsModal(tab = 'missions') {
+      playClick();
+      currentMissionTab = tab;
+      switchScreen('missions');
+      renderMissionsModal();
+    }
+
+    function closeMissionsModal() {
+      playClick();
+      switchScreen(previousScreen === 'missions' ? 'main-menu' : previousScreen);
+    }
+
+    function onCoinCollected() {
+      lifetimeStats.lifetimeCoins = (lifetimeStats.lifetimeCoins || 0) + 1;
+      SafeStorage.setJSON('river_rush_lifetime_stats_v1', lifetimeStats);
+      updateProgressTracker('run_coins', collectedCoins);
+      checkAchievements();
+      if (typeof nitroActive !== 'undefined' && !nitroActive && nitroCooldownTimer <= 0) {
+        nitroCharge = Math.min(100, nitroCharge + 3);
+        if (typeof updateNitroHUD === 'function') updateNitroHUD();
+      }
+    }
+
+    function onNearMissTriggered() {
+      lifetimeStats.lifetimeNearMisses = (lifetimeStats.lifetimeNearMisses || 0) + 1;
+      if (comboMultiplier > (lifetimeStats.maxLifetimeMultiplier || 1)) {
+        lifetimeStats.maxLifetimeMultiplier = comboMultiplier;
+      }
+      SafeStorage.setJSON('river_rush_lifetime_stats_v1', lifetimeStats);
+      updateProgressTracker('run_nearmiss', totalNearMisses);
+      updateProgressTracker('combo_mult', comboMultiplier);
+      checkAchievements();
+      if (typeof nitroActive !== 'undefined' && !nitroActive && nitroCooldownTimer <= 0) {
+        nitroCharge = Math.min(100, nitroCharge + 20);
+        if (typeof updateNitroHUD === 'function') updateNitroHUD();
+      }
+    }
+
+    function onRiverEventCompleted(evtName) {
+      runEventsCompleted++;
+      updateProgressTracker('run_event', runEventsCompleted);
+      if (typeof nitroActive !== 'undefined' && !nitroActive && nitroCooldownTimer <= 0) {
+        nitroCharge = Math.min(100, nitroCharge + 25);
+        if (typeof updateNitroHUD === 'function') updateNitroHUD();
+      }
+    }
+
+    function onDistanceUpdated(dist) {
+      const dInt = Math.floor(dist);
+      updateProgressTracker('run_distance', dInt);
+      updateProgressTracker('run_score', totalGameScore);
+    }
+
+    function recordMapPlayed(mapName) {
+      if (!lifetimeStats.mapsPlayed.includes(mapName)) {
+        lifetimeStats.mapsPlayed.push(mapName);
+        SafeStorage.setJSON('river_rush_lifetime_stats_v1', lifetimeStats);
+        checkAchievements();
+      }
+    }
+
+    function onGameOverPhase7() {
+      lifetimeStats.lifetimeDistance = (lifetimeStats.lifetimeDistance || 0) + Math.floor(currentDistance);
+      SafeStorage.setJSON('river_rush_lifetime_stats_v1', lifetimeStats);
+      checkAchievements();
+      updateMissionsBadges();
+    }
+
+    function onBoatUnlocked() {
+      checkAchievements();
+      updateMissionsBadges();
+    }
+
+    /* ==========================================================
+       BOAT DATABASE & SELECTION LOGIC (PHASE 8 GARAGE)
        ========================================================== */
     const boatsDB = [
       { name: "SPEEDSTER", color: 0xd92626, stripe: 0xffffff, preview: "assets/ui/Boat_Preview_Red.png", speed: 3, handling: 4, durability: 3, unlocked: true, cost: 0 },
       { name: "HYDRO WAVE", color: 0x1a78d0, stripe: 0x00f0ff, preview: "assets/ui/Boat_Preview_Blue.png", speed: 4, handling: 3, durability: 3, unlocked: true, cost: 0 },
       { name: "THUNDERBOLT", color: 0xf5bf18, stripe: 0x222222, preview: "assets/ui/Boat_Preview_Yellow.png", speed: 5, handling: 2, durability: 4, unlocked: true, cost: 0 },
-      { name: "VIPER JET", color: 0x28ba38, stripe: 0xd4ff00, preview: "assets/ui/Boat_Preview_Green.png", speed: 4, handling: 5, durability: 2, unlocked: true, cost: 0 },
+      { name: "VIPER JET", color: 0x28ba38, stripe: 0xd4ff00, preview: "assets/ui/Boat_Preview_Green.png", speed: 4, handling: 5, durability: 2, unlocked: false, cost: 8000 },
       { name: "PHANTOM X", color: 0x18181c, stripe: 0xa832e8, preview: "assets/ui/Boat_Preview_Black.png", speed: 5, handling: 5, durability: 5, unlocked: false, cost: 25000 }
     ];
     let currentBoatIdx = 0;
     let selectedBoatIdx = 0;
-    let userCoins = 12350;
+    let userCoins = (() => {
+      const stored = SafeStorage.getItem('river_rush_user_coins');
+      return (stored !== null && !isNaN(parseInt(stored, 10))) ? parseInt(stored, 10) : 12350;
+    })();
+
+    function initBoatsState() {
+      const savedUnlocked = SafeStorage.getJSON('river_rush_unlocked_boats_v1', null);
+      if (Array.isArray(savedUnlocked)) {
+        boatsDB.forEach((b, idx) => {
+          b.unlocked = savedUnlocked.includes(idx) || (b.cost === 0);
+        });
+      } else {
+        const defaultUnlocked = boatsDB.map((b, i) => b.unlocked ? i : -1).filter(i => i >= 0);
+        SafeStorage.setJSON('river_rush_unlocked_boats_v1', defaultUnlocked);
+      }
+      const savedSelected = SafeStorage.getItem('river_rush_selected_boat_v1');
+      if (savedSelected !== null && !isNaN(parseInt(savedSelected, 10))) {
+        const idx = parseInt(savedSelected, 10);
+        if (idx >= 0 && idx < boatsDB.length && boatsDB[idx].unlocked) {
+          selectedBoatIdx = idx;
+          currentBoatIdx = idx;
+        }
+      }
+    }
+
+    function updateAllCoinDisplays() {
+      const bCoinsEl = document.getElementById('boat-select-coins');
+      if (bCoinsEl) bCoinsEl.innerText = userCoins.toLocaleString();
+      const uCoinsEl = document.getElementById('upgrades-coins-val');
+      if (uCoinsEl) uCoinsEl.innerText = userCoins.toLocaleString();
+      const mCoinsEl = document.getElementById('missions-coin-val');
+      if (mCoinsEl) mCoinsEl.innerText = userCoins.toLocaleString();
+    }
 
     function renderBoatStats(idx) {
+      if (idx < 0 || idx >= boatsDB.length) idx = 0;
       const b = boatsDB[idx];
-      document.getElementById('boat-card-name').innerText = b.name;
+      const nameEl = document.getElementById('boat-card-name');
+      if (nameEl) nameEl.innerText = b.name;
 
       // Update Center Showcase Image
       const showcaseImg = document.getElementById('boat-showcase-img');
@@ -3733,6 +6376,7 @@
 
       function renderSegs(containerId, count) {
         const el = document.getElementById(containerId);
+        if (!el) return;
         el.innerHTML = '';
         for (let i = 0; i < 5; i++) {
           const s = document.createElement('div');
@@ -3745,21 +6389,26 @@
       renderSegs('boat-durability-segs', b.durability);
 
       const btn = document.getElementById('btn-select-action');
-      if (!b.unlocked) {
-        btn.innerText = `UNLOCK (${b.cost.toLocaleString()})`;
-        btn.style.fontSize = 'clamp(12px, 1.3vw, 16px)';
-        btn.style.background = 'linear-gradient(180deg, #6b7787 0%, #3d4653 100%)';
-        btn.style.borderColor = '#2a313a';
-      } else if (idx === selectedBoatIdx) {
-        btn.innerText = 'SELECTED';
-        btn.style.fontSize = 'clamp(15px, 1.6vw, 20px)';
-        btn.style.background = 'linear-gradient(180deg, #4ec322 0%, #299312 90%, #16550a 100%)';
-        btn.style.borderColor = '#16550a';
-      } else {
-        btn.innerText = 'SELECT';
-        btn.style.fontSize = 'clamp(15px, 1.6vw, 20px)';
-        btn.style.background = 'linear-gradient(180deg, #ffc61e 0%, #e4940a 90%, #915505 100%)';
-        btn.style.borderColor = '#915505';
+      if (btn) {
+        if (!b.unlocked) {
+          btn.innerText = `UNLOCK (${b.cost.toLocaleString()})`;
+          btn.style.fontSize = 'clamp(12px, 1.3vw, 16px)';
+          btn.style.background = 'linear-gradient(180deg, #6b7787 0%, #3d4653 100%)';
+          btn.style.borderColor = '#2a313a';
+          btn.style.color = '#ffffff';
+        } else if (idx === selectedBoatIdx) {
+          btn.innerText = 'SELECTED';
+          btn.style.fontSize = 'clamp(15px, 1.6vw, 20px)';
+          btn.style.background = 'linear-gradient(180deg, #4ec322 0%, #299312 90%, #16550a 100%)';
+          btn.style.borderColor = '#16550a';
+          btn.style.color = '#ffffff';
+        } else {
+          btn.innerText = 'SELECT';
+          btn.style.fontSize = 'clamp(15px, 1.6vw, 20px)';
+          btn.style.background = 'linear-gradient(180deg, #ffc61e 0%, #e4940a 90%, #915505 100%)';
+          btn.style.borderColor = '#915505';
+          btn.style.color = '#1a1000';
+        }
       }
 
       // Update 3D boat hull & stripe colors
@@ -3770,11 +6419,34 @@
         boatStripeMat.color.setHex(b.stripe);
       }
 
-      // Update thumbnails selection
+      // Update thumbnails selection, equipped checkmark & lock badges
       const slots = document.querySelectorAll('.boat-thumb-slot');
       slots.forEach((s, i) => {
         s.classList.toggle('selected', i === idx);
+        s.classList.toggle('equipped', i === selectedBoatIdx);
+        let badge = s.querySelector('.thumb-lock-badge');
+        if (!boatsDB[i].unlocked) {
+          if (!badge) {
+            badge = document.createElement('div');
+            badge.className = 'thumb-lock-badge';
+            badge.innerText = '🔒';
+            s.appendChild(badge);
+          }
+          badge.style.display = 'flex';
+          s.classList.add('locked-slot');
+        } else {
+          if (badge) badge.style.display = 'none';
+          s.classList.remove('locked-slot');
+          if (i === 4) {
+            const img = s.querySelector('img');
+            if (img && img.src.includes('Locked')) {
+              img.src = 'assets/ui/Boat_Preview_Black.png';
+            }
+          }
+        }
       });
+
+      updateAllCoinDisplays();
     }
 
     function cycleBoat(dir) {
@@ -3789,7 +6461,10 @@
       renderBoatStats(idx);
     }
 
-    function confirmSelectBoat() {
+    function confirmSelectBoat(targetIdx) {
+      if (typeof targetIdx === 'number' && targetIdx >= 0 && targetIdx < boatsDB.length) {
+        currentBoatIdx = targetIdx;
+      }
       playClick();
       const b = boatsDB[currentBoatIdx];
       if (!b.unlocked) {
@@ -3797,27 +6472,289 @@
           userCoins -= b.cost;
           b.unlocked = true;
           selectedBoatIdx = currentBoatIdx;
-          document.getElementById('boat-select-coins').innerText = userCoins.toLocaleString();
-          // Unlock thumbnail icon
+          SafeStorage.setItem('river_rush_user_coins', userCoins.toString());
+          const unlockedList = boatsDB.map((boat, i) => boat.unlocked ? i : -1).filter(i => i >= 0);
+          SafeStorage.setJSON('river_rush_unlocked_boats_v1', unlockedList);
+          SafeStorage.setItem('river_rush_selected_boat_v1', selectedBoatIdx.toString());
+
+          // Update thumbnail icon for 5th boat if unlocked
           const thumb4 = document.querySelector('.boat-thumb-slot:nth-child(5) img');
-          if (thumb4) thumb4.src = "assets/ui/Boat_Preview_Black.png";
+          if (thumb4) thumb4.src = 'assets/ui/Boat_Preview_Black.png';
+
+          updateAllCoinDisplays();
           renderBoatStats(currentBoatIdx);
-          toast(`Unlocked ${b.name}!`);
+          if (typeof onBoatUnlocked === 'function') onBoatUnlocked();
+          playCoin();
+          toast(`Unlocked & Equipped ${b.name}!`);
+          return true;
         } else {
-          toast(`Need ${b.cost - userCoins} more coins!`);
+          toast(`Need ${(b.cost - userCoins).toLocaleString()} more coins!`);
+          return false;
         }
       } else {
         selectedBoatIdx = currentBoatIdx;
+        SafeStorage.setItem('river_rush_selected_boat_v1', selectedBoatIdx.toString());
         renderBoatStats(currentBoatIdx);
         toast(`Equipped ${b.name}!`);
+        return true;
       }
     }
 
     function addCoins(amount) {
       playCoin();
       userCoins += amount;
-      document.getElementById('boat-select-coins').innerText = userCoins.toLocaleString();
-      toast(`+${amount} Coins!`);
+      SafeStorage.setItem('river_rush_user_coins', userCoins.toString());
+      updateAllCoinDisplays();
+      toast(`+${amount.toLocaleString()} Coins!`);
+    }
+
+    /* ==========================================================
+       PERFORMANCE UPGRADES SYSTEM (PHASE 8)
+       ========================================================== */
+    const UPGRADES_CONFIG = {
+      engine: {
+        id: 'engine',
+        name: 'Engine Tuning',
+        icon: '⚡',
+        desc: 'Throttle acceleration responsiveness and Nitro recharge efficiency',
+        maxLevel: 5,
+        costs: [1000, 2500, 5000, 9000, 15000],
+        benefits: [
+          '+20% Throttle Acceleration & +10% Nitro Recharge',
+          '+40% Throttle Acceleration & +20% Nitro Recharge',
+          '+60% Throttle Acceleration & +30% Nitro Recharge',
+          '+80% Throttle Acceleration & +40% Nitro Recharge',
+          '+100% Rapid Acceleration & +50% Nitro Recharge (MAX)'
+        ],
+        currentDesc: (lvl) => lvl === 0 ? 'Stock Acceleration (Level 0)' : `+${lvl * 20}% Throttle Accel | +${lvl * 10}% Nitro Refill`
+      },
+      handling: {
+        id: 'handling',
+        name: 'Hydro Rudder',
+        icon: '🎯',
+        desc: 'Lateral steering agility and carving control within river boundaries',
+        maxLevel: 5,
+        costs: [800, 2000, 4000, 7500, 12000],
+        benefits: [
+          '+6% Turn Agility & Sharper Carve Response',
+          '+12% Turn Agility & Sharper Carve Response',
+          '+18% Turn Agility & Sharper Carve Response',
+          '+24% Turn Agility & Sharper Carve Response',
+          '+30% Maximum Agility & Precision Control (MAX)'
+        ],
+        currentDesc: (lvl) => lvl === 0 ? 'Stock Rudder (Level 0)' : `+${lvl * 6}% Steering Agility & Responsiveness`
+      },
+      hull: {
+        id: 'hull',
+        name: 'Reinforced Hull',
+        icon: '🛡️',
+        desc: 'Collision recovery invulnerability window and impact shock dampening',
+        maxLevel: 5,
+        costs: [1200, 2800, 5500, 9500, 16000],
+        benefits: [
+          '+0.15s Safe Recovery & -12% Impact Disorientation',
+          '+0.30s Safe Recovery & -24% Impact Disorientation',
+          '+0.45s Safe Recovery & -36% Impact Disorientation',
+          '+0.60s Safe Recovery & -48% Impact Disorientation',
+          '+0.75s Elite Recovery & -60% Impact Disorientation (MAX)'
+        ],
+        currentDesc: (lvl) => lvl === 0 ? 'Standard Crash Recovery (0.90s, Level 0)' : `+${(lvl * 0.15).toFixed(2)}s Recovery Window | -${lvl * 12}% Shock`
+      }
+    };
+
+    let upgradesState = SafeStorage.getJSON('river_rush_upgrades_v1', { engine: 0, handling: 0, hull: 0 });
+
+    function renderUpgradesScreen() {
+      updateAllCoinDisplays();
+      const container = document.getElementById('upgrades-list-container');
+      if (!container) return;
+
+      const keys = ['engine', 'handling', 'hull'];
+      let html = '';
+
+      keys.forEach(k => {
+        const u = UPGRADES_CONFIG[k];
+        const lvl = Math.min(u.maxLevel, Math.max(0, upgradesState[k] || 0));
+        const isMax = lvl >= u.maxLevel;
+        const nextCost = isMax ? 0 : u.costs[lvl];
+        const canAfford = !isMax && (userCoins >= nextCost);
+
+        let dotsHtml = '';
+        for (let i = 0; i < u.maxLevel; i++) {
+          dotsHtml += `<div class="upgrade-level-dot ${i < lvl ? 'filled' : ''}"></div>`;
+        }
+
+        const nextBenefitText = isMax ? 'All Performance Enhancements Mastered!' : `Next Level (${lvl + 1}): ${u.benefits[lvl]}`;
+
+        html += `
+          <div class="upgrade-card ${isMax ? 'maxed' : ''}">
+            <div class="upgrade-header">
+              <div class="upgrade-icon-box">${u.icon}</div>
+              <div class="upgrade-info-box">
+                <div class="upgrade-title-row">
+                  <span class="upgrade-title">${u.name}</span>
+                  <span class="upgrade-lvl-badge ${isMax ? 'max' : ''}">LVL ${lvl} / ${u.maxLevel}</span>
+                </div>
+                <div class="upgrade-desc">${u.desc}</div>
+              </div>
+            </div>
+
+            <div class="upgrade-level-row">
+              <span class="upgrade-level-label">UPGRADE LEVEL</span>
+              <div class="upgrade-level-dots">${dotsHtml}</div>
+            </div>
+
+            <div class="upgrade-stats-box">
+              <div class="upgrade-cur-stat"><strong>Current:</strong> ${u.currentDesc(lvl)}</div>
+              <div class="upgrade-next-stat ${isMax ? 'maxed' : ''}"><strong>${isMax ? 'Status:' : 'Benefit:'}</strong> ${nextBenefitText}</div>
+            </div>
+
+            <div class="upgrade-footer-row">
+              ${isMax ? `
+                <button class="btn-upgrade-action maxed" disabled>
+                  <span>✓ MAX LEVEL</span>
+                </button>
+              ` : `
+                <button class="btn-upgrade-action ${canAfford ? 'can-afford' : 'insufficient'}" onclick="purchaseUpgrade('${k}')">
+                  <img src="assets/ui/Icon_Coin.png" alt="Coin">
+                  <span>UPGRADE (${nextCost.toLocaleString()})</span>
+                </button>
+              `}
+            </div>
+          </div>
+        `;
+      });
+
+      container.innerHTML = html;
+    }
+
+    function purchaseUpgrade(category) {
+      playClick();
+      const u = UPGRADES_CONFIG[category];
+      if (!u) return { success: false, reason: 'invalid_category' };
+      const curLvl = upgradesState[category] || 0;
+      if (curLvl >= u.maxLevel) {
+        toast(`${u.name} already at MAX Level!`);
+        return { success: false, reason: 'max_level' };
+      }
+      const cost = u.costs[curLvl];
+      if (userCoins < cost) {
+        toast(`Need ${(cost - userCoins).toLocaleString()} more coins!`);
+        return { success: false, reason: 'insufficient_coins', needed: cost - userCoins };
+      }
+      userCoins -= cost;
+      upgradesState[category] = curLvl + 1;
+      SafeStorage.setItem('river_rush_user_coins', userCoins.toString());
+      SafeStorage.setJSON('river_rush_upgrades_v1', upgradesState);
+      updateAllCoinDisplays();
+      renderUpgradesScreen();
+      if (typeof playUpgradeSound === 'function') playUpgradeSound();
+      toast(`Upgraded ${u.name} to Level ${upgradesState[category]}!`);
+      return { success: true, level: upgradesState[category], cost };
+    }
+
+    /* ==========================================================
+       NITRO BOOST SYSTEM (PHASE 8)
+       ========================================================== */
+    let nitroCharge = 100; // 0 to 100 (starts full for immediate boost availability)
+    let nitroActive = false;
+    let nitroTimer = 0;
+    let nitroCooldownTimer = 0;
+    const NITRO_DURATION = 3.5;
+    const NITRO_COOLDOWN = 2.0;
+
+    function activateNitro() {
+      if (!gameActive) return { success: false, reason: 'not_game_active' };
+      if (playerLives <= 0) return { success: false, reason: 'zero_lives' };
+      if (nitroActive) return { success: false, reason: 'already_active' };
+      if (nitroCooldownTimer > 0) {
+        toast(`Nitro cooling down (${nitroCooldownTimer.toFixed(1)}s)`);
+        return { success: false, reason: 'cooldown', cooldown: nitroCooldownTimer };
+      }
+      if (nitroCharge < 100) {
+        toast(`Nitro not ready (${Math.floor(nitroCharge)}%)`);
+        return { success: false, reason: 'not_ready', charge: nitroCharge };
+      }
+
+      nitroActive = true;
+      nitroCharge = 0;
+      nitroTimer = NITRO_DURATION;
+      if (typeof playNitroSound === 'function') playNitroSound();
+
+      const btn = document.getElementById('btn-nitro-boost');
+      if (btn) btn.classList.add('boosting');
+      const fx = document.getElementById('hud-nitro-fx');
+      if (fx) fx.classList.add('active');
+
+      toast('⚡ NITRO BOOST ACTIVATED!');
+      updateNitroHUD();
+      return { success: true, timer: nitroTimer };
+    }
+
+    function updateNitro(dt) {
+      if (!gameActive) return;
+
+      const engineLvl = (typeof upgradesState !== 'undefined' && upgradesState.engine) ? upgradesState.engine : 0;
+
+      if (nitroActive) {
+        nitroTimer -= dt;
+        if (nitroTimer <= 0) {
+          nitroActive = false;
+          nitroTimer = 0;
+          nitroCooldownTimer = NITRO_COOLDOWN;
+          const btn = document.getElementById('btn-nitro-boost');
+          if (btn) btn.classList.remove('boosting');
+          const fx = document.getElementById('hud-nitro-fx');
+          if (fx) fx.classList.remove('active');
+        }
+      } else if (nitroCooldownTimer > 0) {
+        nitroCooldownTimer = Math.max(0, nitroCooldownTimer - dt);
+      } else if (nitroCharge < 100) {
+        // Base passive recharge rate: 9% per sec; Engine upgrade boosts up to +50% faster
+        const refillRate = 9.0 * (1.0 + engineLvl * 0.10);
+        nitroCharge = Math.min(100, nitroCharge + refillRate * dt);
+      }
+
+      updateNitroHUD();
+    }
+
+    function updateNitroHUD() {
+      const fill = document.getElementById('hud-nitro-fill');
+      const statusEl = document.getElementById('hud-nitro-status');
+      const btn = document.getElementById('btn-nitro-boost');
+
+      if (fill) {
+        if (nitroActive) {
+          const pct = Math.max(0, Math.min(100, (nitroTimer / NITRO_DURATION) * 100));
+          fill.style.width = `${pct}%`;
+          fill.className = 'nitro-fill active-boost';
+        } else {
+          fill.style.width = `${Math.min(100, Math.max(0, nitroCharge))}%`;
+          fill.className = 'nitro-fill' + (nitroCharge >= 100 ? ' full' : '');
+        }
+      }
+
+      if (statusEl) {
+        if (nitroActive) {
+          statusEl.innerText = `BOOST ${nitroTimer.toFixed(1)}s`;
+          statusEl.className = 'nitro-gauge-status boosting';
+        } else if (nitroCooldownTimer > 0) {
+          statusEl.innerText = `COOL ${nitroCooldownTimer.toFixed(1)}s`;
+          statusEl.className = 'nitro-gauge-status cooling';
+        } else if (nitroCharge >= 100) {
+          statusEl.innerText = 'READY [SPACE]';
+          statusEl.className = 'nitro-gauge-status ready';
+        } else {
+          statusEl.innerText = `${Math.floor(nitroCharge)}%`;
+          statusEl.className = 'nitro-gauge-status charging';
+        }
+      }
+
+      if (btn) {
+        btn.classList.toggle('ready', !nitroActive && nitroCharge >= 100 && nitroCooldownTimer <= 0);
+        btn.classList.toggle('cooling', !nitroActive && nitroCooldownTimer > 0);
+        btn.classList.toggle('boosting', nitroActive);
+      }
     }
 
     /* ==========================================================
@@ -3845,6 +6782,9 @@
       if (waterMesh) waterMesh.material.color.setHex(m.water);
       rockMaterials.forEach(mat => mat.color.setHex(m.rock));
       foliageMaterials.forEach(mat => mat.color.setHex(m.foliage));
+      if (typeof recordMapPlayed === 'function') {
+        recordMapPlayed(m.name);
+      }
       toast(`Loaded ${m.name}!`);
     }
 
@@ -3865,9 +6805,13 @@
 
       // Update Toolbar active button
       const navButtons = document.querySelectorAll('.nav-btn');
-      const keyMap = { 'main-menu': 0, 'hud': 1, 'pause': 2, 'gameover': 3, 'boat-select': 4, 'map-select': 5 };
-      if (keyMap[screenKey] !== undefined) {
+      const keyMap = { 'main-menu': 0, 'hud': 1, 'pause': 2, 'gameover': 3, 'boat-select': 4, 'map-select': 5, 'missions': 6, 'upgrades': 7 };
+      if (keyMap[screenKey] !== undefined && navButtons[keyMap[screenKey]]) {
         navButtons[keyMap[screenKey]].classList.add('active');
+      }
+
+      if (screenKey !== 'missions') {
+        previousScreen = screenKey;
       }
 
       const prevActive = gameActive;
@@ -3878,6 +6822,10 @@
 
       if (screenKey === 'boat-select') {
         renderBoatStats(currentBoatIdx);
+      } else if (screenKey === 'missions') {
+        renderMissionsModal();
+      } else if (screenKey === 'upgrades') {
+        renderUpgradesScreen();
       }
     }
 
@@ -3893,6 +6841,42 @@
       invulnerableTimer = 0;
       keysPressed.left = false;
       keysPressed.right = false;
+
+      // Phase 8: Reset Nitro & Apply Selected Boat
+      nitroActive = false;
+      nitroTimer = 0;
+      nitroCooldownTimer = 0;
+      nitroCharge = 100;
+      const nBtn = document.getElementById('btn-nitro-boost');
+      if (nBtn) nBtn.className = 'hud-nitro-btn';
+      const nFx = document.getElementById('hud-nitro-fx');
+      if (nFx) nFx.className = 'hud-nitro-fx';
+      if (typeof updateNitroHUD === 'function') updateNitroHUD();
+
+      if (boatsDB[selectedBoatIdx]) {
+        const b = boatsDB[selectedBoatIdx];
+        if (boatHullMat) boatHullMat.color.setHex(b.color);
+        if (boatStripeMat) boatStripeMat.color.setHex(b.stripe);
+      }
+
+      // Phase 6 Reset
+      comboCount = 0;
+      comboMultiplier = 1;
+      comboTimer = 0;
+      totalNearMisses = 0;
+      nearMissScore = 0;
+      totalGameScore = 0;
+      maxComboReached = 1;
+      rapidSpeedBoost = 0;
+      currentEvent = RIVER_EVENTS.IDLE;
+      eventTimer = 0;
+      eventCooldown = 15.0 + Math.random() * 6.0;
+      runEventsCompleted = 0;
+      updateComboHUD();
+      const banner = document.getElementById('hud-event-banner');
+      if (banner) banner.className = 'hud-event-banner';
+      const popup = document.getElementById('hud-nearmiss-popup');
+      if (popup) popup.className = 'hud-nearmiss-popup';
 
       if (boatGroup) {
         boatGroup.position.set(0, -0.06, -1.2);
@@ -4186,6 +7170,120 @@
       set(v) { targetTiltSteer = v; }
     });
 
+    // Expose Phase 6 hooks for test harness & verification
+    window.RIVER_EVENTS = RIVER_EVENTS;
+    window.triggerRiverEvent = triggerRiverEvent;
+    window.endCurrentRiverEvent = endCurrentRiverEvent;
+    window.triggerNearMiss = triggerNearMiss;
+    window.triggerNearMissDebug = function() { triggerNearMiss(boatCurrentX + 2.0); };
+    window.resetCombo = resetCombo;
+    window.updateComboHUD = updateComboHUD;
+    window.getPhase6State = function() {
+      return {
+        currentEvent,
+        eventTimer,
+        eventCooldown,
+        rapidSpeedBoost,
+        comboCount,
+        comboMultiplier,
+        comboTimer,
+        COMBO_TIMEOUT,
+        totalNearMisses,
+        nearMissScore,
+        totalGameScore,
+        maxComboReached
+      };
+    };
+
+    // Expose Phase 7 hooks for test harness & verification
+    window.SafeStorage = SafeStorage;
+    window.MISSIONS_CONFIG = MISSIONS_CONFIG;
+    window.DAILY_POOL = DAILY_POOL;
+    window.ACHIEVEMENTS_CONFIG = ACHIEVEMENTS_CONFIG;
+    window.openMissionsModal = openMissionsModal;
+    window.closeMissionsModal = closeMissionsModal;
+    window.switchMissionsTab = switchMissionsTab;
+    window.claimMission = claimMission;
+    window.claimDaily = claimDaily;
+    window.claimAchievement = claimAchievement;
+    window.checkAchievements = checkAchievements;
+    window.showAchievementUnlockNotification = showAchievementUnlockNotification;
+    window.renderMissionsModal = renderMissionsModal;
+    window.updateMissionsBadges = updateMissionsBadges;
+    window.onCoinCollected = onCoinCollected;
+    window.onNearMissTriggered = onNearMissTriggered;
+    window.onRiverEventCompleted = onRiverEventCompleted;
+    window.onDistanceUpdated = onDistanceUpdated;
+    window.recordMapPlayed = recordMapPlayed;
+    window.onGameOverPhase7 = onGameOverPhase7;
+    window.initPhase7State = initPhase7State;
+    window.getPhase7State = function() {
+      return {
+        missionsState,
+        dailyState,
+        currentDailyChallenges,
+        lifetimeStats,
+        achievementsState,
+        currentMissionTab,
+        runEventsCompleted,
+        userCoins
+      };
+    };
+    window.simulateNewDay = function(mockDateStr) {
+      dailyState.date = mockDateStr;
+      dailyState.challenges = {};
+      currentDailyChallenges = getDailyChallengesForDate(mockDateStr);
+      currentDailyChallenges.forEach(c => {
+        dailyState.challenges[c.id] = { progress: 0, completed: false, claimed: false };
+      });
+      SafeStorage.setJSON('river_rush_daily_v1', dailyState);
+      renderMissionsModal();
+      updateMissionsBadges();
+      return currentDailyChallenges;
+    };
+
+    /* Phase 8 Window Test Hooks & Controls */
+    window.resumeGame = function() { switchScreen('hud'); };
+    window.activateNitro = activateNitro;
+    window.getNitroState = function() {
+      return {
+        nitroCharge,
+        nitroActive,
+        nitroTimer,
+        nitroCooldownTimer,
+        NITRO_DURATION,
+        NITRO_COOLDOWN,
+        boatSpeed,
+        currentSpeed: boatSpeed,
+        baseSpeed
+      };
+    };
+    window.setNitroCharge = function(val) {
+      nitroCharge = Math.max(0, Math.min(100, val));
+      updateNitroHUD();
+      return nitroCharge;
+    };
+    window.UPGRADES_CONFIG = UPGRADES_CONFIG;
+    window.upgradesState = upgradesState;
+    window.getUpgradesState = function() { return upgradesState; };
+    window.purchaseUpgrade = purchaseUpgrade;
+    window.renderUpgradesScreen = renderUpgradesScreen;
+    window.boatsDB = boatsDB;
+    window.confirmSelectBoat = confirmSelectBoat;
+    window.updateAllCoinDisplays = updateAllCoinDisplays;
+    window.getUserCoins = function() { return userCoins; };
+    window.setUserCoins = function(amt) {
+      userCoins = amt;
+      SafeStorage.setItem('river_rush_user_coins', String(amt));
+      updateAllCoinDisplays();
+      return userCoins;
+    };
+    window.resetUpgrades = function() {
+      upgradesState = { engine: 0, handling: 0, hull: 0 };
+      SafeStorage.setJSON('river_rush_upgrades_v1', upgradesState);
+      renderUpgradesScreen();
+    };
+
     // Prevent default pinch-zoom and gesture scrolling inside game
     document.addEventListener('gesturestart', (e) => e.preventDefault(), { passive: false });
     document.addEventListener('gesturechange', (e) => e.preventDefault(), { passive: false });
@@ -4252,6 +7350,8 @@
       } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
         keysPressed.right = true;
         startSteer(1);
+      } else if (e.code === 'Space' || e.code === 'ShiftLeft' || e.code === 'ShiftRight' || e.key === ' ' || e.key === 'n' || e.key === 'N') {
+        activateNitro();
       } else if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') {
         switchScreen('pause');
       }
@@ -4367,6 +7467,45 @@
       } catch (e) {}
     }
 
+    function playNitroSound() {
+      try {
+        const ctx = getAudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(160, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(720, ctx.currentTime + 0.4);
+        osc.frequency.linearRampToValueAtTime(540, ctx.currentTime + 1.2);
+        gain.gain.setValueAtTime(0.01, ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.25, ctx.currentTime + 0.08);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 1.2);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 1.2);
+      } catch (e) {}
+    }
+
+    function playUpgradeSound() {
+      try {
+        const ctx = getAudioCtx();
+        const freqs = [330, 440, 554.37, 659.25, 880];
+        freqs.forEach((freq, idx) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          const st = ctx.currentTime + idx * 0.07;
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, st);
+          gain.gain.setValueAtTime(0.2, st);
+          gain.gain.exponentialRampToValueAtTime(0.01, st + 0.25);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(st);
+          osc.stop(st + 0.25);
+        });
+      } catch (e) {}
+    }
+
     let toastTimer;
     function toast(msg) {
       const el = document.getElementById('toast');
@@ -4381,7 +7520,24 @@
       init3D();
       setupSteerButton('btn-steer-l', -1);
       setupSteerButton('btn-steer-r', 1);
-      renderBoatStats(0);
+
+      const nitroBtn = document.getElementById('btn-nitro-boost');
+      if (nitroBtn) {
+        const onNitroTap = (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          activateNitro();
+        };
+        nitroBtn.addEventListener('pointerdown', onNitroTap);
+        nitroBtn.addEventListener('click', onNitroTap);
+      }
+
+      initBoatsState();
+      renderBoatStats(selectedBoatIdx);
+      renderUpgradesScreen();
+      initPhase7State();
+      recordMapPlayed(mapsDB[0].name);
+      updateNitroHUD();
     });
   </script>
 </body>
