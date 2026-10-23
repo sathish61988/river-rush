@@ -151,6 +151,17 @@
       z-index: 1;
     }
 
+    /* Cinematic Peripheral Speed Streaks Canvas (Phase 10) */
+    #speed-streaks-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+      pointer-events: none;
+    }
+
     /* Screen UI Overlay */
     .screen {
       position: absolute;
@@ -676,15 +687,25 @@
       right: 3%;
       width: clamp(96px, 11vw, 130px);
       height: clamp(96px, 11vw, 130px);
-      background: radial-gradient(circle, #0e1928 0%, #08101a 100%);
-      border: 3.5px solid #2d4f78;
+      background: radial-gradient(circle, rgba(14, 25, 40, 0.94) 0%, rgba(8, 16, 26, 0.96) 100%);
+      border: 3.5px solid #2d5a8c;
       border-radius: 50%;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6), inset 0 0 15px rgba(30, 112, 212, 0.3);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.65), 0 0 16px rgba(0, 210, 255, 0.28), inset 0 0 18px rgba(30, 112, 212, 0.35);
+      backdrop-filter: blur(6px);
+      transition: border-color 0.3s ease, box-shadow 0.3s ease;
       z-index: 20;
+    }
+    .hud-speedometer.nitro-active {
+      border-color: #ff9900 !important;
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.75), 0 0 24px rgba(255, 153, 0, 0.65), inset 0 0 20px rgba(255, 153, 0, 0.45) !important;
+    }
+    .hud-speedometer.nitro-active .speedo-digits {
+      color: #ffea70 !important;
+      text-shadow: 0 0 14px rgba(255, 170, 0, 0.95) !important;
     }
     .speedo-digits {
       font-family: 'Teko', sans-serif;
@@ -693,6 +714,7 @@
       font-weight: 700;
       color: #ffffff;
       text-shadow: 0 0 10px rgba(80, 160, 255, 0.8);
+      transition: color 0.2s ease, text-shadow 0.2s ease;
     }
     .speedo-unit {
       font-size: clamp(10px, 1.1vw, 13px);
@@ -2743,6 +2765,8 @@
   <div id="game-container" class="device-frame">
     <!-- 3D ThreeJS River Scene -->
     <canvas id="webgl-canvas"></canvas>
+    <!-- Peripheral Speed Streaks Overlay -->
+    <canvas id="speed-streaks-canvas"></canvas>
 
     <!-- Collision Impact Vignette Overlay -->
     <div id="hit-flash" class="hit-flash-overlay"></div>
@@ -3224,6 +3248,9 @@
     const fxParticles = particlePool; // Alias for backward compatibility
     let skyTex, cliffTex, foamTex, waterfallTex, teakDeckTex, logBarkTex, woodRingTex;
     let waterNormalTex, waterColorTex;
+    let wakePlumeTex, roosterSprayTex, exhaustGlowTex;
+    let speedCanvas, speedCtx, speedStreaks = [];
+    let continuousEngineAudio = null;
     let bankMaterials = [], rockMaterials = [], foliageMaterials = [];
     let coins = [], obstacleLogs = [], sceneryObjects = [];
     let boatTargetX = 0, boatCurrentX = 0;
@@ -3271,17 +3298,19 @@
     let maxComboReached = 1;
     let nearMissPopupTimeout = null;
 
-    // Camera chase settings & dynamic follow (Phase 9: Elevated framing for complete boat visibility & cinematic depth)
-    const CAM_BASE_Y = 3.92;
-    const CAM_BASE_Z = -7.8;
+    // Camera chase settings & dynamic follow (Phase 10: Elevated framing with dynamic momentum lag, banking & surge)
+    const CAM_BASE_Y = 3.82;
+    const CAM_BASE_Z = -7.7;
     const CAM_LOOK_Y = 0.95;
-    const CAM_LOOK_Z = 16.0;
+    const CAM_LOOK_Z = 18.0;
     const BASE_FOV = 58;
-    const MAX_FOV = 64;
+    const MAX_FOV = 74;
     let currentFOV = BASE_FOV;
     let smoothCamX = 0;
     let smoothLookX = 0;
     let smoothCamRoll = 0;
+    let smoothCamY = CAM_BASE_Y;
+    let smoothCamZ = CAM_BASE_Z;
 
     // Refined boat motion smoothing (Phase 2)
     let smoothBoatRoll = 0;
@@ -3421,17 +3450,18 @@
       const imgData = ctx.createImageData(256, 256);
       const data = imgData.data;
 
-      // Multi-octave wave height field with 5 harmonic spectrum octaves
+      // Multi-octave wave height field with 6 harmonic spectrum octaves
       const heights = new Float32Array(256 * 256);
       for (let y = 0; y < 256; y++) {
         for (let x = 0; x < 256; x++) {
           const u = (x / 256) * Math.PI * 2;
           const v = (y / 256) * Math.PI * 2;
-          const h = Math.sin(u * 3.0 + v * 2.0) * 0.30
-                  + Math.sin(u * 6.5 - v * 4.5) * 0.22
-                  + Math.cos(u * 1.8 + v * 7.5) * 0.18
-                  + Math.sin(u * 12.0 + v * 10.0) * 0.15
-                  + Math.cos(u * 18.0 - v * 16.0) * 0.10;
+          const h = Math.sin(u * 4.0 + v * 3.0) * 0.28
+                  + Math.sin(u * 8.0 - v * 6.0) * 0.22
+                  + Math.cos(u * 2.2 + v * 10.0) * 0.18
+                  + Math.sin(u * 16.0 + v * 12.0) * 0.14
+                  + Math.cos(u * 24.0 - v * 20.0) * 0.10
+                  + Math.sin(u * 32.0 + v * 28.0) * 0.08;
           heights[y * 256 + x] = h;
         }
       }
@@ -3444,8 +3474,8 @@
           const xm1 = (x - 1 + 256) % 256;
           const xp1 = (x + 1) % 256;
 
-          const dx = (heights[y * 256 + xp1] - heights[y * 256 + xm1]) * 1.8;
-          const dy = (heights[yp1 * 256 + x] - heights[ym1 * 256 + x]) * 1.8;
+          const dx = (heights[y * 256 + xp1] - heights[y * 256 + xm1]) * 2.2;
+          const dy = (heights[yp1 * 256 + x] - heights[ym1 * 256 + x]) * 2.2;
 
           const len = Math.sqrt(dx * dx + dy * dy + 1.0);
           const nx = (-dx / len) * 0.5 + 0.5;
@@ -3473,38 +3503,40 @@
       c.height = 512;
       const ctx = c.getContext('2d');
 
-      // Across the width (0 to 512), blend vivid shoreline turquoise into deep crystalline emerald-teal
+      // Across the width (0 to 512), blend vivid crystal turquoise into deep racing sapphire abyss
       const grad = ctx.createLinearGradient(0, 0, 512, 0);
-      grad.addColorStop(0.00, '#0ec4b2'); // Crystal turquoise shoreline
-      grad.addColorStop(0.08, '#0ba398'); // Shallow edge
-      grad.addColorStop(0.18, '#06707c'); // Channel transition emerald
-      grad.addColorStop(0.35, '#034556'); // Deep river channel
-      grad.addColorStop(0.50, '#023042'); // Deepest central sapphire-emerald abyss
-      grad.addColorStop(0.65, '#034556'); // Deep river channel
-      grad.addColorStop(0.82, '#06707c'); // Channel transition emerald
-      grad.addColorStop(0.92, '#0ba398'); // Shallow edge
-      grad.addColorStop(1.00, '#0ec4b2'); // Crystal turquoise shoreline
+      grad.addColorStop(0.00, '#15e4cc'); // Glowing crystal turquoise shoreline
+      grad.addColorStop(0.08, '#0ec2b4'); // Shallow reef edge
+      grad.addColorStop(0.18, '#088ca4'); // Channel transition emerald
+      grad.addColorStop(0.35, '#045572'); // Deep river flow
+      grad.addColorStop(0.50, '#023048'); // Deepest central sapphire abyss
+      grad.addColorStop(0.65, '#045572'); // Deep river flow
+      grad.addColorStop(0.82, '#088ca4'); // Channel transition emerald
+      grad.addColorStop(0.92, '#0ec2b4'); // Shallow reef edge
+      grad.addColorStop(1.00, '#15e4cc'); // Glowing crystal turquoise shoreline
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, 512, 512);
 
-      // Organic longitudinal river current streaks in deep turquoise
-      ctx.fillStyle = 'rgba(18, 175, 165, 0.18)';
-      for (let i = 0; i < 90; i++) {
-        const x = 20 + Math.random() * 472;
+      // Organic longitudinal river current streaks with subtle velocity bands
+      ctx.fillStyle = 'rgba(20, 205, 190, 0.22)';
+      for (let i = 0; i < 110; i++) {
+        const x = 15 + Math.random() * 482;
         const y = Math.random() * 512;
-        const w = 2 + Math.random() * 10;
-        const h = 50 + Math.random() * 110;
+        const w = 2 + Math.random() * 12;
+        const h = 60 + Math.random() * 130;
         ctx.fillRect(x, y, w, h);
       }
 
-      // Crisp sparkling wave caustics
-      ctx.fillStyle = 'rgba(160, 245, 235, 0.12)';
-      for (let i = 0; i < 60; i++) {
-        const x = 30 + Math.random() * 452;
+      // Crisp sparkling wave caustics network in shallow water
+      ctx.fillStyle = 'rgba(220, 255, 250, 0.24)';
+      for (let i = 0; i < 75; i++) {
+        const x = (Math.random() < 0.5) ? (20 + Math.random() * 95) : (397 + Math.random() * 95);
         const y = Math.random() * 512;
-        const w = 2 + Math.random() * 6;
-        const h = 25 + Math.random() * 50;
-        ctx.fillRect(x, y, w, h);
+        const w = 3 + Math.random() * 8;
+        const h = 20 + Math.random() * 55;
+        ctx.beginPath();
+        ctx.ellipse(x, y, w, h, 0.15, 0, Math.PI * 2);
+        ctx.fill();
       }
 
       const tex = new THREE.CanvasTexture(c);
@@ -3519,25 +3551,29 @@
       c.height = 512;
       const ctx = c.getContext('2d');
 
-      // Genuine transparent alpha background (eliminates dark rectangular box artifacts)
+      // Transparent background with soft-feathered edge fade (eliminates box edges)
       ctx.clearRect(0, 0, 512, 512);
 
-      // Cellular bubbly whitewater foam
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.94)';
-      for (let i = 0; i < 650; i++) {
+      // Cellular bubbly whitewater foam with border edge fade
+      for (let i = 0; i < 750; i++) {
         const x = Math.random() * 512;
         const y = Math.random() * 512;
         const r = 2.0 + Math.random() * 8.5;
+        const edgeDist = Math.min(x, 512 - x, y, 512 - y);
+        const alpha = Math.min(1.0, edgeDist / 36.0) * (0.65 + Math.random() * 0.35);
+        ctx.fillStyle = `rgba(255, 255, 255, ${alpha.toFixed(2)})`;
         ctx.beginPath();
         ctx.arc(x, y, r, 0, Math.PI * 2);
         ctx.fill();
       }
 
       // Aerated frothy swirls with soft blue-white rim
-      ctx.fillStyle = 'rgba(235, 250, 255, 0.50)';
-      for (let i = 0; i < 280; i++) {
+      for (let i = 0; i < 320; i++) {
         const x = Math.random() * 512;
         const y = Math.random() * 512;
+        const edgeDist = Math.min(x, 512 - x, y, 512 - y);
+        const alpha = Math.min(1.0, edgeDist / 36.0) * (0.35 + Math.random() * 0.25);
+        ctx.fillStyle = `rgba(235, 250, 255, ${alpha.toFixed(2)})`;
         ctx.beginPath();
         ctx.ellipse(x, y, 16 + Math.random() * 28, 5 + Math.random() * 12, Math.random() * Math.PI, 0, Math.PI * 2);
         ctx.fill();
@@ -3546,6 +3582,101 @@
       const tex = new THREE.CanvasTexture(c);
       tex.wrapS = THREE.RepeatWrapping;
       tex.wrapT = THREE.RepeatWrapping;
+      return tex;
+    }
+
+    function createWakePlumeCanvasTexture() {
+      const c = document.createElement('canvas');
+      c.width = 512;
+      c.height = 1024;
+      const ctx = c.getContext('2d');
+      ctx.clearRect(0, 0, 512, 1024);
+
+      // Trailing Aerodynamic V-Wake with strict boundary alpha falloff (zero card edges)
+      const cx = 256;
+      for (let y = 16; y < 1008; y += 6) {
+        const ny = y / 1024; // 0 (stern) to 1 (rear dissipation)
+        const longAlpha = Math.sin(ny * Math.PI); // exactly 0 at top and bottom
+        const wakeHalfWidth = 24 + ny * 210;
+
+        for (let x = cx - wakeHalfWidth; x <= cx + wakeHalfWidth; x += 8) {
+          const latNorm = Math.abs(x - cx) / Math.max(1, wakeHalfWidth);
+          const latAlpha = Math.cos(latNorm * Math.PI * 0.5); // 1 at center, 0 at outer boundary
+          const totalAlpha = longAlpha * latAlpha;
+          if (totalAlpha < 0.02) continue;
+
+          // Churning center boil vs frothy lateral wave chine
+          const isCenter = latNorm < 0.35;
+          const bubbleAlpha = totalAlpha * (isCenter ? 0.92 : 0.68) * (0.7 + Math.random() * 0.3);
+          ctx.fillStyle = isCenter ? `rgba(255, 255, 255, ${bubbleAlpha.toFixed(2)})` : `rgba(230, 248, 255, ${bubbleAlpha.toFixed(2)})`;
+          const r = 2.5 + Math.random() * (isCenter ? 7.5 : 5.0);
+          ctx.beginPath();
+          ctx.arc(x + (Math.random() - 0.5) * 6, y + (Math.random() - 0.5) * 4, r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = THREE.ClampToEdgeWrapping;
+      tex.wrapT = THREE.ClampToEdgeWrapping;
+      return tex;
+    }
+
+    function createRoosterSprayCanvasTexture() {
+      const c = document.createElement('canvas');
+      c.width = 256;
+      c.height = 512;
+      const ctx = c.getContext('2d');
+      ctx.clearRect(0, 0, 256, 512);
+
+      // Dynamic rooster-tail chine spray plume with feathered alpha (zero rectangle cards)
+      for (let i = 0; i < 950; i++) {
+        // Spray arches from bottom-center (x: 128, y: 480) upward and backward
+        const tVal = Math.random();
+        const archX = 128 + (Math.random() - 0.5) * (40 + tVal * 180);
+        const archY = 480 - tVal * 420 + (Math.random() - 0.5) * 30;
+
+        const xFade = Math.sin((archX / 256) * Math.PI);
+        const yFade = Math.sin((archY / 512) * Math.PI);
+        const alpha = Math.max(0, xFade * yFade * (0.85 - tVal * 0.45));
+        if (alpha < 0.02) continue;
+
+        ctx.fillStyle = `rgba(255, 255, 255, ${alpha.toFixed(2)})`;
+        const r = 1.8 + (1.0 - tVal) * 4.5 + Math.random() * 2.0;
+        ctx.beginPath();
+        ctx.arc(archX, archY, r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = THREE.ClampToEdgeWrapping;
+      tex.wrapT = THREE.ClampToEdgeWrapping;
+      return tex;
+    }
+
+    function createExhaustGlowCanvasTexture() {
+      const c = document.createElement('canvas');
+      c.width = 256;
+      c.height = 256;
+      const ctx = c.getContext('2d');
+      ctx.clearRect(0, 0, 256, 256);
+
+      // Radial plasma thruster glow
+      const grad = ctx.createRadialGradient(128, 128, 0, 128, 128, 120);
+      grad.addColorStop(0.00, 'rgba(255, 255, 255, 1.0)');
+      grad.addColorStop(0.18, 'rgba(0, 235, 255, 0.95)');
+      grad.addColorStop(0.48, 'rgba(60, 110, 255, 0.55)');
+      grad.addColorStop(0.80, 'rgba(180, 50, 255, 0.22)');
+      grad.addColorStop(1.00, 'rgba(180, 50, 255, 0.0)');
+
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(128, 128, 120, 0, Math.PI * 2);
+      ctx.fill();
+
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = THREE.ClampToEdgeWrapping;
+      tex.wrapT = THREE.ClampToEdgeWrapping;
       return tex;
     }
 
@@ -3683,12 +3814,33 @@
       skyTex = createSkyCanvasTexture();
       cliffTex = createCliffCanvasTexture();
       foamTex = createWaterFoamCanvasTexture();
+      wakePlumeTex = createWakePlumeCanvasTexture();
+      roosterSprayTex = createRoosterSprayCanvasTexture();
+      exhaustGlowTex = createExhaustGlowCanvasTexture();
       waterfallTex = createWaterfallCanvasTexture();
       teakDeckTex = createTeakDeckCanvasTexture();
       logBarkTex = createLogBarkCanvasTexture();
       woodRingTex = createWoodRingCanvasTexture();
       waterNormalTex = createWaterNormalCanvasTexture();
       waterColorTex = createWaterColorCanvasTexture();
+
+      // Prefiltered Environment Cubemap for realistic IBL reflections across all boat & water materials
+      try {
+        const pmremGenerator = new THREE.PMREMGenerator(renderer);
+        pmremGenerator.compileEquirectangularShader();
+        scene.environment = pmremGenerator.fromEquirectangular(skyTex).texture;
+      } catch (e) {
+        console.warn("PMREM environment generation fallback:", e);
+      }
+
+      // Initialize Speed Streaks 2D Overlay
+      speedCanvas = document.getElementById('speed-streaks-canvas');
+      if (speedCanvas) {
+        speedCanvas.width = container.clientWidth;
+        speedCanvas.height = container.clientHeight;
+        speedCtx = speedCanvas.getContext('2d');
+        initSpeedStreaks();
+      }
 
       // Atmospheric Sky Dome with procedural tropical sun & horizon clouds
       const skyGeo = new THREE.SphereGeometry(280, 32, 20);
@@ -3701,38 +3853,38 @@
       scene.add(skyMesh);
 
       // Balanced Hemisphere Ambient Bounce (Sky: tropical azure, Ground: deep jungle earth)
-      const hemiLight = new THREE.HemisphereLight(0x56a4d4, 0x162c1e, 0.58);
+      const hemiLight = new THREE.HemisphereLight(0x62b0e0, 0x14281c, 0.65);
       hemiLight.position.set(0, 50, 0);
       scene.add(hemiLight);
 
       // Sun Directional Light positioned overhead-balanced to evenly light both riverbanks
-      const dirLight = new THREE.DirectionalLight(0xfff6e4, 1.30);
-      dirLight.position.set(12, 52, -18);
+      const dirLight = new THREE.DirectionalLight(0xfff6dc, 1.45);
+      dirLight.position.set(14, 54, -18);
       dirLight.castShadow = true;
       dirLight.shadow.mapSize.width = 1024;
       dirLight.shadow.mapSize.height = 1024;
       dirLight.shadow.camera.near = 1.0;
-      dirLight.shadow.camera.far = 160;
-      dirLight.shadow.camera.left = -24;
-      dirLight.shadow.camera.right = 24;
-      dirLight.shadow.camera.top = 55;
-      dirLight.shadow.camera.bottom = -15;
+      dirLight.shadow.camera.far = 170;
+      dirLight.shadow.camera.left = -26;
+      dirLight.shadow.camera.right = 26;
+      dirLight.shadow.camera.top = 60;
+      dirLight.shadow.camera.bottom = -18;
       dirLight.shadow.bias = -0.0004;
       dirLight.shadow.normalBias = 0.02;
       scene.add(dirLight);
 
       // Soft River Canyon Fill Light from opposing riverbank
-      const fillLight = new THREE.DirectionalLight(0x1488a4, 0.32);
+      const fillLight = new THREE.DirectionalLight(0x1490ac, 0.38);
       fillLight.position.set(-25, 20, 30);
       scene.add(fillLight);
 
       // Downriver Gorge Warm Atmospheric Rim Accent
-      const gorgeRimLight = new THREE.DirectionalLight(0xffaa68, 0.35);
+      const gorgeRimLight = new THREE.DirectionalLight(0xffb26e, 0.42);
       gorgeRimLight.position.set(8, 18, 130);
       scene.add(gorgeRimLight);
 
       // Underwater Up-Glow for rich tropical translucency
-      const underwaterGlow = new THREE.DirectionalLight(0x0c748c, 0.22);
+      const underwaterGlow = new THREE.DirectionalLight(0x0e889e, 0.28);
       underwaterGlow.position.set(0, -20, 10);
       scene.add(underwaterGlow);
 
@@ -3741,9 +3893,9 @@
       const waterMat = new THREE.MeshStandardMaterial({
         map: waterColorTex,
         normalMap: waterNormalTex,
-        normalScale: new THREE.Vector2(0.35, 0.35),
-        roughness: 0.12,
-        metalness: 0.15,
+        normalScale: new THREE.Vector2(0.38, 0.38),
+        roughness: 0.08,
+        metalness: 0.18,
         transparent: true,
         opacity: 0.96,
         wireframe: false
@@ -3755,14 +3907,14 @@
           `
           #include <color_fragment>
           vec3 viewDir = normalize(vViewPosition);
-          vec3 lightDir = normalize(vec3(0.25, 0.88, -0.35));
+          vec3 lightDir = normalize(vec3(0.24, 0.90, -0.32));
           vec3 halfDir = normalize(lightDir + viewDir);
           float specAngle = max(0.0, dot(vNormal, halfDir));
-          float sunGlint = pow(specAngle, 96.0) * 1.5 + pow(specAngle, 24.0) * 0.30;
+          float sunGlint = pow(specAngle, 128.0) * 2.2 + pow(specAngle, 28.0) * 0.45;
           float NdotV = max(0.0, dot(vNormal, viewDir));
-          float fresnel = pow(1.0 - NdotV, 4.0);
-          vec3 skyReflection = mix(vec3(0.12, 0.54, 0.82), vec3(0.96, 0.84, 0.68), fresnel * 0.55);
-          diffuseColor.rgb = mix(diffuseColor.rgb, skyReflection, fresnel * 0.62) + vec3(1.0, 0.97, 0.88) * sunGlint;
+          float fresnel = pow(1.0 - NdotV, 3.8);
+          vec3 skyReflection = mix(vec3(0.10, 0.52, 0.86), vec3(0.98, 0.86, 0.70), fresnel * 0.55);
+          diffuseColor.rgb = mix(diffuseColor.rgb, skyReflection, fresnel * 0.68) + vec3(1.0, 0.98, 0.92) * sunGlint;
           `
         );
       };
@@ -4168,18 +4320,28 @@
         scene.add(cap);
       });
 
-      // 3. Canyon Waterfall Headwall Backdrop across the river valley (Z = 145)
-      const headwallGeo = new THREE.BoxGeometry(86, 34, 14);
-      const headwall = new THREE.Mesh(headwallGeo, cliffMat);
-      headwall.position.set(0, 16, 147);
-      headwall.receiveShadow = true;
-      scene.add(headwall);
+      // 3. Flanking Canyon Gorge Gateway Portals (Z = 145) leaving central river corridor open to infinity & karst mountains
+      const portalLeftGeo = new THREE.BoxGeometry(32, 38, 18);
+      const portalLeft = new THREE.Mesh(portalLeftGeo, cliffMat);
+      portalLeft.position.set(-28, 17, 147);
+      portalLeft.receiveShadow = true;
+      scene.add(portalLeft);
 
-      const headwallTop = new THREE.Mesh(new THREE.BoxGeometry(88, 3.5, 16), topMat);
-      headwallTop.position.set(0, 33, 147);
-      scene.add(headwallTop);
+      const portalLeftTop = new THREE.Mesh(new THREE.BoxGeometry(34, 4, 20), topMat);
+      portalLeftTop.position.set(-28, 36, 147);
+      scene.add(portalLeftTop);
 
-      // Triple Cascading 3D Waterfalls pouring over the cliff face (matching BG_InGameRiver.png)
+      const portalRightGeo = new THREE.BoxGeometry(32, 38, 18);
+      const portalRight = new THREE.Mesh(portalRightGeo, cliffMat);
+      portalRight.position.set(28, 17, 147);
+      portalRight.receiveShadow = true;
+      scene.add(portalRight);
+
+      const portalRightTop = new THREE.Mesh(new THREE.BoxGeometry(34, 4, 20), topMat);
+      portalRightTop.position.set(28, 36, 147);
+      scene.add(portalRightTop);
+
+      // Cascading Flanking 3D Waterfalls pouring over lateral gorge cliff faces into plunge pools
       const wfMat = new THREE.MeshBasicMaterial({
         map: waterfallTex,
         transparent: true,
@@ -4188,9 +4350,8 @@
       });
 
       const wfCurtains = [
-        { x: -20, w: 15, h: 32, z: 141 },
-        { x: 0,   w: 16, h: 32, z: 141 },
-        { x: 20,  w: 15, h: 32, z: 141 }
+        { x: -22, w: 16, h: 34, z: 141 },
+        { x: 22,  w: 16, h: 34, z: 141 }
       ];
       wfCurtains.forEach(c => {
         const wfGeo = new THREE.PlaneGeometry(c.w, c.h, 6, 12);
@@ -4207,15 +4368,15 @@
         scene.add(wfMesh);
       });
 
-      // Plunge Pool Foam Disks at base of waterfalls
-      const poolGeo = new THREE.CircleGeometry(10.5, 20);
+      // Plunge Pool Foam Disks at base of lateral waterfalls
+      const poolGeo = new THREE.CircleGeometry(11.0, 24);
       const poolMat = new THREE.MeshBasicMaterial({
         map: foamTex,
         transparent: true,
         opacity: 0.82,
         depthWrite: false
       });
-      [-20, 0, 20].forEach(px => {
+      [-22, 22].forEach(px => {
         const pool = new THREE.Mesh(poolGeo, poolMat);
         pool.rotation.x = -Math.PI / 2;
         pool.position.set(px, 0.12, 141);
@@ -4275,89 +4436,101 @@
       boatGroup = new THREE.Group();
       boatMeshVariants = [];
 
-      // Premium Gelcoat & Metallic PBR Materials
+      // Premium High-Gloss Gelcoat, Metallic Flake & Reflective PBR Materials
       boatHullMat = new THREE.MeshStandardMaterial({
         color: 0xe02816,
-        roughness: 0.16,
-        metalness: 0.32
+        roughness: 0.12,
+        metalness: 0.28,
+        envMapIntensity: 1.5
       });
 
       boatStripeMat = new THREE.MeshStandardMaterial({
         color: 0xffffff,
-        roughness: 0.20,
-        metalness: 0.22
+        roughness: 0.16,
+        metalness: 0.20,
+        envMapIntensity: 1.3
       });
 
       const chromeMat = new THREE.MeshStandardMaterial({
         color: 0xf4f7fa,
         metalness: 0.98,
-        roughness: 0.05
+        roughness: 0.04,
+        envMapIntensity: 2.0
       });
 
       const darkCarbonMat = new THREE.MeshStandardMaterial({
-        color: 0x181a1e,
-        roughness: 0.42,
-        metalness: 0.70
+        color: 0x16181b,
+        roughness: 0.35,
+        metalness: 0.75,
+        envMapIntensity: 1.3
       });
 
       const cockpitInteriorMat = new THREE.MeshStandardMaterial({
         color: 0x121417,
-        roughness: 0.75
+        roughness: 0.65,
+        envMapIntensity: 0.8
       });
 
       const seatMat = new THREE.MeshStandardMaterial({
         color: 0x22262c,
-        roughness: 0.55
+        roughness: 0.45,
+        envMapIntensity: 0.9
       });
 
       const seatCushionMat = new THREE.MeshStandardMaterial({
         color: 0xd8c8b0,
-        roughness: 0.40
+        roughness: 0.35,
+        envMapIntensity: 0.8
       });
 
       const glassMat = new THREE.MeshPhysicalMaterial({
         color: 0x48c4f0,
         transparent: true,
-        opacity: 0.72,
-        roughness: 0.05,
-        transmission: 0.76,
-        reflectivity: 0.96
+        opacity: 0.68,
+        roughness: 0.04,
+        transmission: 0.78,
+        reflectivity: 0.98,
+        envMapIntensity: 1.8
       });
 
       const cyanGlassMat = new THREE.MeshPhysicalMaterial({
         color: 0x00f0ff,
         transparent: true,
-        opacity: 0.75,
-        roughness: 0.05,
-        transmission: 0.78,
-        reflectivity: 0.96
+        opacity: 0.70,
+        roughness: 0.04,
+        transmission: 0.80,
+        reflectivity: 0.98,
+        envMapIntensity: 1.8
       });
 
       const darkGlassMat = new THREE.MeshPhysicalMaterial({
-        color: 0x222630,
+        color: 0x181c24,
         transparent: true,
-        opacity: 0.85,
-        roughness: 0.08,
-        transmission: 0.60,
-        reflectivity: 0.92
+        opacity: 0.82,
+        roughness: 0.06,
+        transmission: 0.62,
+        reflectivity: 0.95,
+        envMapIntensity: 1.5
       });
 
       const greenGlassMat = new THREE.MeshPhysicalMaterial({
         color: 0x30e868,
         transparent: true,
-        opacity: 0.72,
-        roughness: 0.06,
-        transmission: 0.75,
-        reflectivity: 0.95
+        opacity: 0.70,
+        roughness: 0.05,
+        transmission: 0.78,
+        reflectivity: 0.96,
+        envMapIntensity: 1.8
       });
 
       const violetGlassMat = new THREE.MeshPhysicalMaterial({
         color: 0x9d4edd,
         transparent: true,
-        opacity: 0.78,
-        roughness: 0.05,
-        transmission: 0.72,
-        reflectivity: 0.95
+        opacity: 0.74,
+        roughness: 0.04,
+        transmission: 0.75,
+        reflectivity: 0.96,
+        envMapIntensity: 1.8
       });
 
       const neonCyanMat = new THREE.MeshBasicMaterial({ color: 0x00f0ff });
@@ -4808,14 +4981,15 @@
       // SHARED BOAT PROPULSION & WATER INTERACTION EFFECTS
       // ==========================================================
 
-      // 5. Trailing V-Wake Foam Plane with Procedural Foam Texture
-      const wakeGeo = new THREE.PlaneGeometry(8.5, 12.0, 4, 8);
+      // 5. Trailing Aerodynamic V-Wake with Organic Feathered Alpha Falloff (Zero Box Cuts)
+      const wakeGeo = new THREE.PlaneGeometry(9.5, 14.0, 8, 16);
       const wPos = wakeGeo.attributes.position;
       const baseWakeX = new Float32Array(wPos.count);
       for (let i = 0; i < wPos.count; i++) {
         const y = wPos.getY(i);
-        const t = (6 - y) / 12;
-        const widthScale = 0.32 + t * 0.95;
+        // tRow = 0 at stern (top of plane y=+7), 1 at trailing rear (y=-7)
+        const tRow = (7 - y) / 14;
+        const widthScale = 0.22 + tRow * 1.15;
         wPos.setX(i, wPos.getX(i) * widthScale);
         baseWakeX[i] = wPos.getX(i);
       }
@@ -4823,72 +4997,91 @@
       wakeGeo.userData = { baseWakeX };
 
       const wakeMat = new THREE.MeshBasicMaterial({
-        map: foamTex,
+        map: wakePlumeTex,
         transparent: true,
-        opacity: 0.75,
+        opacity: 0.88,
         depthWrite: false
       });
-      wakeMat.map.repeat.set(1, 3);
       boatWakeMesh = new THREE.Mesh(wakeGeo, wakeMat);
       boatWakeMesh.rotation.x = -Math.PI / 2;
-      boatWakeMesh.position.set(0, 0.04, -7.2);
+      boatWakeMesh.position.set(0, 0.04, -8.2);
       boatGroup.add(boatWakeMesh);
 
-      // 6. Transom Boiling Churn Foam directly behind motors
-      const churnGeo = new THREE.PlaneGeometry(2.8, 2.6);
+      // 6. Transom Churn Foam Disk directly behind motors (soft feathered oval)
+      const churnGeo = new THREE.CircleGeometry(1.6, 22);
+      churnGeo.scale(1.2, 0.75, 1.0);
       const churnMat = new THREE.MeshBasicMaterial({
         map: foamTex,
         transparent: true,
-        opacity: 0.9,
+        opacity: 0.85,
         depthWrite: false
       });
       churnMesh = new THREE.Mesh(churnGeo, churnMat);
       churnMesh.rotation.x = -Math.PI / 2;
-      churnMesh.position.set(0, 0.05, -2.5);
+      churnMesh.position.set(0, 0.05, -2.4);
       boatGroup.add(churnMesh);
 
-      // 7. Flared Lateral Rooster-Tail Spray Curtains
+      // 7. Flared Lateral Rooster-Tail Chine Spray Curtains (feathered alpha, curved geometry)
       const sprayMatL = new THREE.MeshBasicMaterial({
-        map: foamTex,
+        map: roosterSprayTex,
         transparent: true,
-        opacity: 0.68,
+        opacity: 0.72,
         side: THREE.DoubleSide,
         depthWrite: false
       });
-      sprayPlaneL = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 3.4), sprayMatL);
-      sprayPlaneL.position.set(-1.0, 0.28, -2.1);
-      sprayPlaneL.rotation.set(0.14, -0.38, 0.52);
+      sprayPlaneL = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 3.8), sprayMatL);
+      sprayPlaneL.position.set(-1.05, 0.32, -2.2);
+      sprayPlaneL.rotation.set(0.18, -0.32, 0.48);
       boatGroup.add(sprayPlaneL);
 
       const sprayMatR = new THREE.MeshBasicMaterial({
-        map: foamTex,
+        map: roosterSprayTex,
         transparent: true,
-        opacity: 0.68,
+        opacity: 0.72,
         side: THREE.DoubleSide,
         depthWrite: false
       });
-      sprayPlaneR = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 3.4), sprayMatR);
-      sprayPlaneR.position.set(1.0, 0.28, -2.1);
-      sprayPlaneR.rotation.set(0.14, 0.38, -0.52);
+      sprayPlaneR = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 3.8), sprayMatR);
+      sprayPlaneR.position.set(1.05, 0.32, -2.2);
+      sprayPlaneR.rotation.set(0.18, 0.32, -0.48);
       boatGroup.add(sprayPlaneR);
 
-      // 8. Dynamic Bow Spray V-Plumes
+      // 8. Dynamic Bow Chine Spray V-Plumes
       const bowSprayMat = new THREE.MeshBasicMaterial({
-        map: foamTex,
+        map: roosterSprayTex,
         transparent: true,
-        opacity: 0.52,
+        opacity: 0.58,
         side: THREE.DoubleSide,
         depthWrite: false
       });
-      bowSprayL = new THREE.Mesh(new THREE.PlaneGeometry(0.75, 1.9), bowSprayMat);
-      bowSprayL.rotation.set(-0.25, -0.4, 0.65);
-      bowSprayL.position.set(-0.76, 0.16, 1.35);
+      bowSprayL = new THREE.Mesh(new THREE.PlaneGeometry(0.85, 2.2), bowSprayMat);
+      bowSprayL.rotation.set(-0.22, -0.36, 0.62);
+      bowSprayL.position.set(-0.80, 0.18, 1.35);
       boatGroup.add(bowSprayL);
 
-      bowSprayR = new THREE.Mesh(new THREE.PlaneGeometry(0.75, 1.9), bowSprayMat.clone());
-      bowSprayR.rotation.set(-0.25, 0.4, -0.65);
-      bowSprayR.position.set(0.76, 0.16, 1.35);
+      bowSprayR = new THREE.Mesh(new THREE.PlaneGeometry(0.85, 2.2), bowSprayMat.clone());
+      bowSprayR.rotation.set(-0.22, 0.36, -0.62);
+      bowSprayR.position.set(0.80, 0.18, 1.35);
       boatGroup.add(bowSprayR);
+
+      // 9. Twin Nitro / Thruster Jet Exhaust Cones
+      const exhaustPlumes = [];
+      [-0.45, 0.45].forEach(tx => {
+        const exhMat = new THREE.MeshBasicMaterial({
+          map: exhaustGlowTex,
+          transparent: true,
+          opacity: 0.55,
+          side: THREE.DoubleSide,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending
+        });
+        const exhPlane = new THREE.Mesh(new THREE.PlaneGeometry(0.55, 1.6), exhMat);
+        exhPlane.rotation.x = -Math.PI / 2;
+        exhPlane.position.set(tx, 0.42, -2.4);
+        boatGroup.add(exhPlane);
+        exhaustPlumes.push(exhPlane);
+      });
+      boatGroup.userData = { exhaustPlumes };
 
       // Elevated camera framing position for complete boat visibility
       boatGroup.position.set(0, -0.02, -0.85);
@@ -5359,6 +5552,127 @@
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       renderer.setSize(w, h);
+      if (speedCanvas) {
+        speedCanvas.width = w;
+        speedCanvas.height = h;
+      }
+    }
+
+    /* ==========================================================
+       CINEMATIC SPEED STREAKS & AUDIO ENGINE (Phase 10)
+       ========================================================== */
+    function initSpeedStreaks() {
+      speedStreaks = [];
+      for (let i = 0; i < 40; i++) {
+        speedStreaks.push({
+          angle: Math.random() * Math.PI * 2,
+          dist: 0.35 + Math.random() * 0.65,
+          length: 0.05 + Math.random() * 0.15,
+          speed: 1.2 + Math.random() * 1.8,
+          alpha: 0.2 + Math.random() * 0.6
+        });
+      }
+    }
+
+    function updateSpeedStreaks(dt) {
+      if (!speedCtx || !speedCanvas) return;
+      const w = speedCanvas.width;
+      const h = speedCanvas.height;
+      speedCtx.clearRect(0, 0, w, h);
+
+      const isBoosting = (typeof nitroActive !== 'undefined' && nitroActive);
+      const isHighSpeed = (boatSpeed > baseSpeed * 1.08);
+      if (!isBoosting && !isHighSpeed) return;
+
+      const intensity = isBoosting ? 1.0 : Math.min(1.0, (boatSpeed - baseSpeed * 1.08) / (baseSpeed * 0.2));
+      const cx = w * 0.5;
+      const cy = h * 0.48;
+      const maxR = Math.hypot(cx, cy);
+
+      speedCtx.save();
+      speedCtx.lineWidth = isBoosting ? 2.5 : 1.8;
+
+      for (let i = 0; i < speedStreaks.length; i++) {
+        const s = speedStreaks[i];
+        s.dist += s.speed * dt * (isBoosting ? 2.2 : 1.2);
+        if (s.dist > 1.0) {
+          s.dist = 0.30 + Math.random() * 0.15;
+          s.angle = Math.random() * Math.PI * 2;
+        }
+
+        // Keep center 65% of screen crystal clear for obstacles
+        if (s.dist < 0.35) continue;
+
+        const r1 = s.dist * maxR;
+        const r2 = Math.min(maxR, (s.dist + s.length) * maxR);
+        const cosA = Math.cos(s.angle);
+        const sinA = Math.sin(s.angle);
+
+        const x1 = cx + cosA * r1 * (w / Math.max(1, h));
+        const y1 = cy + sinA * r1;
+        const x2 = cx + cosA * r2 * (w / Math.max(1, h));
+        const y2 = cy + sinA * r2;
+
+        const a = s.alpha * intensity * Math.min(1.0, (s.dist - 0.35) / 0.25);
+        speedCtx.strokeStyle = isBoosting
+          ? `rgba(100, 220, 255, ${a.toFixed(2)})`
+          : `rgba(220, 245, 255, ${(a * 0.65).toFixed(2)})`;
+        speedCtx.beginPath();
+        speedCtx.moveTo(x1, y1);
+        speedCtx.lineTo(x2, y2);
+        speedCtx.stroke();
+      }
+      speedCtx.restore();
+    }
+
+    let continuousAudioStarted = false;
+    let engineOsc = null, engineGain = null, engineFilter = null;
+    function initContinuousAudio() {
+      if (continuousAudioStarted) return;
+      try {
+        const ctx = getAudioCtx();
+        if (ctx.state === 'suspended') ctx.resume();
+
+        engineOsc = ctx.createOscillator();
+        engineGain = ctx.createGain();
+        engineFilter = ctx.createBiquadFilter();
+
+        engineOsc.type = 'sawtooth';
+        engineOsc.frequency.setValueAtTime(85, ctx.currentTime);
+
+        engineFilter.type = 'lowpass';
+        engineFilter.frequency.setValueAtTime(380, ctx.currentTime);
+
+        const soundBtn = document.getElementById('audio-sound');
+        const isMuted = soundBtn && soundBtn.classList.contains('off');
+        engineGain.gain.setValueAtTime(isMuted ? 0 : 0.055, ctx.currentTime);
+
+        engineOsc.connect(engineFilter);
+        engineFilter.connect(engineGain);
+        engineGain.connect(ctx.destination);
+
+        engineOsc.start();
+        continuousAudioStarted = true;
+      } catch (e) {}
+    }
+
+    function updateContinuousAudio(dt) {
+      if (!continuousAudioStarted || !engineOsc) return;
+      try {
+        const ctx = getAudioCtx();
+        const soundBtn = document.getElementById('audio-sound');
+        const isMuted = !gameActive || (soundBtn && soundBtn.classList.contains('off'));
+        const targetVol = isMuted ? 0 : ((typeof nitroActive !== 'undefined' && nitroActive) ? 0.09 : 0.055);
+        engineGain.gain.setTargetAtTime(targetVol, ctx.currentTime, 0.1);
+
+        const speedRatio = Math.max(0.8, boatSpeed / baseSpeed);
+        const isBoosting = (typeof nitroActive !== 'undefined' && nitroActive);
+        const targetFreq = 85 + (speedRatio - 1.0) * 160 + (isBoosting ? 65 : 0);
+        engineOsc.frequency.setTargetAtTime(targetFreq, ctx.currentTime, 0.08);
+
+        const filterFreq = 340 + (speedRatio - 1.0) * 450 + (isBoosting ? 300 : 0);
+        engineFilter.frequency.setTargetAtTime(filterFreq, ctx.currentTime, 0.08);
+      } catch (e) {}
     }
 
     function animate() {
@@ -5415,17 +5729,17 @@
         c.rotation.z = Math.sin(t * 3) * 0.08;
       });
 
-      // Animate boat stern wake opacity pulsation & dynamic curving ribbon (Phase 2)
+      // Animate boat stern wake opacity pulsation & dynamic curving ribbon (Phase 2 & 10)
       if (boatWakeMesh) {
-        boatWakeMesh.material.opacity = 0.62 + Math.sin(t * 12) * 0.15;
+        boatWakeMesh.material.opacity = 0.72 + Math.sin(t * 12) * 0.12;
         if (boatWakeMesh.geometry && boatWakeMesh.geometry.userData && boatWakeMesh.geometry.userData.baseWakeX) {
           const wGeo = boatWakeMesh.geometry;
           const wPos = wGeo.attributes.position;
           const baseXs = wGeo.userData.baseWakeX;
           for (let i = 0; i < wPos.count; i++) {
             const y = wPos.getY(i);
-            const tRow = Math.max(0, Math.min(1.0, (6 - y) / 12));
-            const bend = -smoothBoatRoll * Math.pow(tRow, 1.35) * 2.4;
+            const tRow = Math.max(0, Math.min(1.0, (7 - y) / 14));
+            const bend = -smoothBoatRoll * Math.pow(tRow, 1.35) * 2.8;
             wPos.setX(i, baseXs[i] + bend);
           }
           wPos.needsUpdate = true;
@@ -5442,13 +5756,13 @@
       // Animate rooster-tail lateral spray
       if (sprayPlaneL && sprayPlaneR) {
         const isBoosting = (typeof nitroActive !== 'undefined' && nitroActive);
-        const sprayPulse = (isBoosting ? 0.82 : 0.58) + Math.sin(t * 18) * 0.16;
+        const sprayPulse = (isBoosting ? 0.88 : 0.65) + Math.sin(t * 18) * 0.15;
         sprayPlaneL.material.opacity = Math.min(1.0, sprayPulse);
         sprayPlaneR.material.opacity = Math.min(1.0, sprayPulse);
         const turn = boatTargetX - boatCurrentX;
-        const boostYScale = isBoosting ? 1.4 : 1.0;
-        sprayPlaneL.scale.y = (1.0 + Math.max(0, -turn * 1.2)) * boostYScale;
-        sprayPlaneR.scale.y = (1.0 + Math.max(0, turn * 1.2)) * boostYScale;
+        const boostYScale = isBoosting ? 1.5 : 1.0;
+        sprayPlaneL.scale.y = (1.0 + Math.max(0, -turn * 1.3)) * boostYScale;
+        sprayPlaneR.scale.y = (1.0 + Math.max(0, turn * 1.3)) * boostYScale;
       }
 
       // Animate dynamic bow spray V-plumes flaring into turns
@@ -5456,9 +5770,29 @@
         const turn = boatTargetX - boatCurrentX;
         bowSprayL.scale.setScalar(1.0 + Math.max(0, turn * 1.5));
         bowSprayR.scale.setScalar(1.0 + Math.max(0, -turn * 1.5));
-        bowSprayL.material.opacity = 0.45 + Math.sin(t * 16) * 0.15 + Math.abs(turn) * 0.3;
-        bowSprayR.material.opacity = 0.45 + Math.cos(t * 16) * 0.15 + Math.abs(turn) * 0.3;
+        bowSprayL.material.opacity = 0.50 + Math.sin(t * 16) * 0.15 + Math.abs(turn) * 0.3;
+        bowSprayR.material.opacity = 0.50 + Math.cos(t * 16) * 0.15 + Math.abs(turn) * 0.3;
       }
+
+      // Animate twin exhaust thruster plumes (Phase 10)
+      if (boatGroup && boatGroup.userData && boatGroup.userData.exhaustPlumes) {
+        const isBoosting = (typeof nitroActive !== 'undefined' && nitroActive);
+        boatGroup.userData.exhaustPlumes.forEach((plume, pIdx) => {
+          const pulse = isBoosting
+            ? (0.80 + Math.sin(t * 36 + pIdx * 2.5) * 0.20)
+            : (0.35 + Math.sin(t * 18 + pIdx) * 0.12);
+          plume.material.opacity = pulse;
+          plume.scale.set(
+            isBoosting ? (1.35 + Math.sin(t * 26) * 0.2) : 1.0,
+            isBoosting ? (1.90 + Math.cos(t * 30) * 0.3) : 1.0,
+            1.0
+          );
+        });
+      }
+
+      // Update speed streaks overlay & continuous engine audio
+      updateSpeedStreaks(dt);
+      updateContinuousAudio(dt);
 
       // Animate Obstacle Logs buoyant bobbing in river water
       obstacleLogs.forEach((obs, idx) => {
@@ -5557,27 +5891,36 @@
         const turnDelta = (boatTargetX - boatCurrentX) * 0.7 + (-steerDir * 0.35);
 
         // ==========================================================
-        // DYNAMIC CAMERA FOLLOW & BANKING (PHASE 2)
+        // DYNAMIC CAMERA FOLLOW & BANKING (Phase 10)
         // ==========================================================
-        const targetCamX = boatCurrentX * 0.65;
-        smoothCamX += (targetCamX - smoothCamX) * Math.min(1.0, 5.0 * dt);
+        const targetCamX = boatCurrentX * 0.62;
+        smoothCamX += (targetCamX - smoothCamX) * Math.min(1.0, 5.2 * dt);
 
         // Keep camera pointing along forward chase line so obstacles straight ahead remain in clear view
-        smoothLookX += (smoothCamX - smoothLookX) * Math.min(1.0, 6.0 * dt);
+        smoothLookX += (smoothCamX - smoothLookX) * Math.min(1.0, 6.2 * dt);
 
-        const targetCamRoll = Math.max(-0.035, Math.min(0.035, -turnDelta * 0.022));
-        smoothCamRoll += (targetCamRoll - smoothCamRoll) * Math.min(1.0, 4.0 * dt);
+        // Horizon banking: tilts into turns up to ~0.082 rad (~4.7 deg)
+        const targetCamRoll = Math.max(-0.082, Math.min(0.082, -turnDelta * 0.065));
+        smoothCamRoll += (targetCamRoll - smoothCamRoll) * Math.min(1.0, 5.0 * dt);
+
+        // Dynamic camera surge: slight Z pullback and Y drop during acceleration and Nitro
+        const isBoosting = (typeof nitroActive !== 'undefined' && nitroActive);
+        const speedRatio = Math.max(1.0, boatSpeed / baseSpeed);
+        const targetCamZ = CAM_BASE_Z - (speedRatio - 1.0) * 3.8 - (isBoosting ? 0.85 : 0);
+        const targetCamY = CAM_BASE_Y - (speedRatio - 1.0) * 0.85 - (isBoosting ? 0.25 : 0);
+        smoothCamZ += (targetCamZ - smoothCamZ) * Math.min(1.0, 4.5 * dt);
+        smoothCamY += (targetCamY - smoothCamY) * Math.min(1.0, 4.5 * dt);
 
         if (cameraShake > 0) {
           cameraShake = Math.max(0, cameraShake - dt);
           camera.position.x = smoothCamX + (Math.random() - 0.5) * cameraShake * 0.7;
-          camera.position.y = CAM_BASE_Y + (Math.random() - 0.5) * cameraShake * 0.7;
+          camera.position.y = smoothCamY + (Math.random() - 0.5) * cameraShake * 0.7;
         } else {
           cameraShake = 0;
           camera.position.x = smoothCamX;
-          camera.position.y = CAM_BASE_Y;
+          camera.position.y = smoothCamY;
         }
-        camera.position.z = CAM_BASE_Z;
+        camera.position.z = smoothCamZ;
         camera.up.set(smoothCamRoll, 1, 0).normalize();
         camera.lookAt(smoothLookX, CAM_LOOK_Y, CAM_LOOK_Z);
 
@@ -5593,7 +5936,7 @@
 
         const speedNorm = Math.max(0, Math.min(1.0, (boatSpeed - baseSpeed) / (baseSpeed * 0.22)));
         const targetFOV = BASE_FOV + speedNorm * (MAX_FOV - BASE_FOV);
-        currentFOV += (targetFOV - currentFOV) * Math.min(1.0, 2.5 * dt);
+        currentFOV += (targetFOV - currentFOV) * Math.min(1.0, 3.0 * dt);
         currentFOV = Math.max(BASE_FOV, Math.min(MAX_FOV, currentFOV));
 
         if (Math.abs(camera.fov - currentFOV) > 0.02) {
@@ -5602,9 +5945,9 @@
         }
 
         // ==========================================================
-        // REFINED BOAT MOTION: ROLL, YAW, PITCH & HEAVE (PHASE 2)
+        // REFINED BOAT MOTION: ROLL, YAW, PITCH & HEAVE (Phase 10)
         // ==========================================================
-        const targetRoll = turnDelta * 0.38;
+        const targetRoll = turnDelta * 0.42;
         smoothBoatRoll += (targetRoll - smoothBoatRoll) * Math.min(1.0, 14.0 * dt);
         boatGroup.rotation.z = smoothBoatRoll;
 
@@ -5612,15 +5955,16 @@
         smoothBoatYaw += (targetYaw - smoothBoatYaw) * Math.min(1.0, 14.0 * dt);
         boatGroup.rotation.y = smoothBoatYaw;
 
-        const planingPitch = 0.038 + (boatSpeed / baseSpeed - 1.0) * 0.025;
-        const wavePitch = Math.sin(t * 5.2) * 0.016;
-        const turnCompression = Math.abs(turnDelta) * 0.022;
-        const targetPitch = planingPitch + wavePitch - turnCompression;
-        smoothBoatPitch += (targetPitch - smoothBoatPitch) * Math.min(1.0, 10.0 * dt);
+        const planingPitch = 0.042 + (boatSpeed / baseSpeed - 1.0) * 0.035;
+        const wavePitch = Math.sin(t * 6.0) * 0.018;
+        const engineVib = Math.sin(t * 42.0) * 0.003;
+        const turnCompression = Math.abs(turnDelta) * 0.025;
+        const targetPitch = planingPitch + wavePitch + engineVib - turnCompression;
+        smoothBoatPitch += (targetPitch - smoothBoatPitch) * Math.min(1.0, 12.0 * dt);
         boatGroup.rotation.x = smoothBoatPitch;
 
         boatGroup.position.x = boatCurrentX;
-        boatGroup.position.y = -0.02 + Math.sin(t * 4.8) * 0.028 - Math.abs(smoothBoatRoll) * 0.035;
+        boatGroup.position.y = -0.02 + Math.sin(t * 5.0) * 0.028 - Math.abs(smoothBoatRoll) * 0.035;
 
         // ==========================================================
         // DYNAMIC RIVER EVENTS MANAGER (Phase 6)
@@ -5774,14 +6118,16 @@
         document.getElementById('hud-speed-val').innerText = `${speedKmh}`;
         if (typeof onDistanceUpdated === 'function') onDistanceUpdated(currentDistance);
       } else {
-        // Paused or Game Over: smoothly damp camera follow & freeze gameplay movement (Phase 2)
+        // Paused or Game Over: smoothly damp camera follow & freeze gameplay movement
         if (camera) {
           smoothCamX += (0 - smoothCamX) * Math.min(1.0, 5.0 * dt);
           smoothLookX += (0 - smoothLookX) * Math.min(1.0, 5.0 * dt);
           smoothCamRoll += (0 - smoothCamRoll) * Math.min(1.0, 5.0 * dt);
+          smoothCamY += (CAM_BASE_Y - smoothCamY) * Math.min(1.0, 5.0 * dt);
+          smoothCamZ += (CAM_BASE_Z - smoothCamZ) * Math.min(1.0, 5.0 * dt);
           camera.position.x = smoothCamX;
-          camera.position.y = CAM_BASE_Y;
-          camera.position.z = CAM_BASE_Z;
+          camera.position.y = smoothCamY;
+          camera.position.z = smoothCamZ;
           camera.up.set(smoothCamRoll, 1, 0).normalize();
           camera.lookAt(smoothLookX, CAM_LOOK_Y, CAM_LOOK_Z);
 
@@ -5791,10 +6137,13 @@
             camera.updateProjectionMatrix();
           }
         }
+        if (speedCtx && speedCanvas) {
+          speedCtx.clearRect(0, 0, speedCanvas.width, speedCanvas.height);
+        }
         steerDir = 0;
         if (boatGroup) {
           boatGroup.position.x = boatCurrentX;
-          boatGroup.position.y = -0.06 + Math.sin(t * 2) * 0.02;
+          boatGroup.position.y = -0.02 + Math.sin(t * 2) * 0.02;
           boatGroup.rotation.z *= 0.9;
           boatGroup.rotation.y *= 0.9;
         }
@@ -7180,6 +7529,8 @@
       if (btn) btn.classList.add('boosting');
       const fx = document.getElementById('hud-nitro-fx');
       if (fx) fx.classList.add('active');
+      const speedo = document.querySelector('.hud-speedometer');
+      if (speedo) speedo.classList.add('nitro-active');
 
       toast('⚡ NITRO BOOST ACTIVATED!');
       updateNitroHUD();
@@ -7201,6 +7552,8 @@
           if (btn) btn.classList.remove('boosting');
           const fx = document.getElementById('hud-nitro-fx');
           if (fx) fx.classList.remove('active');
+          const speedo = document.querySelector('.hud-speedometer');
+          if (speedo) speedo.classList.remove('nitro-active');
         }
       } else if (nitroCooldownTimer > 0) {
         nitroCooldownTimer = Math.max(0, nitroCooldownTimer - dt);
@@ -7346,7 +7699,12 @@
       if (nBtn) nBtn.className = 'hud-nitro-btn';
       const nFx = document.getElementById('hud-nitro-fx');
       if (nFx) nFx.className = 'hud-nitro-fx';
+      const speedo = document.querySelector('.hud-speedometer');
+      if (speedo) speedo.classList.remove('nitro-active');
       if (typeof updateNitroHUD === 'function') updateNitroHUD();
+
+      // Start continuous dynamic audio engine
+      initContinuousAudio();
 
       if (boatsDB[selectedBoatIdx]) {
         if (typeof updateBoatModel === 'function') {
@@ -7378,7 +7736,7 @@
       if (popup) popup.className = 'hud-nearmiss-popup';
 
       if (boatGroup) {
-        boatGroup.position.set(0, -0.06, -1.2);
+        boatGroup.position.set(0, -0.02, -0.85);
         boatGroup.rotation.set(0.038, 0, 0);
         boatGroup.visible = true;
       }
@@ -7387,6 +7745,8 @@
       smoothCamX = 0;
       smoothLookX = 0;
       smoothCamRoll = 0;
+      smoothCamY = CAM_BASE_Y;
+      smoothCamZ = CAM_BASE_Z;
       smoothBoatRoll = 0;
       smoothBoatYaw = 0;
       smoothBoatPitch = 0.038;
